@@ -2,6 +2,7 @@ package com.lalema.app.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lalema.app.data.PoopRecord
 import com.lalema.app.domain.PoopRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,10 @@ data class CalendarUiState(
     val currentYearMonth: YearMonth = YearMonth.now(),
     val recordedDates: Set<String> = emptySet(),
     val selectedDate: String? = null,
-    val showMakeupDialog: Boolean = false
+    val showMakeupDialog: Boolean = false,
+    val showDetailDialog: Boolean = false,
+    val showRecordForm: Boolean = false,
+    val selectedRecords: List<PoopRecord> = emptyList()
 )
 
 @HiltViewModel
@@ -54,29 +58,75 @@ class CalendarViewModel @Inject constructor(
         val today = LocalDate.now()
         val clickedDate = LocalDate.parse(date, dateFormatter)
         val daysDiff = ChronoUnit.DAYS.between(clickedDate, today)
-        if (daysDiff in 0..6 && date !in _uiState.value.recordedDates) {
+
+        if (date in _uiState.value.recordedDates) {
+            viewModelScope.launch {
+                val records = repository.getByDate(date)
+                _uiState.value = _uiState.value.copy(
+                    selectedDate = date,
+                    selectedRecords = records,
+                    showDetailDialog = true
+                )
+            }
+        } else if (daysDiff in 0..6) {
             _uiState.value = _uiState.value.copy(
                 selectedDate = date,
-                showMakeupDialog = true
+                showRecordForm = true
             )
         }
     }
 
-    fun makeupRecord(date: String) {
+    fun makeupRecord(
+        timeHour: Int,
+        timeMinute: Int,
+        amount: String,
+        consistency: String,
+        color: String,
+        smell: String,
+        painLevel: Int,
+        blood: Boolean,
+        mucus: Boolean,
+        notes: String
+    ) {
         viewModelScope.launch {
-            repository.record(date)
+            repository.record(
+                date = _uiState.value.selectedDate!!,
+                timeHour = timeHour,
+                timeMinute = timeMinute,
+                amount = amount,
+                consistency = consistency,
+                color = color,
+                smell = smell,
+                painLevel = painLevel,
+                blood = blood,
+                mucus = mucus,
+                notes = notes
+            )
             refreshMonthData()
+            loadTodayStatus()
             _uiState.value = _uiState.value.copy(
-                showMakeupDialog = false,
+                showRecordForm = false,
                 selectedDate = null
             )
+        }
+    }
+
+    fun deleteRecord(id: Long) {
+        viewModelScope.launch {
+            repository.deleteRecord(id)
+            refreshMonthData()
+            loadTodayStatus()
+            _uiState.value = _uiState.value.copy(showDetailDialog = false)
         }
     }
 
     fun dismissDialog() {
         _uiState.value = _uiState.value.copy(
             showMakeupDialog = false,
-            selectedDate = null
+            showDetailDialog = false,
+            showRecordForm = false,
+            selectedDate = null,
+            selectedRecords = emptyList()
         )
     }
 
@@ -87,5 +137,8 @@ class CalendarViewModel @Inject constructor(
         val records = repository.getByDateRange(startDate, endDate)
         val dates = records.map { it.date }.toSet()
         _uiState.value = _uiState.value.copy(recordedDates = dates)
+    }
+
+    private suspend fun loadTodayStatus() {
     }
 }

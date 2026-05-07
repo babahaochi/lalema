@@ -1,5 +1,7 @@
 package com.lalema.app.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -17,6 +19,10 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.lalema.app.ui.calendar.CalendarScreen
+import com.lalema.app.ui.home.HomeScreen
 
 private data class BottomNavItem(
     val label: String,
@@ -57,6 +63,22 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        NavGraph(navController = navController)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Home.route
+            ) {
+                composable(Screen.Home.route) {
+                    HomeScreen(navController)
+                }
+                composable(Screen.Calendar.route) {
+                    CalendarScreen(navController)
+                }
+            }
+        }
     }
 }

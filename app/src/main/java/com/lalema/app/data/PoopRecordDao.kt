@@ -9,23 +9,29 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface PoopRecordDao {
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(record: PoopRecord): Long
 
-    @Query("SELECT * FROM poop_records WHERE date = :date")
-    suspend fun getByDate(date: String): PoopRecord?
+    @Query("SELECT * FROM poop_records WHERE date = :date ORDER BY time_hour DESC, time_minute DESC")
+    suspend fun getByDate(date: String): List<PoopRecord>
 
-    @Query("SELECT * FROM poop_records WHERE date BETWEEN :startDate AND :endDate ORDER BY date ASC")
+    @Query("SELECT * FROM poop_records WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC, time_hour DESC, time_minute DESC")
     suspend fun getByDateRange(startDate: String, endDate: String): List<PoopRecord>
 
-    @Query("SELECT * FROM poop_records ORDER BY date DESC")
+    @Query("SELECT * FROM poop_records ORDER BY date DESC, time_hour DESC, time_minute DESC")
     fun getAll(): Flow<List<PoopRecord>>
 
-    @Query("SELECT COUNT(*) FROM poop_records WHERE date LIKE :monthPattern")
+    @Query("SELECT COUNT(DISTINCT date) FROM poop_records WHERE date LIKE :monthPattern")
     suspend fun getCountByMonth(monthPattern: String): Int
+
+    @Query("SELECT COUNT(*) FROM poop_records WHERE date LIKE :monthPattern")
+    suspend fun getRecordCountByMonth(monthPattern: String): Int
 
     @Query("DELETE FROM poop_records WHERE date = :date")
     suspend fun deleteByDate(date: String)
+
+    @Query("DELETE FROM poop_records WHERE id = :id")
+    suspend fun deleteById(id: Long)
 
     @Query("SELECT EXISTS(SELECT 1 FROM poop_records WHERE date = :date)")
     suspend fun existsByDate(date: String): Boolean

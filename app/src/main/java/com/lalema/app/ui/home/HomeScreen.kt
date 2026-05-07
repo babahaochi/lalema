@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -28,22 +29,19 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -59,14 +57,12 @@ import androidx.navigation.NavHostController
 import com.lalema.app.ui.navigation.Screen
 import com.lalema.app.ui.theme.Brown500
 import com.lalema.app.ui.theme.Brown700
-import com.lalema.app.ui.theme.Brown50
 import com.lalema.app.ui.theme.Brown100
 import com.lalema.app.ui.theme.Brown900
 import com.lalema.app.ui.theme.Green500
 import com.lalema.app.ui.theme.Green700
 import com.lalema.app.ui.theme.WarmOrange500
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,9 +71,6 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
     var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.9f else 1f,
@@ -85,15 +78,17 @@ fun HomeScreen(
         label = "buttonScale"
     )
 
-    LaunchedEffect(uiState.showAlreadyRecorded) {
-        if (uiState.showAlreadyRecorded) {
-            scope.launch {
-                snackbarHostState.showSnackbar("今天已经拉过了 🎉")
-            }
-            delay(2000)
-            viewModel.dismissAlreadyRecorded()
-        }
+    LaunchedEffect(Unit) {
+        viewModel.loadTodayStatus()
     }
+
+    PoopRecordForm(
+        show = uiState.showRecordForm,
+        onDismiss = { viewModel.hideRecordForm() },
+        onSubmit = { timeHour, timeMinute, amount, consistency, color, smell, painLevel, blood, mucus, notes ->
+            viewModel.recordToday(timeHour, timeMinute, amount, consistency, color, smell, painLevel, blood, mucus, notes)
+        }
+    )
 
     Scaffold(
         topBar = {
@@ -109,15 +104,6 @@ fun HomeScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        },
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = Green500,
-                    contentColor = Color.White
-                )
-            }
         }
     ) { innerPadding ->
         Column(
@@ -145,11 +131,7 @@ fun HomeScreen(
                     .shadow(12.dp, CircleShape)
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = if (uiState.isTodayRecorded) {
-                                listOf(Green500, Green700)
-                            } else {
-                                listOf(Brown500, Brown700)
-                            }
+                            colors = listOf(Brown500, Brown700)
                         ),
                         shape = CircleShape
                     )
@@ -158,32 +140,23 @@ fun HomeScreen(
                         indication = null
                     ) {
                         pressed = true
-                        viewModel.recordToday()
+                        viewModel.showRecordForm()
                     },
                 contentAlignment = Alignment.Center
             ) {
-                if (uiState.isTodayRecorded) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Text(
-                            text = "已拉 ✓",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                } else {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(40.dp)
+                    )
                     Text(
-                        text = "拉了！",
+                        text = "记录",
                         color = Color.White,
-                        fontSize = 28.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
