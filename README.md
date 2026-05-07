@@ -1,22 +1,22 @@
-# LaLeMa App
+# LaLeMa（拉了吗）
 
-一个基于 Android 的排便记录应用，帮助你养成良好的排便习惯。
+一个基于 Android 的宠物/个人排便记录应用，帮助你养成良好的排便习惯。采用 Jetpack Compose + Material 3 构建，支持 Liquid Glass 液态玻璃设计风格。
 
 ## 功能特性
 
 ### 核心功能
 - 📅 每日排便打卡记录
 - 📊 连续打卡天数统计
-- 📈 本月排便次数统计
+- 📈 本月排便次数和打卡天数统计
 - 📅 日历视图查看历史记录
 - 🔄 补打卡功能（支持近7天）
 
 ### 详细记录
-- ⏰ 自定义时间选择
+- ⏰ 自定义时间选择（TimePickerDialog）
 - 📏 排便量记录（少量、正常、大量）
-- 💧 干稀程度（干、正常、稀、水样）
-- 🎨 颜色记录（6种颜色选项）
-- 👃 气味记录（无味、正常、轻微、强烈）
+- 💧 干稀程度（非常干、较干、正常、偏软、很软、稀便）
+- 🎨 颜色记录（8种颜色：棕色、深棕、黄色、绿色、红色、黑色、灰白、橙色）
+- 👃 气味记录（正常、稍有气味、气味较重、非常臭）
 - 🤕 疼痛程度（无疼痛、轻微、中等、严重）
 - 🩸 特殊标记（有血、有粘液）
 - 📝 备注信息
@@ -29,24 +29,27 @@
 
 ### 界面设计
 - 🍸 **Liquid Glass 液态玻璃设计** - 现代化毛玻璃效果
-- 🎨 **全新蓝紫配色方案** - 日间/夜间模式自适应
-- ✨ 流畅的动画效果
-- 📐 合理的间距和布局
+- 🎨 **蓝紫配色方案** - 日间/夜间模式自适应
+- ✨ 流畅的入场动画和按钮弹动效果
+- 📐 Material 3 设计规范
 
 ### 提醒功能
 - ⏰ **闹钟提醒** - 支持自定义时间，重启后自动恢复
 - 📅 **日历提醒** - 在系统日历中创建每日提醒事件
-- 🔔 开机自动恢复闹钟设置
+- 🔔 开机自动恢复闹钟设置（BootReceiver）
 
 ## 技术栈
 
-- **框架**: Android Jetpack Compose
-- **语言**: Kotlin
-- **架构**: MVVM + Repository
-- **依赖注入**: Hilt
-- **数据库**: Room
-- **最低 SDK**: Android 8.0 (API 26)
-- **目标 SDK**: Android 14 (API 34)
+| 技术 | 版本 |
+|------|------|
+| 语言 | Kotlin 1.9.22 |
+| UI 框架 | Jetpack Compose (BOM 2024.01.00) |
+| 架构 | MVVM + Repository |
+| 依赖注入 | Hilt 2.50 |
+| 数据库 | Room 2.6.1 |
+| 导航 | Navigation Compose 2.7.6 |
+| 最低 SDK | Android 8.0 (API 26) |
+| 目标 SDK | Android 14 (API 34) |
 
 ## 环境要求
 
@@ -62,44 +65,63 @@
 ./gradle-local/gradle-8.2/bin/gradle assembleRelease
 ```
 
-### 使用 gradle wrapper
+### 使用 Gradle Wrapper
 
 ```bash
 ./gradlew assembleRelease
 ```
 
+APK 输出路径：`app/build/outputs/apk/release/app-release.apk`
+
 ## 项目结构
 
 ```
-app/
-├── src/main/java/com/lalema/app/
-│   ├── data/              # 数据层
-│   │   ├── data/         # 数据库、DAO、实体类
-│   │   └── di/           # 依赖注入模块
-│   ├── domain/            # 业务逻辑层
-│   │   └── PoopRepository.kt
-│   ├── ui/                # UI 层
-│   │   ├── home/         # 主页
-│   │   ├── calendar/     # 日历页
-│   │   ├── settings/     # 设置页
-│   │   ├── navigation/   # 导航配置
-│   │   └── theme/        # 主题配置（含Liquid Glass组件）
-│   ├── reminder/          # 提醒功能
-│   │   ├── ReminderManager.kt
-│   │   ├── ReminderReceiver.kt
-│   │   └── BootReceiver.kt
-│   ├── LaLeMaApplication.kt
-│   └── MainActivity.kt
-├── src/main/res/          # 资源文件
-└── build.gradle.kts      # 模块配置
+app/src/main/java/com/lalema/app/
+├── data/                    # 数据层
+│   ├── AppDatabase.kt       # Room 数据库定义
+│   ├── PoopRecord.kt        # 实体类 + 枚举定义
+│   ├── PoopRecordDao.kt     # DAO 接口
+│   └── di/
+│       └── DatabaseModule.kt # Hilt 依赖注入模块
+├── domain/
+│   └── PoopRepository.kt   # 业务逻辑层（打卡、统计、连续天数）
+├── ui/
+│   ├── home/
+│   │   ├── HomeScreen.kt    # 主页 UI
+│   │   ├── HomeViewModel.kt # 主页状态管理
+│   │   └── PoopRecordForm.kt# 记录表单（底部弹窗）
+│   ├── calendar/
+│   │   ├── CalendarScreen.kt # 日历视图
+│   │   └── CalendarViewModel.kt
+│   ├── settings/
+│   │   └── SettingsScreen.kt # 设置页（闹钟/日历提醒）
+│   ├── navigation/
+│   │   ├── MainScreen.kt    # 主框架 + 底部导航
+│   │   └── Screen.kt        # 路由定义
+│   └── theme/
+│       ├── Color.kt         # 颜色定义
+│       ├── Theme.kt         # 主题配置
+│       ├── Type.kt          # 字体样式
+│       └── LiquidGlass.kt   # 液态玻璃组件库
+├── reminder/
+│   ├── ReminderManager.kt   # 闹钟管理 + 日历事件
+│   └── BootReceiver.kt      # 开机恢复闹钟
+├── LaLeMaApplication.kt     # Hilt 入口
+└── MainActivity.kt          # 主 Activity
 ```
 
 ## 版本历史
 
+### v1.5.0
+- 🐛 **修复连续打卡无限循环** - 添加365天上限保护
+- 🐛 **修复导航返回数据不刷新** - 基于路由感知的智能刷新
+- 🧹 **代码清理** - 移除重复调用、死代码和无效注解
+- 📦 **版本升级** - versionCode 5, versionName 1.5.0
+
 ### v1.4.0
 - 🎨 **全新蓝紫配色** - 更现代、更清新的视觉体验
 - 🌙 **完善深色模式** - 自动适配系统日间/夜间主题
-- 🔔 **修复闹钟重启丢失** - 添加BootReceiver，开机自动恢复
+- 🔔 **修复闹钟重启丢失** - 添加 BootReceiver，开机自动恢复
 - 📅 **修复日历创建失败** - 优化日历账户检测和错误提示
 - 🍸 **优化液态玻璃效果** - 更好的透明度和边框效果
 

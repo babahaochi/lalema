@@ -60,3 +60,8 @@ val CardBackgroundDark = Color(0xFF252540)
 // 错误色
 val ErrorLight = Color(0xFFFF4757)
 val ErrorDark = Color(0xFFFF6B6B)
+
+// 排便记录表单色
+val Brown500 = Color(0xFF8D6E63)
+val Brown700 = Color(0xFF4E342E)
+val Green500 = Color(0xFF4CAF50)
