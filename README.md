@@ -49,7 +49,7 @@
 | 数据库 | Room 2.6.1 |
 | 导航 | Navigation Compose 2.7.6 |
 | 最低 SDK | Android 8.0 (API 26) |
-| 目标 SDK | Android 14 (API 34) |
+| 目标 SDK | Android 16 (API 36) |
 
 ## 环境要求
 

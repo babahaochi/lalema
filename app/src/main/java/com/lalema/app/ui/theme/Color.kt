@@ -2,66 +2,104 @@ package com.lalema.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// 主色调 - 现代蓝紫色系
-val PrimaryLight = Color(0xFF5B6DFD)
-val PrimaryDark = Color(0xFF8B9CFF)
+data class ColorPreset(
+    val name: String,
+    val primaryLight: Color,
+    val primaryDark: Color,
+    val secondaryLight: Color,
+    val secondaryDark: Color,
+    val tertiaryLight: Color,
+    val tertiaryDark: Color
+)
 
-val SecondaryLight = Color(0xFF00C9A7)
-val SecondaryDark = Color(0xFF5EEAD4)
+val colorPresets = listOf(
+    ColorPreset(
+        name = "蓝紫",
+        primaryLight = Color(0xFF4A5CE0),
+        primaryDark = Color(0xFF9DA5FF),
+        secondaryLight = Color(0xFF00A58E),
+        secondaryDark = Color(0xFF4ECDC4),
+        tertiaryLight = Color(0xFFE06030),
+        tertiaryDark = Color(0xFFFFAB91)
+    ),
+    ColorPreset(
+        name = "樱花粉",
+        primaryLight = Color(0xFFD81B60),
+        primaryDark = Color(0xFFF48FB1),
+        secondaryLight = Color(0xFF8E24AA),
+        secondaryDark = Color(0xFFCE93D8),
+        tertiaryLight = Color(0xFFEF6C00),
+        tertiaryDark = Color(0xFFFFCC80)
+    ),
+    ColorPreset(
+        name = "薄荷绿",
+        primaryLight = Color(0xFF00796B),
+        primaryDark = Color(0xFF4DB6AC),
+        secondaryLight = Color(0xFF2E7D32),
+        secondaryDark = Color(0xFF81C784),
+        tertiaryLight = Color(0xFFF57F17),
+        tertiaryDark = Color(0xFFFFD54F)
+    ),
+    ColorPreset(
+        name = "琥珀橙",
+        primaryLight = Color(0xFFE65100),
+        primaryDark = Color(0xFFFFAB40),
+        secondaryLight = Color(0xFFC62828),
+        secondaryDark = Color(0xFFEF9A9A),
+        tertiaryLight = Color(0xFF5E35B1),
+        tertiaryDark = Color(0xFFB39DDB)
+    ),
+    ColorPreset(
+        name = "靛蓝",
+        primaryLight = Color(0xFF283593),
+        primaryDark = Color(0xFF7986CB),
+        secondaryLight = Color(0xFF1565C0),
+        secondaryDark = Color(0xFF64B5F6),
+        tertiaryLight = Color(0xFF00695C),
+        tertiaryDark = Color(0xFF80CBC4)
+    ),
+    ColorPreset(
+        name = "玫瑰红",
+        primaryLight = Color(0xFFB71C50),
+        primaryDark = Color(0xFFF06292),
+        secondaryLight = Color(0xFF6A1B9A),
+        secondaryDark = Color(0xFFBA68C8),
+        tertiaryLight = Color(0xFFE65100),
+        tertiaryDark = Color(0xFFFFCC80)
+    )
+)
 
-val TertiaryLight = Color(0xFFFF6B6B)
-val TertiaryDark = Color(0xFFFF9E9E)
+val PrimaryLight = colorPresets[0].primaryLight
+val PrimaryDark = colorPresets[0].primaryDark
+val SecondaryLight = colorPresets[0].secondaryLight
+val SecondaryDark = colorPresets[0].secondaryDark
+val TertiaryLight = colorPresets[0].tertiaryLight
+val TertiaryDark = colorPresets[0].tertiaryDark
 
-// 背景色
-val BackgroundLight = Color(0xFFF8F9FE)
-val BackgroundDark = Color(0xFF0F0F1A)
+val SurfaceLight = Color(0xFFF8F9FF)
+val SurfaceDark = Color(0xFF1A1C2E)
+val BackgroundLight = Color(0xFFF5F6FF)
+val BackgroundDark = Color(0xFF121420)
 
-val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceDark = Color(0xFF1A1A2E)
+val OnSurfaceLight = Color(0xFF1A1C2E)
+val OnSurfaceDark = Color(0xFFE8E8F0)
 
-// 文字色
-val OnBackgroundLight = Color(0xFF1A1A2E)
-val OnBackgroundDark = Color(0xFFE8E8F0)
+val OnSurfaceVariantLight = Color(0xFF4A4E68)
+val OnSurfaceVariantDark = Color(0xFFB8B8CC)
 
-val OnSurfaceLight = Color(0xFF2D2D44)
-val OnSurfaceDark = Color(0xFFD0D0E0)
+val SuccessLight = Color(0xFF2E7D32)
+val SuccessDark = Color(0xFF66BB6A)
+val WarningLight = Color(0xFFEF6C00)
+val WarningDark = Color(0xFFFFB74D)
 
-val OnSurfaceVariantLight = Color(0xFF6B6B80)
-val OnSurfaceVariantDark = Color(0xFF9A9AB0)
+val PrimaryContainerLight = Color(0xFFE0E0FF)
+val PrimaryContainerDark = Color(0xFF2D3060)
+val OnPrimaryContainerLight = Color(0xFF1A1C50)
+val OnPrimaryContainerDark = Color(0xFFE0E0FF)
 
-// 轮廓色
-val OutlineLight = Color(0xFFBDBDD0)
-val OutlineDark = Color(0xFF4A4A60)
+val ErrorLight = Color(0xFFD32F2F)
+val ErrorDark = Color(0xFFEF5350)
 
-// 状态色
-val SuccessLight = Color(0xFF00C9A7)
-val SuccessDark = Color(0xFF5EEAD4)
-
-val WarningLight = Color(0xFFFFB347)
-val WarningDark = Color(0xFFFFD68A)
-
-// 玻璃效果色
-val GlassWhite = Color(0x40FFFFFF)
-val GlassDark = Color(0x30000000)
-val GlassBorder = Color(0x30FFFFFF)
-val GlassBorderDark = Color(0x20000000)
-
-// 渐变色彩
-val GradientStartLight = Color(0xFF5B6DFD)
-val GradientEndLight = Color(0xFF00C9A7)
-
-val GradientStartDark = Color(0xFF8B9CFF)
-val GradientEndDark = Color(0xFF5EEAD4)
-
-// 卡片背景
-val CardBackgroundLight = Color(0xFFFFFFFF)
-val CardBackgroundDark = Color(0xFF252540)
-
-// 错误色
-val ErrorLight = Color(0xFFFF4757)
-val ErrorDark = Color(0xFFFF6B6B)
-
-// 排便记录表单色
 val Brown500 = Color(0xFF8D6E63)
 val Brown700 = Color(0xFF4E342E)
 val Green500 = Color(0xFF4CAF50)

@@ -4,8 +4,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import com.lalema.app.ui.navigation.MainScreen
 import com.lalema.app.ui.theme.LaLeMaTheme
+import com.lalema.app.ui.theme.LocalThemeSettings
+import com.lalema.app.ui.theme.ThemePreferences
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -14,8 +22,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            LaLeMaTheme {
-                MainScreen()
+            val context = LocalContext.current
+            var themeSettings by remember { mutableStateOf(ThemePreferences.load(context)) }
+
+            CompositionLocalProvider(LocalThemeSettings provides themeSettings) {
+                LaLeMaTheme(themeSettings = themeSettings) {
+                    MainScreen(
+                        onThemeSettingsChanged = { newSettings ->
+                            themeSettings = newSettings
+                            ThemePreferences.save(context, newSettings)
+                        }
+                    )
+                }
             }
         }
     }

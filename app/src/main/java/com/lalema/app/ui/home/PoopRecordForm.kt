@@ -54,9 +54,6 @@ import com.lalema.app.data.PoopColor
 import com.lalema.app.data.PoopConsistency
 import com.lalema.app.data.PoopSmell
 import com.lalema.app.data.PainLevel
-import com.lalema.app.ui.theme.Brown500
-import com.lalema.app.ui.theme.Brown700
-import com.lalema.app.ui.theme.Green500
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,7 +134,7 @@ fun PoopRecordForm(
                     Icon(
                         imageVector = Icons.Default.AccessTime,
                         contentDescription = null,
-                        tint = Brown500
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
@@ -154,7 +151,7 @@ fun PoopRecordForm(
                 text = "量多量少",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Brown700
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(modifier = Modifier.fillMaxWidth()) {
                 PoopAmount.entries.forEach { amount ->
@@ -173,7 +170,7 @@ fun PoopRecordForm(
                 text = "干稀程度",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Brown700
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(modifier = Modifier.fillMaxWidth()) {
                 PoopConsistency.entries.forEach { consistency ->
@@ -192,7 +189,7 @@ fun PoopRecordForm(
                 text = "颜色",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Brown700
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(modifier = Modifier.fillMaxWidth()) {
                 PoopColor.entries.take(4).forEach { color ->
@@ -224,7 +221,7 @@ fun PoopRecordForm(
                 text = "气味",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Brown700
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(modifier = Modifier.fillMaxWidth()) {
                 PoopSmell.entries.forEach { smell ->
@@ -243,7 +240,7 @@ fun PoopRecordForm(
                 text = "疼痛程度",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Brown700
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(modifier = Modifier.fillMaxWidth()) {
                 PainLevel.entries.forEachIndexed { index, level ->
@@ -265,14 +262,14 @@ fun PoopRecordForm(
                 Checkbox(
                     checked = hasBlood,
                     onCheckedChange = { hasBlood = it },
-                    colors = CheckboxDefaults.colors(checkedColor = Brown500)
+                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.error)
                 )
                 Text(text = "有血", fontSize = 14.sp)
                 Spacer(modifier = Modifier.width(24.dp))
                 Checkbox(
                     checked = hasMucus,
                     onCheckedChange = { hasMucus = it },
-                    colors = CheckboxDefaults.colors(checkedColor = Brown500)
+                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.error)
                 )
                 Text(text = "有粘液", fontSize = 14.sp)
             }
@@ -311,7 +308,7 @@ fun PoopRecordForm(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Green500)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
@@ -336,8 +333,8 @@ fun ChoiceChip(
             .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) Brown500 else MaterialTheme.colorScheme.surface,
-            contentColor = if (selected) Color.White else Brown700
+            containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+            contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 4.dp else 2.dp)
     ) {
@@ -372,14 +369,14 @@ fun ColorChip(
                 .background(android.graphics.Color.parseColor(colorHex).let { Color(it) })
                 .border(
                     width = 2.dp,
-                    color = if (selected) Brown500 else Color.Transparent,
+                    color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
                     shape = CircleShape
                 )
         )
         Text(
             text = displayName,
             fontSize = 10.sp,
-            color = if (selected) Brown500 else Brown700,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 2.dp)
         )
     }

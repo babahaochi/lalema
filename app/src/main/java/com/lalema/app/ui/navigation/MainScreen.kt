@@ -25,6 +25,7 @@ import androidx.navigation.compose.composable
 import com.lalema.app.ui.calendar.CalendarScreen
 import com.lalema.app.ui.home.HomeScreen
 import com.lalema.app.ui.settings.SettingsScreen
+import com.lalema.app.ui.theme.ThemeSettings
 
 private data class BottomNavItem(
     val label: String,
@@ -39,7 +40,9 @@ private val bottomNavItems = listOf(
 )
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onThemeSettingsChanged: (ThemeSettings) -> Unit = {}
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -82,15 +85,18 @@ fun MainScreen() {
                     CalendarScreen(navController)
                 }
                 composable(Screen.Settings.route) {
-                    SettingsScreen(onBack = {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+                    SettingsScreen(
+                        onBack = {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    })
+                        },
+                        onThemeSettingsChanged = onThemeSettingsChanged
+                    )
                 }
             }
         }
