@@ -103,7 +103,6 @@ class CalendarViewModel @Inject constructor(
                 notes = notes
             )
             refreshMonthData()
-            loadTodayStatus()
             _uiState.value = _uiState.value.copy(
                 showRecordForm = false,
                 selectedDate = null
@@ -115,7 +114,6 @@ class CalendarViewModel @Inject constructor(
         viewModelScope.launch {
             repository.deleteRecord(id)
             refreshMonthData()
-            loadTodayStatus()
             _uiState.value = _uiState.value.copy(showDetailDialog = false)
         }
     }
@@ -139,6 +137,4 @@ class CalendarViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(recordedDates = dates)
     }
 
-    private suspend fun loadTodayStatus() {
-    }
 }

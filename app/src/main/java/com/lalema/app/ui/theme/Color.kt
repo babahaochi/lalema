@@ -2,42 +2,61 @@ package com.lalema.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Brown50 = Color(0xFFEFEBE9)
-val Brown100 = Color(0xFFD7CCC8)
-val Brown200 = Color(0xFFBCAAA4)
-val Brown300 = Color(0xFFA1887F)
-val Brown400 = Color(0xFF8D6E63)
-val Brown500 = Color(0xFF795548)
-val Brown600 = Color(0xFF6D4C41)
-val Brown700 = Color(0xFF5D4037)
-val Brown800 = Color(0xFF4E342E)
-val Brown900 = Color(0xFF3E2723)
+// 主色调 - 现代蓝紫色系
+val PrimaryLight = Color(0xFF5B6DFD)
+val PrimaryDark = Color(0xFF8B9CFF)
 
-val WarmOrange200 = Color(0xFFFFCC80)
-val WarmOrange400 = Color(0xFFFFA726)
-val WarmOrange500 = Color(0xFFFF9800)
-val WarmOrange700 = Color(0xFFF57C00)
+val SecondaryLight = Color(0xFF00C9A7)
+val SecondaryDark = Color(0xFF5EEAD4)
 
-val Green500 = Color(0xFF4CAF50)
-val Green400 = Color(0xFF66BB6A)
-val Green600 = Color(0xFF43A047)
-val Green700 = Color(0xFF388E3C)
+val TertiaryLight = Color(0xFFFF6B6B)
+val TertiaryDark = Color(0xFFFF9E9E)
 
-val GreenLight = Color(0xFFE8F5E9)
-val OrangeLight = Color(0xFFFFF3E0)
-val BlueLight = Color(0xFFE3F2FD)
-val PurpleLight = Color(0xFFF3E5F5)
+// 背景色
+val BackgroundLight = Color(0xFFF8F9FE)
+val BackgroundDark = Color(0xFF0F0F1A)
 
+val SurfaceLight = Color(0xFFFFFFFF)
+val SurfaceDark = Color(0xFF1A1A2E)
+
+// 文字色
+val OnBackgroundLight = Color(0xFF1A1A2E)
+val OnBackgroundDark = Color(0xFFE8E8F0)
+
+val OnSurfaceLight = Color(0xFF2D2D44)
+val OnSurfaceDark = Color(0xFFD0D0E0)
+
+val OnSurfaceVariantLight = Color(0xFF6B6B80)
+val OnSurfaceVariantDark = Color(0xFF9A9AB0)
+
+// 轮廓色
+val OutlineLight = Color(0xFFBDBDD0)
+val OutlineDark = Color(0xFF4A4A60)
+
+// 状态色
+val SuccessLight = Color(0xFF00C9A7)
+val SuccessDark = Color(0xFF5EEAD4)
+
+val WarningLight = Color(0xFFFFB347)
+val WarningDark = Color(0xFFFFD68A)
+
+// 玻璃效果色
 val GlassWhite = Color(0x40FFFFFF)
 val GlassDark = Color(0x30000000)
 val GlassBorder = Color(0x30FFFFFF)
 val GlassBorderDark = Color(0x20000000)
 
-val SurfaceLight = Color(0xFFFAFAFA)
-val SurfaceDark = Color(0xFF121212)
+// 渐变色彩
+val GradientStartLight = Color(0xFF5B6DFD)
+val GradientEndLight = Color(0xFF00C9A7)
 
-val OnSurfaceLight = Color(0xFF1C1B1F)
-val OnSurfaceDark = Color(0xFFE6E1E5)
+val GradientStartDark = Color(0xFF8B9CFF)
+val GradientEndDark = Color(0xFF5EEAD4)
 
-val OutlineLight = Color(0xFF79747E)
-val OutlineDark = Color(0xFF938F99)
+// 卡片背景
+val CardBackgroundLight = Color(0xFFFFFFFF)
+val CardBackgroundDark = Color(0xFF252540)
+
+// 错误色
+val ErrorLight = Color(0xFFFF4757)
+val ErrorDark = Color(0xFFFF6B6B)

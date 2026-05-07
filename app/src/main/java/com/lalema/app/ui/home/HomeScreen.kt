@@ -66,16 +66,18 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.lalema.app.data.PoopColor
 import com.lalema.app.data.PoopConsistency
 import com.lalema.app.data.PoopRecord
 import com.lalema.app.ui.navigation.Screen
-import com.lalema.app.ui.theme.Green500
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LiquidGlassStatCard
-import com.lalema.app.ui.theme.WarmOrange500
-import com.lalema.app.ui.theme.Brown500
-import com.lalema.app.ui.theme.Brown600
+import com.lalema.app.ui.theme.PrimaryLight
+import com.lalema.app.ui.theme.SecondaryLight
+import com.lalema.app.ui.theme.TertiaryLight
+import com.lalema.app.ui.theme.SuccessLight
+import com.lalema.app.ui.theme.WarningLight
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,10 +95,17 @@ fun HomeScreen(
     )
     var showContent by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        viewModel.loadTodayStatus()
-        delay(100)
-        showContent = true
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val isHomeActive = navBackStackEntry?.destination?.route == Screen.Home.route
+
+    LaunchedEffect(isHomeActive) {
+        if (isHomeActive) {
+            viewModel.loadTodayStatus()
+            delay(100)
+            showContent = true
+        } else {
+            showContent = false
+        }
     }
 
     PoopRecordForm(
@@ -163,11 +172,11 @@ fun HomeScreen(
                     modifier = Modifier
                         .size(180.dp)
                         .scale(scale)
-                        .shadow(20.dp, CircleShape, spotColor = Brown500.copy(alpha = 0.3f))
+                        .shadow(20.dp, CircleShape, spotColor = PrimaryLight.copy(alpha = 0.3f))
                         .clip(CircleShape)
                         .background(
                             brush = Brush.verticalGradient(
-                                colors = listOf(Brown500, Brown600)
+                                colors = listOf(PrimaryLight, SecondaryLight)
                             )
                         )
                         .clickable(
@@ -226,7 +235,7 @@ fun HomeScreen(
                             Icon(
                                 imageVector = Icons.Default.LocalFireDepartment,
                                 contentDescription = null,
-                                tint = WarmOrange500,
+                                tint = TertiaryLight,
                                 modifier = Modifier.size(28.dp)
                             )
                         },
@@ -239,7 +248,7 @@ fun HomeScreen(
                             Icon(
                                 imageVector = Icons.Default.TagFaces,
                                 contentDescription = null,
-                                tint = Brown500,
+                                tint = PrimaryLight,
                                 modifier = Modifier.size(28.dp)
                             )
                         },
@@ -252,7 +261,7 @@ fun HomeScreen(
                             Icon(
                                 imageVector = Icons.Default.PieChart,
                                 contentDescription = null,
-                                tint = Green500,
+                                tint = SuccessLight,
                                 modifier = Modifier.size(28.dp)
                             )
                         },

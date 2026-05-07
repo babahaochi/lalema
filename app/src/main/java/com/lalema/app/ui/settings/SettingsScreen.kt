@@ -66,8 +66,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.lalema.app.reminder.BootReceiver
 import com.lalema.app.reminder.ReminderManager
-import com.lalema.app.ui.theme.GlassWhite
 import com.lalema.app.ui.theme.LiquidGlassCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,10 +83,11 @@ fun SettingsScreen(
         )
     }
 
-    var reminderEnabled by remember { mutableStateOf(false) }
+    val alarmState = remember { BootReceiver.loadAlarmState(context) }
+    var reminderEnabled by remember { mutableStateOf(alarmState.first) }
     var calendarReminderEnabled by remember { mutableStateOf(false) }
-    var reminderHour by remember { mutableStateOf(8) }
-    var reminderMinute by remember { mutableStateOf(0) }
+    var reminderHour by remember { mutableStateOf(alarmState.second) }
+    var reminderMinute by remember { mutableStateOf(alarmState.third) }
     var showTimePicker by remember { mutableStateOf(false) }
     var expandedReminder by remember { mutableStateOf(false) }
 
@@ -144,6 +145,9 @@ fun SettingsScreen(
                         if (reminderEnabled) {
                             reminderManager.cancelDailyReminder()
                             reminderManager.setDailyReminder(reminderHour, reminderMinute)
+                            BootReceiver.saveAlarmState(context, true, reminderHour, reminderMinute)
+                        } else {
+                            BootReceiver.saveAlarmState(context, false, reminderHour, reminderMinute)
                         }
                     }
                 ) {
@@ -235,6 +239,7 @@ fun SettingsScreen(
                                                 ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) -> {
                                                     reminderManager.setDailyReminder(reminderHour, reminderMinute)
                                                     reminderEnabled = true
+                                                    BootReceiver.saveAlarmState(context, true, reminderHour, reminderMinute)
                                                 }
                                                 else -> {
                                                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -243,10 +248,12 @@ fun SettingsScreen(
                                         } else {
                                             reminderManager.setDailyReminder(reminderHour, reminderMinute)
                                             reminderEnabled = true
+                                            BootReceiver.saveAlarmState(context, true, reminderHour, reminderMinute)
                                         }
                                     } else {
                                         reminderManager.cancelDailyReminder()
                                         reminderEnabled = false
+                                        BootReceiver.saveAlarmState(context, false, reminderHour, reminderMinute)
                                     }
                                 }
                             )

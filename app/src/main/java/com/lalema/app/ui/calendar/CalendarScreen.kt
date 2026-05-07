@@ -62,10 +62,10 @@ import com.lalema.app.data.PoopConsistency
 import com.lalema.app.data.PoopRecord
 import com.lalema.app.data.PoopSmell
 import com.lalema.app.ui.home.PoopRecordForm
-import com.lalema.app.ui.theme.Brown500
-import com.lalema.app.ui.theme.Green500
 import com.lalema.app.ui.theme.LiquidGlassCard
-import com.lalema.app.ui.theme.WarmOrange500
+import com.lalema.app.ui.theme.PrimaryLight
+import com.lalema.app.ui.theme.SuccessLight
+import com.lalema.app.ui.theme.WarningLight
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -276,7 +276,7 @@ fun CalendarScreen(
                                             modifier = Modifier
                                                 .size(36.dp)
                                                 .clip(CircleShape)
-                                                .background(Green500),
+                                                .background(SuccessLight),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
@@ -290,7 +290,7 @@ fun CalendarScreen(
                                             modifier = Modifier
                                                 .size(36.dp)
                                                 .clip(CircleShape)
-                                                .border(2.dp, Brown500, CircleShape),
+                                                .border(2.dp, PrimaryLight, CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
@@ -302,12 +302,12 @@ fun CalendarScreen(
                                         }
                                         isFuture -> Text(
                                             text = day.toString(),
-                                            color = Color.Gray,
+                                            color = MaterialTheme.colorScheme.outline,
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                         isMakeupAvailable -> Text(
                                             text = day.toString(),
-                                            color = WarmOrange500,
+                                            color = WarningLight,
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Medium
                                         )
@@ -350,9 +350,9 @@ private fun LegendSection() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                LegendItem(color = Green500, text = "已记录")
-                LegendItem(color = Brown500, text = "今天", isOutline = true)
-                LegendItem(color = WarmOrange500, text = "可补卡")
+                LegendItem(color = SuccessLight, text = "已记录")
+                LegendItem(color = PrimaryLight, text = "今天", isOutline = true)
+                LegendItem(color = WarningLight, text = "可补卡")
             }
         }
     }

@@ -75,11 +75,13 @@ class PoopRepository @Inject constructor(
     suspend fun getStreak(): Int {
         var streak = 0
         var current = LocalDate.now()
-        while (true) {
+        var daysChecked = 0
+        while (daysChecked < 365) {
             val dateStr = current.format(dateFormatter)
             if (dao.existsByDate(dateStr)) {
                 streak++
                 current = current.minusDays(1)
+                daysChecked++
             } else {
                 break
             }
