@@ -54,3 +54,32 @@ app/
 - 基础打卡功能
 - 日历视图
 - 补打卡功能
+
+## 发布指南
+
+### 创建新版本
+
+1. **构建APK**:
+   ```bash
+   # 方式1：使用脚本
+   release.bat 1.0.1
+   
+   # 方式2：手动构建
+   ./gradle-local/gradle-8.2/bin/gradle assembleRelease --no-daemon
+   ```
+
+2. **创建GitHub Release**:
+   - 访问: https://github.com/babahaochi/lalema/releases
+   - 点击 "Draft a new release"
+   - **Tag version**: `v1.0.1`
+   - **Release title**: `Version 1.0.1`
+   - **Upload**: `app/build/outputs/apk/release/app-release.apk`
+   - 填写更新说明并发布
+
+### 版本号规则
+
+使用语义化版本号（Semantic Versioning）:
+- `v1.0.0` - 主版本.次版本.修订版本
+- 主版本号: 重大功能变更
+- 次版本号: 新功能添加
+- 修订版本号: Bug修复

@@ -38,3 +38,6 @@ android-sdk/
 
 # Downloaded dependencies
 *.zip
+
+# Release scripts
+release.bat

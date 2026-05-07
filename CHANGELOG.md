@@ -31,3 +31,5 @@
 - 日历视图
 - 补打卡功能
 - 数据持久化 (Room)
+- 项目配置文件完善（README, CHANGELOG, .gitignore）
+- 发布脚本 release.bat
