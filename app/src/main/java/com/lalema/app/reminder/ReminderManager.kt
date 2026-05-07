@@ -5,10 +5,12 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.CalendarContract
 import android.provider.CalendarContract.Events
 import android.provider.CalendarContract.Reminders
+import androidx.core.content.ContextCompat
 import java.util.*
 import javax.inject.Inject
 
@@ -67,60 +69,82 @@ class ReminderManager @Inject constructor(
         }
     }
 
-    fun createCalendarEvent(title: String, description: String, hour: Int, minute: Int) {
-        val eventValues = android.content.ContentValues().apply {
-            put(Events.TITLE, title)
-            put(Events.DESCRIPTION, description)
-            put(Events.CALENDAR_ID, getDefaultCalendarId())
-            put(Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
-
-            val start = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, hour)
-                set(Calendar.MINUTE, minute)
-                set(Calendar.SECOND, 0)
-            }.timeInMillis
-
-            val end = Calendar.getInstance().apply {
-                timeInMillis = start
-                add(Calendar.HOUR_OF_DAY, 1)
-            }.timeInMillis
-
-            put(Events.DTSTART, start)
-            put(Events.DTEND, end)
-            put(Events.ALL_DAY, 0)
-            put(Events.RRULE, "FREQ=DAILY")
+    fun createCalendarEvent(title: String, description: String, hour: Int, minute: Int): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val readPermission = ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CALENDAR)
+            val writePermission = ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_CALENDAR)
+            if (readPermission != PackageManager.PERMISSION_GRANTED || writePermission != PackageManager.PERMISSION_GRANTED) {
+                return false
+            }
         }
 
-        context.contentResolver.insert(Events.CONTENT_URI, eventValues)?.let { eventUri ->
-            val eventId = eventUri.lastPathSegment?.toLong() ?: return
+        return try {
+            val calendarId = getDefaultCalendarId()
+            if (calendarId == -1L) return false
 
-            val reminderValues = android.content.ContentValues().apply {
-                put(Reminders.EVENT_ID, eventId)
-                put(Reminders.METHOD, Reminders.METHOD_ALERT)
-                put(Reminders.MINUTES, 0)
+            val eventValues = android.content.ContentValues().apply {
+                put(Events.TITLE, title)
+                put(Events.DESCRIPTION, description)
+                put(Events.CALENDAR_ID, calendarId)
+                put(Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
+
+                val start = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, hour)
+                    set(Calendar.MINUTE, minute)
+                    set(Calendar.SECOND, 0)
+                }.timeInMillis
+
+                val end = Calendar.getInstance().apply {
+                    timeInMillis = start
+                    add(Calendar.HOUR_OF_DAY, 1)
+                }.timeInMillis
+
+                put(Events.DTSTART, start)
+                put(Events.DTEND, end)
+                put(Events.ALL_DAY, 0)
+                put(Events.RRULE, "FREQ=DAILY")
             }
 
-            context.contentResolver.insert(Reminders.CONTENT_URI, reminderValues)
+            context.contentResolver.insert(Events.CONTENT_URI, eventValues)?.let { eventUri ->
+                val eventId = eventUri.lastPathSegment?.toLong() ?: return false
+
+                val reminderValues = android.content.ContentValues().apply {
+                    put(Reminders.EVENT_ID, eventId)
+                    put(Reminders.METHOD, Reminders.METHOD_ALERT)
+                    put(Reminders.MINUTES, 0)
+                }
+
+                context.contentResolver.insert(Reminders.CONTENT_URI, reminderValues)
+                true
+            } ?: false
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
     }
 
     private fun getDefaultCalendarId(): Long {
-        val projection = arrayOf(CalendarContract.Calendars._ID)
-        val selection = "${CalendarContract.Calendars.IS_PRIMARY} = 1"
+        return try {
+            val projection = arrayOf(CalendarContract.Calendars._ID)
+            val selection = "${CalendarContract.Calendars.IS_PRIMARY} = 1"
 
-        context.contentResolver.query(
-            CalendarContract.Calendars.CONTENT_URI,
-            projection,
-            selection,
-            null,
-            null
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                return cursor.getLong(0)
-            }
+            context.contentResolver.query(
+                CalendarContract.Calendars.CONTENT_URI,
+                projection,
+                selection,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    cursor.getLong(0)
+                } else {
+                    -1L
+                }
+            } ?: -1L
+        } catch (e: Exception) {
+            e.printStackTrace()
+            -1L
         }
-
-        return 1L
     }
 
     companion object {

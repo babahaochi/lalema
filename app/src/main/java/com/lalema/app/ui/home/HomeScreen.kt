@@ -1,7 +1,15 @@
 package com.lalema.app.ui.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -64,6 +72,7 @@ import com.lalema.app.data.PoopRecord
 import com.lalema.app.ui.navigation.Screen
 import com.lalema.app.ui.theme.Green500
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassStatCard
 import com.lalema.app.ui.theme.WarmOrange500
 import com.lalema.app.ui.theme.Brown500
 import com.lalema.app.ui.theme.Brown600
@@ -78,13 +87,16 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.95f else 1f,
-        animationSpec = tween(durationMillis = 150),
+        targetValue = if (pressed) 0.92f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
         label = "buttonScale"
     )
+    var showContent by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadTodayStatus()
+        delay(100)
+        showContent = true
     }
 
     PoopRecordForm(
@@ -102,13 +114,14 @@ fun HomeScreen(
                     Text(
                         text = "拉了吗",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp
+                        fontSize = 20.sp
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                ),
+                modifier = Modifier.height(48.dp)
             )
         }
     ) { innerPadding ->
@@ -121,52 +134,68 @@ fun HomeScreen(
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "今天感觉如何？",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center
-            )
+            AnimatedVisibility(
+                visible = showContent,
+                enter = fadeIn(animationSpec = tween(600)) + slideInVertically(
+                    animationSpec = tween(600),
+                    initialOffsetY = { -30 }
+                )
+            ) {
+                Text(
+                    text = "今天感觉如何？",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center
+                )
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Box(
-                modifier = Modifier
-                    .size(180.dp)
-                    .scale(scale)
-                    .shadow(16.dp, CircleShape, spotColor = Brown500.copy(alpha = 0.4f))
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(Brown500, Brown600)
-                        )
-                    )
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        pressed = true
-                        viewModel.showRecordForm()
-                    },
-                contentAlignment = Alignment.Center
+            AnimatedVisibility(
+                visible = showContent,
+                enter = fadeIn(animationSpec = tween(800, delayMillis = 200)) + slideInVertically(
+                    animationSpec = tween(800, delayMillis = 200),
+                    initialOffsetY = { 50 }
+                )
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Box(
+                    modifier = Modifier
+                        .size(180.dp)
+                        .scale(scale)
+                        .shadow(20.dp, CircleShape, spotColor = Brown500.copy(alpha = 0.3f))
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(Brown500, Brown600)
+                            )
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            pressed = true
+                            viewModel.showRecordForm()
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "记录",
-                        color = Color.White,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "记录",
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
@@ -179,118 +208,114 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            AnimatedVisibility(
+                visible = showContent,
+                enter = fadeIn(animationSpec = tween(800, delayMillis = 400)) + slideInVertically(
+                    animationSpec = tween(800, delayMillis = 400),
+                    initialOffsetY = { 30 }
+                )
             ) {
-                StatCardLarge(
-                    icon = Icons.Default.LocalFireDepartment,
-                    value = "${uiState.streak}",
-                    label = "连续打卡",
-                    iconTint = WarmOrange500,
-                    modifier = Modifier.weight(1f)
-                )
-                StatCardLarge(
-                    icon = Icons.Default.TagFaces,
-                    value = "${uiState.monthCount}",
-                    label = "本月次数",
-                    iconTint = Brown500,
-                    modifier = Modifier.weight(1f)
-                )
-                StatCardLarge(
-                    icon = Icons.Default.PieChart,
-                    value = "${(uiState.monthRate * 100).toInt()}%",
-                    label = "打卡率",
-                    iconTint = Green500,
-                    modifier = Modifier.weight(1f)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    LiquidGlassStatCard(
+                        value = "${uiState.streak}",
+                        label = "连续打卡",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.LocalFireDepartment,
+                                contentDescription = null,
+                                tint = WarmOrange500,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                    LiquidGlassStatCard(
+                        value = "${uiState.monthCount}",
+                        label = "本月次数",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.TagFaces,
+                                contentDescription = null,
+                                tint = Brown500,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                    LiquidGlassStatCard(
+                        value = "${(uiState.monthRate * 100).toInt()}%",
+                        label = "打卡率",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.PieChart,
+                                contentDescription = null,
+                                tint = Green500,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            LiquidGlassCard(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    navController.navigate(Screen.Calendar.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
+            AnimatedVisibility(
+                visible = showContent,
+                enter = fadeIn(animationSpec = tween(800, delayMillis = 600)) + slideInVertically(
+                    animationSpec = tween(800, delayMillis = 600),
+                    initialOffsetY = { 30 }
+                )
             ) {
-                Row(
+                LiquidGlassCard(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    onClick = {
+                        navController.navigate(Screen.Calendar.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "查看日历",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "查看日历",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
 
-            if (uiState.todayRecords.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(24.dp))
-                TodayRecordsSection(records = uiState.todayRecords)
+            AnimatedVisibility(
+                visible = showContent && uiState.todayRecords.isNotEmpty(),
+                enter = expandVertically(animationSpec = tween(600, delayMillis = 800)) + fadeIn(animationSpec = tween(600, delayMillis = 800)),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    TodayRecordsSection(records = uiState.todayRecords)
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-        }
-    }
-}
-
-@Composable
-private fun StatCardLarge(
-    icon: ImageVector,
-    value: String,
-    label: String,
-    iconTint: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
