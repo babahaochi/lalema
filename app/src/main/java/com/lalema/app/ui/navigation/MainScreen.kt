@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -23,6 +24,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.lalema.app.ui.calendar.CalendarScreen
 import com.lalema.app.ui.home.HomeScreen
+import com.lalema.app.ui.settings.SettingsScreen
 
 private data class BottomNavItem(
     val label: String,
@@ -32,7 +34,8 @@ private data class BottomNavItem(
 
 private val bottomNavItems = listOf(
     BottomNavItem("主页", Icons.Filled.Home, Screen.Home.route),
-    BottomNavItem("日历", Icons.Filled.CalendarMonth, Screen.Calendar.route)
+    BottomNavItem("日历", Icons.Filled.CalendarMonth, Screen.Calendar.route),
+    BottomNavItem("设置", Icons.Filled.Settings, Screen.Settings.route)
 )
 
 @Composable
@@ -77,6 +80,17 @@ fun MainScreen() {
                 }
                 composable(Screen.Calendar.route) {
                     CalendarScreen(navController)
+                }
+                composable(Screen.Settings.route) {
+                    SettingsScreen(onBack = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    })
                 }
             }
         }
