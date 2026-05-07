@@ -7,11 +7,23 @@
 ## [Unreleased]
 
 ### Added
-- 项目初始化
-- 每日拉屎打卡功能
-- 连续打卡天数统计
-- 日历视图查看历史记录
-- 补打卡功能
+- [新增] 功能X
+- [新增] 功能Y
+
+### Changed
+- [改进] 优化打卡体验
+
+### Fixed
+- [修复] 已知bug
+
+## [1.1.0] - Development
+
+### Added
+- 准备开发新版本
+
+### Changed
+
+### Fixed
 
 ### Changed
 
