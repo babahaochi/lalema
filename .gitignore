@@ -1,0 +1,40 @@
+# Gradle files
+.gradle/
+gradle-local/
+build/
+*.gradle/
+
+# Android build outputs
+app/build/
+*.apk
+*.ap_
+
+# Signing keys
+*.jks
+*.keystore
+
+# Local configuration
+local.properties
+gradle.properties
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Compiled classes
+*.class
+
+# Logs
+*.log
+
+# SDK files
+android-sdk/
+
+# Downloaded dependencies
+*.zip
