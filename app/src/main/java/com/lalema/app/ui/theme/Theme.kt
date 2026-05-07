@@ -10,55 +10,72 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = Brown500,
+    primary = Brown600,
     onPrimary = Brown50,
     primaryContainer = Brown100,
     onPrimaryContainer = Brown900,
     secondary = WarmOrange500,
     onSecondary = Brown900,
-    secondaryContainer = WarmOrange200,
+    secondaryContainer = OrangeLight,
     onSecondaryContainer = Brown800,
-    tertiary = Brown700,
+    tertiary = Green600,
     onTertiary = Brown50,
-    tertiaryContainer = Brown200,
-    onTertiaryContainer = Brown800,
-    background = Brown50,
-    onBackground = Brown900,
-    surface = Brown50,
-    onSurface = Brown900,
+    tertiaryContainer = GreenLight,
+    onTertiaryContainer = Green700,
+    background = SurfaceLight,
+    onBackground = OnSurfaceLight,
+    surface = SurfaceLight,
+    onSurface = OnSurfaceLight,
     surfaceVariant = Brown100,
     onSurfaceVariant = Brown700,
-    outline = Brown400,
-    outlineVariant = Brown200
+    outline = OutlineLight,
+    outlineVariant = Brown200,
+    surfaceTint = Brown600,
+    inverseSurface = Brown900,
+    inverseOnSurface = Brown50,
+    inversePrimary = Brown300,
+    error = Color(0xFFBA1A1A),
+    onError = Color(0xFFFFFFFF),
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002)
 )
 
 private val DarkColorScheme = darkColorScheme(
     primary = Brown200,
-    onPrimary = Brown800,
-    primaryContainer = Brown600,
+    onPrimary = Brown900,
+    primaryContainer = Brown700,
     onPrimaryContainer = Brown100,
     secondary = WarmOrange400,
-    onSecondary = Brown800,
-    secondaryContainer = WarmOrange700,
+    onSecondary = Brown900,
+    secondaryContainer = Brown800,
     onSecondaryContainer = WarmOrange200,
-    tertiary = Brown300,
-    onTertiary = Brown700,
-    tertiaryContainer = Brown600,
-    onTertiaryContainer = Brown100,
-    background = Brown900,
-    onBackground = Brown50,
-    surface = Brown900,
-    onSurface = Brown50,
+    tertiary = Green400,
+    onTertiary = Brown900,
+    tertiaryContainer = Green700,
+    onTertiaryContainer = GreenLight,
+    background = SurfaceDark,
+    onBackground = OnSurfaceDark,
+    surface = SurfaceDark,
+    onSurface = OnSurfaceDark,
     surfaceVariant = Brown800,
     onSurfaceVariant = Brown200,
-    outline = Brown500,
-    outlineVariant = Brown700
+    outline = OutlineDark,
+    outlineVariant = Brown700,
+    surfaceTint = Brown200,
+    inverseSurface = Brown100,
+    inverseOnSurface = Brown900,
+    inversePrimary = Brown600,
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6)
 )
 
 @Composable

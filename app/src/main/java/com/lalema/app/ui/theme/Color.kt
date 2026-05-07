@@ -19,5 +19,25 @@ val WarmOrange500 = Color(0xFFFF9800)
 val WarmOrange700 = Color(0xFFF57C00)
 
 val Green500 = Color(0xFF4CAF50)
+val Green400 = Color(0xFF66BB6A)
 val Green600 = Color(0xFF43A047)
 val Green700 = Color(0xFF388E3C)
+
+val GreenLight = Color(0xFFE8F5E9)
+val OrangeLight = Color(0xFFFFF3E0)
+val BlueLight = Color(0xFFE3F2FD)
+val PurpleLight = Color(0xFFF3E5F5)
+
+val GlassWhite = Color(0x40FFFFFF)
+val GlassDark = Color(0x30000000)
+val GlassBorder = Color(0x30FFFFFF)
+val GlassBorderDark = Color(0x20000000)
+
+val SurfaceLight = Color(0xFFFAFAFA)
+val SurfaceDark = Color(0xFF121212)
+
+val OnSurfaceLight = Color(0xFF1C1B1F)
+val OnSurfaceDark = Color(0xFFE6E1E5)
+
+val OutlineLight = Color(0xFF79747E)
+val OutlineDark = Color(0xFF938F99)

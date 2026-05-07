@@ -16,12 +16,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.TagFaces
@@ -29,7 +31,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,10 +45,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -55,8 +58,15 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import com.lalema.app.data.PoopColor
+import com.lalema.app.data.PoopConsistency
+import com.lalema.app.data.PoopRecord
 import com.lalema.app.ui.navigation.Screen
-import com.lalema.app.ui.theme.*
+import com.lalema.app.ui.theme.Green500
+import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.WarmOrange500
+import com.lalema.app.ui.theme.Brown500
+import com.lalema.app.ui.theme.Brown600
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,8 +78,8 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.9f else 1f,
-        animationSpec = tween(durationMillis = 100),
+        targetValue = if (pressed) 0.95f else 1f,
+        animationSpec = tween(durationMillis = 150),
         label = "buttonScale"
     )
 
@@ -91,7 +101,8 @@ fun HomeScreen(
                 title = {
                     Text(
                         text = "拉了吗",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -106,29 +117,30 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "今天拉了吗？",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                text = "今天感觉如何？",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Box(
                 modifier = Modifier
-                    .size(200.dp)
+                    .size(180.dp)
                     .scale(scale)
-                    .shadow(12.dp, CircleShape)
+                    .shadow(16.dp, CircleShape, spotColor = Brown500.copy(alpha = 0.4f))
+                    .clip(CircleShape)
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(Brown500, Brown700)
-                        ),
-                        shape = CircleShape
+                            colors = listOf(Brown500, Brown600)
+                        )
                     )
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -146,12 +158,13 @@ fun HomeScreen(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(48.dp)
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "记录",
                         color = Color.White,
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -159,125 +172,182 @@ fun HomeScreen(
 
             LaunchedEffect(pressed) {
                 if (pressed) {
-                    delay(100)
+                    delay(150)
                     pressed = false
                 }
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                StatCard(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.LocalFireDepartment,
-                            contentDescription = null,
-                            tint = WarmOrange500,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    },
-                    value = "${uiState.streak}天",
-                    label = "连续打卡"
+                StatCardLarge(
+                    icon = Icons.Default.LocalFireDepartment,
+                    value = "${uiState.streak}",
+                    label = "连续打卡",
+                    iconTint = WarmOrange500,
+                    modifier = Modifier.weight(1f)
                 )
-                StatCard(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.TagFaces,
-                            contentDescription = null,
-                            tint = Brown500,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    },
-                    value = "${uiState.monthCount}次",
-                    label = "本月次数"
+                StatCardLarge(
+                    icon = Icons.Default.TagFaces,
+                    value = "${uiState.monthCount}",
+                    label = "本月次数",
+                    iconTint = Brown500,
+                    modifier = Modifier.weight(1f)
                 )
-                StatCard(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.PieChart,
-                            contentDescription = null,
-                            tint = Green500,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    },
+                StatCardLarge(
+                    icon = Icons.Default.PieChart,
                     value = "${(uiState.monthRate * 100).toInt()}%",
-                    label = "本月打卡率"
+                    label = "打卡率",
+                    iconTint = Green500,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Row(
-                modifier = Modifier
-                    .clickable {
-                        navController.navigate(Screen.Calendar.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
+            LiquidGlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    navController.navigate(Screen.Calendar.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
                         }
+                        launchSingleTop = true
+                        restoreState = true
                     }
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                }
             ) {
-                Icon(
-                    imageVector = Icons.Default.CalendarMonth,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "查看日历",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "查看日历",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            if (uiState.todayRecords.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                TodayRecordsSection(records = uiState.todayRecords)
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun StatCardLarge(
+    icon: ImageVector,
+    value: String,
+    label: String,
+    iconTint: Color,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodayRecordsSection(records: List<PoopRecord>) {
+    LiquidGlassCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column {
+            Text(
+                text = "今日记录",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            records.forEachIndexed { index, record ->
+                if (index > 0) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                RecordItem(record = record)
             }
         }
     }
 }
 
 @Composable
-private fun StatCard(
-    icon: @Composable () -> Unit,
-    value: String,
-    label: String
-) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Brown100,
-            contentColor = Brown900
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.width(105.dp)
+private fun RecordItem(record: PoopRecord) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            icon()
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = label,
-                fontSize = 12.sp,
-                color = Brown500,
-                textAlign = TextAlign.Center
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.AccessTime,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "${record.timeHour}:${String.format("%02d", record.timeMinute)}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = PoopConsistency.valueOf(record.consistency).displayName,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = PoopColor.valueOf(record.color).displayName,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
