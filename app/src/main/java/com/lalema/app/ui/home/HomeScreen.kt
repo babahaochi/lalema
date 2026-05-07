@@ -53,15 +53,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import com.lalema.app.ui.navigation.Screen
-import com.lalema.app.ui.theme.Brown500
-import com.lalema.app.ui.theme.Brown700
-import com.lalema.app.ui.theme.Brown100
-import com.lalema.app.ui.theme.Brown900
-import com.lalema.app.ui.theme.Green500
-import com.lalema.app.ui.theme.Green700
-import com.lalema.app.ui.theme.WarmOrange500
+import com.lalema.app.ui.theme.*
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -218,7 +213,13 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .clickable {
-                        navController.navigate(Screen.Calendar.route)
+                        navController.navigate(Screen.Calendar.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
