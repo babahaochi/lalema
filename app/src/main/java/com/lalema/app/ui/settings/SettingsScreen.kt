@@ -78,6 +78,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -275,12 +276,17 @@ fun SettingsScreen(
                     onClick = {
                         isCheckingUpdate = true
                         scope.launch {
-                            val info = checkForUpdate()
-                            isCheckingUpdate = false
-                            if (info != null) {
-                                updateDialogInfo = info
-                            } else {
-                                Toast.makeText(context, "已是最新版本", Toast.LENGTH_SHORT).show()
+                            try {
+                                val info = checkForUpdate()
+                                isCheckingUpdate = false
+                                if (info != null) {
+                                    updateDialogInfo = info
+                                } else {
+                                    Toast.makeText(context, "已是最新版本", Toast.LENGTH_SHORT).show()
+                                }
+                            } catch (_: Exception) {
+                                isCheckingUpdate = false
+                                Toast.makeText(context, "检查更新失败，请稍后重试", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -389,8 +395,11 @@ private suspend fun checkForUpdate(): UpdateInfo? {
             connection.setRequestProperty("User-Agent", "LaLeMa-Android")
             connection.connectTimeout = 5000
             connection.readTimeout = 5000
+            connection.instanceFollowRedirects = true
 
-            val response = connection.inputStream.bufferedReader().readText()
+            val responseCode = connection.responseCode
+            val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
+            val response = stream?.bufferedReader()?.readText() ?: throw IOException("Empty response")
             val json = JSONObject(response)
             val tagName = json.getString("tag_name")
             val htmlUrl = json.getString("html_url")
@@ -404,6 +413,8 @@ private suspend fun checkForUpdate(): UpdateInfo? {
             } else {
                 null
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (_: Exception) {
             null
         }
