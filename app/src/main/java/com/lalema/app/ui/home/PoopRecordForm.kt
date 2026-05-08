@@ -4,7 +4,7 @@ import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.lalema.app.ui.theme.LocalIsDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,7 +81,7 @@ fun PoopRecordForm(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     var timeHour by remember { mutableIntStateOf(java.time.LocalTime.now().hour) }
     var timeMinute by remember { mutableIntStateOf(java.time.LocalTime.now().minute) }
     var selectedAmount by remember { mutableStateOf(PoopAmount.NORMAL.name) }
@@ -320,7 +320,7 @@ private fun GlassTimeCard(
     timeMinute: Int,
     onClick: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val shape = RoundedCornerShape(16.dp)
 
     val glassBg = if (isDark) {
@@ -389,7 +389,7 @@ fun ChoiceChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val shape = RoundedCornerShape(10.dp)
 
     val bgColor = if (selected) {

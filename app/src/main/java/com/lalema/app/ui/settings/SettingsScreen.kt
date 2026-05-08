@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.lalema.app.ui.theme.LocalIsDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -313,7 +313,7 @@ fun SettingsScreen(
 
 @Composable
 private fun LiquidGlassDividerThin() {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -337,7 +337,7 @@ private fun SwitchButton(
     onCheckedChange: (Boolean) -> Unit
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
 
     val bgColor = if (checked) {
         if (isDark) primaryColor.copy(alpha = 0.35f) else primaryColor.copy(alpha = 0.25f)
@@ -491,7 +491,7 @@ private fun SettingItem(
     icon: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val modifier = if (onClick != null) {
         Modifier
             .fillMaxWidth()

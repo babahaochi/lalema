@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.lalema.app.ui.navigation.MainScreen
 import com.lalema.app.ui.theme.GlassBackground
-import androidx.compose.runtime.Composable
 import com.lalema.app.ui.theme.LaLeMaTheme
 import com.lalema.app.ui.theme.LocalThemeSettings
 import com.lalema.app.ui.theme.ThemePreferences
@@ -34,30 +33,21 @@ class MainActivity : ComponentActivity() {
             var themeKey by remember { mutableIntStateOf(0) }
 
             CompositionLocalProvider(LocalThemeSettings provides themeSettings) {
-                KeyedTheme(
-                    themeKey = themeKey,
-                    themeSettings = themeSettings,
-                    onThemeSettingsChanged = { newSettings ->
-                        themeSettings = newSettings
-                        themeKey++
-                        ThemePreferences.save(context, newSettings)
+                androidx.compose.runtime.key(themeKey) {
+                    LaLeMaTheme(themeSettings = themeSettings) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            GlassBackground()
+                            MainScreen(
+                                onThemeSettingsChanged = { newSettings ->
+                                    themeSettings = newSettings
+                                    themeKey++
+                                    ThemePreferences.save(context, newSettings)
+                                }
+                            )
+                        }
                     }
-                )
+                }
             }
-        }
-    }
-}
-
-@Composable
-private fun KeyedTheme(
-    themeKey: Int,
-    themeSettings: ThemeSettings,
-    onThemeSettingsChanged: (ThemeSettings) -> Unit
-) {
-    LaLeMaTheme(themeSettings = themeSettings) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            GlassBackground()
-            MainScreen(onThemeSettingsChanged = onThemeSettingsChanged)
         }
     }
 }

@@ -13,7 +13,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -41,7 +40,7 @@ import androidx.compose.material3.Text
 
 @Composable
 fun GlassBackground(modifier: Modifier = Modifier) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val infiniteTransition = rememberInfiniteTransition(label = "glassShimmer")
     val shimmerOffset by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -143,7 +142,7 @@ fun LiquidGlassCard(
     cornerRadius: Dp = 24.dp,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val shape = RoundedCornerShape(cornerRadius)
 
     val glassBg = if (isDark) {
@@ -188,7 +187,6 @@ fun LiquidGlassCard(
             .drawBehind {
                 val w = size.width
                 val h = size.height
-                // Top highlight - simulates light reflection on glass
                 drawRect(
                     brush = Brush.verticalGradient(
                         colors = listOf(
@@ -199,7 +197,6 @@ fun LiquidGlassCard(
                         endY = h * 0.25f
                     )
                 )
-                // Left edge highlight
                 drawRect(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
@@ -231,7 +228,7 @@ fun LiquidGlassButton(
         label = "buttonScale"
     )
 
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
     val glassBg = if (isDark) {
@@ -296,7 +293,7 @@ fun LiquidGlassStatCard(
     modifier: Modifier = Modifier,
     icon: @Composable (() -> Unit)? = null
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val shape = RoundedCornerShape(20.dp)
 
     val glassBg = if (isDark) {
@@ -324,7 +321,6 @@ fun LiquidGlassStatCard(
             .drawBehind {
                 val w = size.width
                 val h = size.height
-                // Top highlight
                 drawRect(
                     brush = Brush.verticalGradient(
                         colors = listOf(
@@ -335,7 +331,6 @@ fun LiquidGlassStatCard(
                         endY = h * 0.30f
                     )
                 )
-                // Left edge highlight
                 drawRect(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
@@ -372,7 +367,7 @@ fun LiquidGlassStatCard(
 
 @Composable
 fun LiquidGlassDivider(modifier: Modifier = Modifier) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val color = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.30f)
 
     Box(
@@ -398,7 +393,7 @@ fun LiquidGlassSurface(
     cornerRadius: Dp = 24.dp,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val shape = RoundedCornerShape(cornerRadius)
 
     val glassBg = if (isDark) {

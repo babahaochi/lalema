@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -41,6 +42,8 @@ object ThemePreferences {
 }
 
 val LocalThemeSettings = compositionLocalOf { ThemeSettings() }
+
+val LocalIsDarkTheme = compositionLocalOf { false }
 
 private fun buildLightScheme(preset: ColorPreset) = lightColorScheme(
     primary = preset.primaryLight,
@@ -108,9 +111,11 @@ fun LaLeMaTheme(
 
     val colorScheme = if (isDark) buildDarkScheme(preset) else buildLightScheme(preset)
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalIsDarkTheme provides isDark) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

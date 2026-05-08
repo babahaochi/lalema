@@ -14,7 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.lalema.app.ui.theme.LocalIsDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -92,7 +92,7 @@ fun HomeScreen(
         label = "buttonScale"
     )
     var showContent by remember { mutableStateOf(false) }
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val isHomeActive = navBackStackEntry?.destination?.route == Screen.Home.route
