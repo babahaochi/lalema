@@ -95,6 +95,7 @@ private fun buildDarkScheme(preset: ColorPreset) = darkColorScheme(
 @Composable
 fun LaLeMaTheme(
     themeSettings: ThemeSettings = ThemeSettings(),
+    key: Int = 0,
     content: @Composable () -> Unit
 ) {
     val presetIndex = themeSettings.colorSchemeIndex.coerceIn(0, colorPresets.size - 1)

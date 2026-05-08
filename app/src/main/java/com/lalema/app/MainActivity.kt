@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -18,6 +19,7 @@ import com.lalema.app.ui.theme.GlassBackground
 import com.lalema.app.ui.theme.LaLeMaTheme
 import com.lalema.app.ui.theme.LocalThemeSettings
 import com.lalema.app.ui.theme.ThemePreferences
+import com.lalema.app.ui.theme.ThemeSettings
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -28,14 +30,19 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             var themeSettings by remember { mutableStateOf(ThemePreferences.load(context)) }
+            var themeKey by remember { mutableIntStateOf(0) }
 
             CompositionLocalProvider(LocalThemeSettings provides themeSettings) {
-                LaLeMaTheme(themeSettings = themeSettings) {
+                LaLeMaTheme(
+                    themeSettings = themeSettings,
+                    key = themeKey
+                ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         GlassBackground()
                         MainScreen(
                             onThemeSettingsChanged = { newSettings ->
                                 themeSettings = newSettings
+                                themeKey++
                                 ThemePreferences.save(context, newSettings)
                             }
                         )

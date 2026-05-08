@@ -234,7 +234,7 @@ fun CalendarScreen(
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(7),
-                        modifier = Modifier.height(280.dp),
+                        modifier = Modifier.height(320.dp),
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
