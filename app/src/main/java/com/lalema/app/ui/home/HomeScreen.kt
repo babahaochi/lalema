@@ -172,13 +172,9 @@ fun HomeScreen(
                     modifier = Modifier
                         .size(180.dp)
                         .scale(scale)
-                        .shadow(20.dp, CircleShape, spotColor = PrimaryLight.copy(alpha = 0.3f))
+                        .shadow(6.dp, CircleShape)
                         .clip(CircleShape)
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(PrimaryLight, SecondaryLight)
-                            )
-                        )
+                        .background(MaterialTheme.colorScheme.surface)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -194,13 +190,13 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "记录",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
