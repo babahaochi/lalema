@@ -78,7 +78,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -274,19 +273,21 @@ fun SettingsScreen(
                     subtitle = "当前版本 v${BuildConfig.VERSION_NAME}",
                     icon = Icons.Default.Update,
                     onClick = {
+                        if (isCheckingUpdate) return@SettingClickableItem
                         isCheckingUpdate = true
                         scope.launch {
-                            try {
-                                val info = checkForUpdate()
-                                isCheckingUpdate = false
-                                if (info != null) {
-                                    updateDialogInfo = info
-                                } else {
-                                    Toast.makeText(context, "已是最新版本", Toast.LENGTH_SHORT).show()
-                                }
+                            val info = try {
+                                checkForUpdate()
                             } catch (_: Exception) {
-                                isCheckingUpdate = false
-                                Toast.makeText(context, "检查更新失败，请稍后重试", Toast.LENGTH_SHORT).show()
+                                null
+                            }
+                            isCheckingUpdate = false
+                            if (info != null) {
+                                updateDialogInfo = info
+                            } else {
+                                try {
+                                    Toast.makeText(context, "已是最新版本", Toast.LENGTH_SHORT).show()
+                                } catch (_: Exception) {}
                             }
                         }
                     }
@@ -388,19 +389,23 @@ private data class UpdateInfo(
 
 private suspend fun checkForUpdate(): UpdateInfo? {
     return withContext(Dispatchers.IO) {
+        var connection: HttpURLConnection? = null
         try {
             val url = URL("https://api.github.com/repos/babahaochi/lalema/releases/latest")
-            val connection = url.openConnection() as HttpURLConnection
+            connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
             connection.setRequestProperty("Accept", "application/vnd.github+json")
             connection.setRequestProperty("User-Agent", "LaLeMa-Android")
-            connection.connectTimeout = 5000
-            connection.readTimeout = 5000
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
             connection.instanceFollowRedirects = true
+            connection.connect()
 
-            val responseCode = connection.responseCode
-            val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
-            val response = stream?.bufferedReader()?.readText() ?: throw IOException("Empty response")
-            val json = JSONObject(response)
+            val code = connection.responseCode
+            if (code != 200) return@withContext null
+
+            val text = connection.inputStream.bufferedReader().use { it.readText() }
+            val json = JSONObject(text)
             val tagName = json.getString("tag_name")
             val htmlUrl = json.getString("html_url")
             val body = json.optString("body", "")
@@ -413,10 +418,10 @@ private suspend fun checkForUpdate(): UpdateInfo? {
             } else {
                 null
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
         } catch (_: Exception) {
             null
+        } finally {
+            connection?.disconnect()
         }
     }
 }

@@ -75,9 +75,9 @@ fun LiquidGlassCard(
             ),
         shape = RoundedCornerShape(cornerRadius),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDark) SurfaceDark.copy(alpha = 0.6f) else SurfaceLight.copy(alpha = 0.7f)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(
             modifier = Modifier
@@ -171,53 +171,33 @@ fun LiquidGlassStatCard(
     modifier: Modifier = Modifier,
     icon: @Composable (() -> Unit)? = null
 ) {
-    val isDark = isSystemInDarkTheme()
-    val glassBg = if (isDark) Color(0x15FFFFFF) else Color(0x30FFFFFF)
-    val borderColor = if (isDark) Color(0x18FFFFFF) else Color(0x40FFFFFF)
-
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDark) SurfaceDark.copy(alpha = 0.5f) else SurfaceLight.copy(alpha = 0.6f)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            glassBg.copy(alpha = 0.5f),
-                            glassBg.copy(alpha = 0.2f)
-                        )
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    color = borderColor.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(16.dp)
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                icon?.invoke()
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(4.dp))
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            icon?.invoke()
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(4.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
