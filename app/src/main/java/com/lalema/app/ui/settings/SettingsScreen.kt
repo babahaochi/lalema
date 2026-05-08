@@ -74,9 +74,11 @@ import com.lalema.app.ui.theme.LocalThemeSettings
 import com.lalema.app.ui.theme.ThemeMode
 import com.lalema.app.ui.theme.ThemeSettings
 import com.lalema.app.ui.theme.colorPresets
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -276,18 +278,22 @@ fun SettingsScreen(
                         if (isCheckingUpdate) return@SettingClickableItem
                         isCheckingUpdate = true
                         scope.launch {
-                            val info = try {
-                                checkForUpdate()
-                            } catch (_: Exception) {
-                                null
-                            }
-                            isCheckingUpdate = false
-                            if (info != null) {
-                                updateDialogInfo = info
-                            } else {
-                                try {
+                            try {
+                                val info = withTimeoutOrNull(15000L) {
+                                    checkForUpdate()
+                                }
+                                isCheckingUpdate = false
+                                if (info != null) {
+                                    updateDialogInfo = info
+                                } else {
                                     Toast.makeText(context, "已是最新版本", Toast.LENGTH_SHORT).show()
-                                } catch (_: Exception) {}
+                                }
+                            } catch (e: CancellationException) {
+                                isCheckingUpdate = false
+                                throw e
+                            } catch (_: Throwable) {
+                                isCheckingUpdate = false
+                                Toast.makeText(context, "检查更新失败，请稍后重试", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -394,12 +400,11 @@ private suspend fun checkForUpdate(): UpdateInfo? {
             val url = URL("https://api.github.com/repos/babahaochi/lalema/releases/latest")
             connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
-            connection.setRequestProperty("Accept", "application/vnd.github+json")
-            connection.setRequestProperty("User-Agent", "LaLeMa-Android")
             connection.connectTimeout = 10000
             connection.readTimeout = 10000
+            connection.setRequestProperty("Accept", "application/vnd.github+json")
+            connection.setRequestProperty("User-Agent", "LaLeMa-Android")
             connection.instanceFollowRedirects = true
-            connection.connect()
 
             val code = connection.responseCode
             if (code != 200) return@withContext null
@@ -418,10 +423,12 @@ private suspend fun checkForUpdate(): UpdateInfo? {
             } else {
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
             null
         } finally {
-            connection?.disconnect()
+            try { connection?.disconnect() } catch (_: Throwable) {}
         }
     }
 }
