@@ -41,24 +41,6 @@ fun LiquidGlassCard(
 ) {
     val isDark = isSystemInDarkTheme()
 
-    val glassBackground = if (isDark) {
-        Color(0x18FFFFFF)
-    } else {
-        Color(0x40FFFFFF)
-    }
-
-    val glassBorder = if (isDark) {
-        Color(0x20FFFFFF)
-    } else {
-        Color(0x50FFFFFF)
-    }
-
-    val glassHighlight = if (isDark) {
-        Color(0x08FFFFFF)
-    } else {
-        Color(0x60FFFFFF)
-    }
-
     val clickableModifier = if (onClick != null) {
         Modifier.clickable { onClick() }
     } else {
@@ -81,24 +63,6 @@ fun LiquidGlassCard(
     ) {
         Box(
             modifier = Modifier
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            glassBackground.copy(alpha = 0.4f),
-                            glassBackground.copy(alpha = 0.1f)
-                        )
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            glassBorder.copy(alpha = 0.6f),
-                            glassBorder.copy(alpha = 0.2f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(cornerRadius)
-                )
                 .padding(20.dp),
             content = content
         )
