@@ -11,8 +11,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +28,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
@@ -35,8 +36,6 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.TagFaces
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,11 +53,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -74,10 +74,8 @@ import com.lalema.app.ui.navigation.Screen
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LiquidGlassStatCard
 import com.lalema.app.ui.theme.PrimaryLight
-import com.lalema.app.ui.theme.SecondaryLight
 import com.lalema.app.ui.theme.TertiaryLight
 import com.lalema.app.ui.theme.SuccessLight
-import com.lalema.app.ui.theme.WarningLight
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,11 +87,12 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.92f else 1f,
+        targetValue = if (pressed) 0.90f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
         label = "buttonScale"
     )
     var showContent by remember { mutableStateOf(false) }
+    val isDark = isSystemInDarkTheme()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val isHomeActive = navBackStackEntry?.destination?.route == Screen.Home.route
@@ -132,13 +131,13 @@ fun HomeScreen(
                 ),
                 modifier = Modifier.height(48.dp)
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -168,13 +167,69 @@ fun HomeScreen(
                     initialOffsetY = { 50 }
                 )
             ) {
+                val primaryColor = MaterialTheme.colorScheme.primary
+                val buttonShape = CircleShape
+
+                val glassBg = if (isDark) {
+                    Brush.radialGradient(
+                        colors = listOf(
+                            primaryColor.copy(alpha = 0.25f),
+                            primaryColor.copy(alpha = 0.10f),
+                            Color.White.copy(alpha = 0.05f)
+                        )
+                    )
+                } else {
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.70f),
+                            primaryColor.copy(alpha = 0.12f),
+                            Color.White.copy(alpha = 0.50f)
+                        )
+                    )
+                }
+
+                val borderColor = if (isDark) {
+                    primaryColor.copy(alpha = 0.35f)
+                } else {
+                    Color.White.copy(alpha = 0.80f)
+                }
+
                 Box(
                     modifier = Modifier
                         .size(180.dp)
                         .scale(scale)
-                        .shadow(6.dp, CircleShape)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface)
+                        .shadow(
+                            elevation = 16.dp,
+                            shape = buttonShape,
+                            spotColor = primaryColor.copy(alpha = 0.2f)
+                        )
+                        .clip(buttonShape)
+                        .background(brush = glassBg)
+                        .border(width = 1.5.dp, color = borderColor, shape = buttonShape)
+                        .drawBehind {
+                            val h = size.height
+                            val w = size.width
+                            drawRect(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = if (isDark) 0.08f else 0.40f),
+                                        Color.Transparent
+                                    ),
+                                    startY = 0f,
+                                    endY = h * 0.35f
+                                )
+                            )
+                            drawRect(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = if (isDark) 0.04f else 0.20f),
+                                        Color.Transparent
+                                    ),
+                                    center = Offset(w * 0.35f, h * 0.2f),
+                                    radius = w * 0.5f
+                                )
+                            )
+                        }
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null

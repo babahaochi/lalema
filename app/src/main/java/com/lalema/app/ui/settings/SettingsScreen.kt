@@ -1,13 +1,11 @@
 package com.lalema.app.ui.settings
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Icon
-import android.os.Build
+import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,30 +29,24 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Update
-import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,577 +55,534 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.lalema.app.BuildConfig
+import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LocalThemeSettings
 import com.lalema.app.ui.theme.ThemeMode
-import com.lalema.app.ui.theme.ThemeSettings
+import com.lalema.app.ui.theme.ThemePreferences
 import com.lalema.app.ui.theme.colorPresets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
+import org.json.JSONArray
 import java.net.HttpURLConnection
 import java.net.URL
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+data class UpdateInfo(
+    val tagName: String,
+    val body: String,
+    val htmlUrl: String,
+    val publishedAt: String,
+    val versionCode: Long,
+    val isForceUpdate: Boolean
+)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit = {},
-    onThemeSettingsChanged: (ThemeSettings) -> Unit = {}
+    navController: NavHostController,
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val currentSettings = LocalThemeSettings.current
-    val isSystemDark = isSystemInDarkTheme()
-
-    var calendarReminderEnabled by remember { mutableStateOf(false) }
-    var calendarReminderHour by remember { mutableStateOf(8) }
-    var calendarReminderMinute by remember { mutableStateOf(0) }
-    var liveActivityEnabled by remember { mutableStateOf(false) }
-
+    val scope = rememberCoroutineScope()
     var isCheckingUpdate by remember { mutableStateOf(false) }
     var updateDialogInfo by remember { mutableStateOf<UpdateInfo?>(null) }
 
-    LaunchedEffect(Unit) {
-        val prefs = context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
-        calendarReminderEnabled = prefs.getBoolean("calendar_reminder_enabled", false)
-        calendarReminderHour = prefs.getInt("calendar_reminder_hour", 8)
-        calendarReminderMinute = prefs.getInt("calendar_reminder_minute", 0)
-        liveActivityEnabled = prefs.getBoolean("live_activity_enabled", false)
-    }
+    val reminderEnabled by viewModel.reminderEnabled.collectAsState()
+    val reminderHour by viewModel.reminderHour.collectAsState()
+    val reminderMinute by viewModel.reminderMinute.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-            }
-            Text(
-                text = "设置",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        SettingsSection(title = "外观", icon = Icons.Default.Palette) {
-            Text(
-                text = "主题模式",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                ThemeMode.entries.forEach { mode ->
-                    val label = when (mode) {
-                        ThemeMode.SYSTEM -> "跟随系统"
-                        ThemeMode.LIGHT -> "浅色"
-                        ThemeMode.DARK -> "深色"
-                    }
-                    FilterChip(
-                        selected = currentSettings.themeMode == mode,
-                        onClick = {
-                            onThemeSettingsChanged(currentSettings.copy(themeMode = mode))
-                        },
-                        label = { Text(label, fontSize = 13.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = Color.White
+    updateDialogInfo?.let { info ->
+        AlertDialog(
+            onDismissRequest = { updateDialogInfo = null },
+            title = {
+                Text(
+                    "发现新版本 ${info.tagName}",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Column {
+                    if (info.body.isNotBlank()) {
+                        Text(
+                            text = info.body,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                    Text(
+                        text = "发布时间：${info.publishedAt}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline
                     )
                 }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.htmlUrl))
+                    context.startActivity(intent)
+                    updateDialogInfo = null
+                }) {
+                    Text("前往下载", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { updateDialogInfo = null }) {
+                    Text("稍后提醒")
+                }
             }
+        )
+    }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "配色方案",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "设置",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                ),
+                modifier = Modifier.height(48.dp)
             )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                colorPresets.forEachIndexed { index, preset ->
-                    ColorSchemeChip(
-                        name = preset.name,
-                        color = preset.primaryLight,
-                        selected = currentSettings.colorSchemeIndex == index,
-                        darkColor = preset.primaryDark,
-                        isDark = currentSettings.themeMode == ThemeMode.DARK ||
-                                (currentSettings.themeMode == ThemeMode.SYSTEM && isSystemDark),
+        },
+        containerColor = Color.Transparent
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            SettingsSection(title = "提醒设置") {
+                SettingItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    title = "每日提醒",
+                    subtitle = if (reminderEnabled) "提醒时间：${reminderHour}:${String.format("%02d", reminderMinute)}" else "已关闭",
+                    trailing = {
+                        SwitchButton(
+                            checked = reminderEnabled,
+                            onCheckedChange = { viewModel.toggleReminder() }
+                        )
+                    }
+                )
+
+                if (reminderEnabled) {
+                    SettingItem(
+                        title = "提醒时间",
+                        subtitle = "${reminderHour}:${String.format("%02d", reminderMinute)}",
                         onClick = {
-                            onThemeSettingsChanged(currentSettings.copy(colorSchemeIndex = index))
+                            TimePickerDialog(
+                                context,
+                                { _, hour, minute ->
+                                    viewModel.setReminderTime(hour, minute)
+                                },
+                                reminderHour,
+                                reminderMinute,
+                                true
+                            ).show()
+                        }
+                    )
+
+                    SettingItem(
+                        title = "忽略电池优化",
+                        subtitle = "确保提醒在后台正常工作",
+                        onClick = {
+                            requestIgnoreBatteryOptimization(context)
                         }
                     )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        SettingsSection(title = "提醒", icon = Icons.Default.Notifications) {
-            SettingSwitchItem(
-                title = "日历提醒",
-                subtitle = "在系统日历中创建每日提醒",
-                icon = Icons.Default.CalendarMonth,
-                checked = calendarReminderEnabled,
-                onCheckedChange = { enabled ->
-                    calendarReminderEnabled = enabled
-                    context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
-                        .edit().putBoolean("calendar_reminder_enabled", enabled).apply()
-
-                    if (enabled) {
-                        val reminderManager = com.lalema.app.reminder.ReminderManager(
-                            context,
-                            context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
-                        )
-                        reminderManager.createCalendarEvent(
-                            "每日排便提醒", "记得打卡记录哦~",
-                            calendarReminderHour, calendarReminderMinute
-                        )
-                        Toast.makeText(context, "日历提醒已设置", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
-
-            SettingSwitchItem(
-                title = "实况通知",
-                subtitle = "在通知栏显示连续打卡进度",
-                icon = Icons.Default.Widgets,
-                checked = liveActivityEnabled,
-                onCheckedChange = { enabled ->
-                    liveActivityEnabled = enabled
-                    context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
-                        .edit().putBoolean("live_activity_enabled", enabled).apply()
-
-                    if (enabled) {
-                        showStreakLiveNotification(context)
-                        Toast.makeText(context, "实况通知已开启", Toast.LENGTH_SHORT).show()
-                    } else {
-                        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                        nm.cancel(2)
-                    }
-                }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        SettingsSection(title = "关于", icon = Icons.Default.CheckCircle) {
-            SettingItem(
-                title = "版本",
-                subtitle = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (isCheckingUpdate) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
+            SettingsSection(title = "外观设置") {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Text(
+                        text = "深色模式",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("正在检查更新...", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        ThemeMode.entries.forEach { mode ->
+                            ThemeModeOption(
+                                mode = mode,
+                                selected = currentSettings.themeMode == mode,
+                                onClick = {
+                                    val newSettings = currentSettings.copy(themeMode = mode)
+                                    ThemePreferences.save(context, newSettings)
+                                    navController.currentBackStackEntry
+                                        ?.savedStateHandle
+                                        ?.set("theme_changed", true)
+                                }
+                            )
+                        }
+                    }
                 }
-            } else {
-                SettingClickableItem(
+
+                LiquidGlassDividerThin()
+
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Text(
+                        text = "主题颜色",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        colorPresets.forEachIndexed { index, preset ->
+                            ColorPresetOption(
+                                preset = preset,
+                                selected = currentSettings.colorSchemeIndex == index,
+                                onClick = {
+                                    val newSettings = currentSettings.copy(colorSchemeIndex = index)
+                                    ThemePreferences.save(context, newSettings)
+                                    navController.currentBackStackEntry
+                                        ?.savedStateHandle
+                                        ?.set("theme_changed", true)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            SettingsSection(title = "其他") {
+                SettingItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Update,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
                     title = "检查更新",
-                    subtitle = "当前版本 v${BuildConfig.VERSION_NAME}",
-                    icon = Icons.Default.Update,
+                    subtitle = if (isCheckingUpdate) "正在检查..." else "当前版本：${BuildConfig.VERSION_NAME}",
                     onClick = {
-                        isCheckingUpdate = true
-                        scope.launch {
-                            var result: UpdateInfo? = null
-                            var errorMsg: String? = null
-                            try {
-                                result = withContext(Dispatchers.IO) { fetchLatestRelease() }
-                            } catch (_: Throwable) {
-                                errorMsg = "检查更新失败，请稍后重试"
-                            }
-                            isCheckingUpdate = false
-                            when {
-                                result != null -> updateDialogInfo = result
-                                errorMsg != null -> Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-                                else -> Toast.makeText(context, "已是最新版本", Toast.LENGTH_SHORT).show()
+                        if (!isCheckingUpdate) {
+                            isCheckingUpdate = true
+                            scope.launch {
+                                val result = try {
+                                    withContext(Dispatchers.IO) { fetchLatestRelease() }
+                                } catch (_: Exception) {
+                                    null
+                                }
+                                isCheckingUpdate = false
+                                when {
+                                    result != null -> updateDialogInfo = result
+                                    else -> Toast.makeText(context, "检查更新失败", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
                     }
                 )
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(32.dp))
+@Composable
+private fun LiquidGlassDividerThin() {
+    val isDark = isSystemInDarkTheme()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.30f),
+                        Color.Transparent
+                    )
+                )
+            )
+            .height(1.dp)
+    )
+}
+
+@Composable
+private fun SwitchButton(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val isDark = isSystemInDarkTheme()
+
+    val bgColor = if (checked) {
+        if (isDark) primaryColor.copy(alpha = 0.35f) else primaryColor.copy(alpha = 0.25f)
+    } else {
+        if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.40f)
     }
 
-    if (updateDialogInfo != null) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { updateDialogInfo = null },
-            icon = { Icon(Icons.Default.Download, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text("发现新版本") },
-            text = {
-                Column {
-                    Text("新版本: ${updateDialogInfo!!.tagName}")
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("当前版本: v${BuildConfig.VERSION_NAME}", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (updateDialogInfo!!.body.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(updateDialogInfo!!.body, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(updateDialogInfo!!.htmlUrl))
-                            context.startActivity(intent)
-                        } catch (_: Exception) {
-                            Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
-                        }
-                        updateDialogInfo = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Text("前往下载")
-                }
-            },
-            dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { updateDialogInfo = null }) {
-                    Text("取消")
-                }
+    Box(
+        modifier = Modifier
+            .width(52.dp)
+            .height(28.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(bgColor)
+            .border(
+                width = 1.dp,
+                color = if (checked) primaryColor.copy(alpha = 0.4f) else
+                    if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.50f),
+                shape = RoundedCornerShape(14.dp)
+            )
+            .clickable { onCheckedChange(!checked) }
+            .padding(3.dp),
+        contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .size(22.dp)
+                .clip(CircleShape)
+                .background(if (checked) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant)
+        )
+    }
+}
+
+private fun requestIgnoreBatteryOptimization(context: Context) {
+    try {
+        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (!pm.isIgnoringBatteryOptimizations(context.packageName)) {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:${context.packageName}")
             }
+            context.startActivity(intent)
+        } else {
+            Toast.makeText(context, "已忽略电池优化", Toast.LENGTH_SHORT).show()
+        }
+    } catch (e: Exception) {
+        try {
+            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+            context.startActivity(intent)
+        } catch (e2: Exception) {
+            Toast.makeText(context, "请在电池设置中手动关闭优化", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
+@Composable
+private fun ThemeModeOption(
+    mode: ThemeMode,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val label = when (mode) {
+        ThemeMode.SYSTEM -> "跟随系统"
+        ThemeMode.LIGHT -> "浅色"
+        ThemeMode.DARK -> "深色"
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onClick,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = MaterialTheme.colorScheme.primary,
+                unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
     }
 }
 
 @Composable
-private fun ColorSchemeChip(
-    name: String,
-    color: Color,
-    darkColor: Color,
-    isDark: Boolean,
+private fun ColorPresetOption(
+    preset: com.lalema.app.ui.theme.ColorPreset,
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val displayColor = if (isDark) darkColor else color
-    Row(
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                if (selected) displayColor.copy(alpha = 0.12f)
-                else MaterialTheme.colorScheme.surface
-            )
-            .border(
-                width = if (selected) 2.dp else 1.dp,
-                color = if (selected) displayColor else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(8.dp)
-            )
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(16.dp)
+                .size(36.dp)
                 .clip(CircleShape)
-                .background(displayColor)
+                .background(preset.primaryLight)
+                .then(
+                    if (selected) Modifier
+                        .border(2.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
+                    else Modifier
+                )
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = name,
-            fontSize = 13.sp,
-            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
-            color = if (selected) displayColor else MaterialTheme.colorScheme.onSurface
+            text = preset.name,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
     }
-}
-
-private data class UpdateInfo(
-    val tagName: String,
-    val htmlUrl: String,
-    val body: String
-)
-
-private fun fetchLatestRelease(): UpdateInfo? {
-    val url = URL("https://api.github.com/repos/babahaochi/lalema/releases/latest")
-    val conn = url.openConnection() as HttpURLConnection
-    conn.connectTimeout = 10000
-    conn.readTimeout = 10000
-    conn.setRequestProperty("Accept", "application/vnd.github+json")
-    conn.setRequestProperty("User-Agent", "LaLeMa-Android")
-    conn.instanceFollowRedirects = true
-
-    val code = conn.responseCode
-    if (code != 200) return null
-
-    val text = conn.inputStream.bufferedReader().use { it.readText() }
-    val json = JSONObject(text)
-    val tagName = json.getString("tag_name")
-    val htmlUrl = json.getString("html_url")
-    val body = json.optString("body", "")
-
-    val latestVersion = tagName.removePrefix("v")
-    val currentVersion = BuildConfig.VERSION_NAME
-
-    return if (isNewerVersion(latestVersion, currentVersion)) {
-        UpdateInfo(tagName, htmlUrl, body.take(200))
-    } else {
-        null
-    }
-}
-
-private fun isNewerVersion(latest: String, current: String): Boolean {
-    val latestParts = latest.split(".").map { it.toIntOrNull() ?: 0 }
-    val currentParts = current.split(".").map { it.toIntOrNull() ?: 0 }
-    for (i in 0 until maxOf(latestParts.size, currentParts.size)) {
-        val l = latestParts.getOrElse(i) { 0 }
-        val c = currentParts.getOrElse(i) { 0 }
-        if (l > c) return true
-        if (l < c) return false
-    }
-    return false
-}
-
-private fun showStreakLiveNotification(context: Context) {
-    val channelId = "lalema_streak_channel"
-    val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val channel = NotificationChannel(
-            channelId,
-            "打卡进度",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "显示连续打卡进度"
-            setShowBadge(false)
-        }
-        nm.createNotificationChannel(channel)
-    }
-
-    val intent = try {
-        val clazz = Class.forName("com.lalema.app.MainActivity")
-        PendingIntent.getActivity(
-            context, 0,
-            Intent(context, clazz),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-    } catch (_: Exception) { null }
-
-    val notification = if (Build.VERSION.SDK_INT >= 36) {
-        buildLiveActivityNotification(context, channelId, intent)
-    } else {
-        buildStandardNotification(context, channelId, intent)
-    }
-
-    nm.notify(2, notification)
-}
-
-@Suppress("NewApi")
-private fun buildLiveActivityNotification(
-    context: Context,
-    channelId: String,
-    pendingIntent: PendingIntent?
-): Notification {
-    return try {
-        val style = Notification.ProgressStyle()
-        style.javaClass.getMethod("setProgress", Int::class.javaPrimitiveType).invoke(style, 7)
-        try {
-            style.javaClass.getMethod("setMaxProgress", Int::class.javaPrimitiveType).invoke(style, 30)
-        } catch (_: Exception) {}
-        try {
-            val icon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
-            style.javaClass.getMethod("setProgressTrackerIcon", Icon::class.java).invoke(style, icon)
-        } catch (_: Exception) {}
-
-        Notification.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("🔥 连续打卡 7 天")
-            .setContentText("继续保持！目标 30 天")
-            .setStyle(style)
-            .setOngoing(true)
-            .setContentIntent(pendingIntent)
-            .build()
-    } catch (_: Exception) {
-        buildStandardNotification(context, channelId, pendingIntent)
-    }
-}
-
-private fun buildStandardNotification(
-    context: Context,
-    channelId: String,
-    pendingIntent: PendingIntent?
-): Notification {
-    return Notification.Builder(context, channelId)
-        .setSmallIcon(android.R.drawable.ic_dialog_info)
-        .setContentTitle("🔥 连续打卡 7 天")
-        .setContentText("继续保持！")
-        .setOngoing(true)
-        .setContentIntent(pendingIntent)
-        .build()
 }
 
 @Composable
 private fun SettingsSection(
     title: String,
-    icon: ImageVector,
     content: @Composable () -> Unit
 ) {
-    Card(
+    LiquidGlassCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        cornerRadius = 20.dp
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             content()
         }
     }
 }
 
 @Composable
-private fun SettingItem(title: String, subtitle: String) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-        Text(
-            text = title,
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = subtitle,
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 2.dp)
-        )
-    }
-}
-
-@Composable
-private fun SettingClickableItem(
+private fun SettingItem(
     title: String,
     subtitle: String,
-    icon: ImageVector,
-    onClick: () -> Unit
+    onClick: (() -> Unit)? = null,
+    icon: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null
 ) {
-    Row(
-        modifier = Modifier
+    val isDark = isSystemInDarkTheme()
+    val modifier = if (onClick != null) {
+        Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .background(
+                if (isDark) Color.White.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.25f),
+                RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 12.dp)
+    } else {
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 12.dp)
+    }
+
+    Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
+        if (icon != null) {
+            icon()
+            Spacer(modifier = Modifier.width(12.dp))
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = subtitle,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+        if (trailing != null) {
+            trailing()
         }
     }
 }
 
-@Composable
-private fun SettingSwitchItem(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = subtitle,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+fun fetchLatestRelease(): UpdateInfo? {
+    val url = URL("https://api.github.com/repos/babahaochi/lalema/releases/latest")
+    val connection = url.openConnection() as HttpURLConnection
+    connection.requestMethod = "GET"
+    connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
+    connection.connectTimeout = 8000
+    connection.readTimeout = 8000
+
+    val response = connection.inputStream.bufferedReader().readText()
+    connection.disconnect()
+
+    val obj = org.json.JSONObject(response)
+    val tagName = obj.getString("tag_name")
+    val body = obj.optString("body", "")
+    val htmlUrl = obj.getString("html_url")
+    val publishedAt = obj.optString("published_at", "")
+
+    val assets = obj.optJSONArray("assets")
+    var versionCode = 0L
+    var isForceUpdate = false
+
+    if (assets != null && assets.length() > 0) {
+        for (i in 0 until assets.length()) {
+            val asset = assets.getJSONObject(i)
+            val name = asset.getString("name")
+            if (name.endsWith(".apk")) {
+                val downloadUrl = asset.getString("browser_download_url")
+                val verCode = downloadUrl.substringAfter("app-").substringBefore("/").toLongOrNull() ?: 0L
+                versionCode = verCode
+                break
+            }
         }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
-                uncheckedBorderColor = MaterialTheme.colorScheme.outline
-            )
-        )
     }
+
+    val latestVersionCode = versionCode
+    if (latestVersionCode <= BuildConfig.VERSION_CODE) {
+        return null
+    }
+
+    return UpdateInfo(
+        tagName = tagName,
+        body = body,
+        htmlUrl = htmlUrl,
+        publishedAt = publishedAt.substringBefore("T"),
+        versionCode = versionCode,
+        isForceUpdate = isForceUpdate
+    )
 }

@@ -55,16 +55,16 @@ private fun buildLightScheme(preset: ColorPreset) = lightColorScheme(
     onTertiary = Color.White,
     tertiaryContainer = preset.tertiaryLight.copy(alpha = 0.12f),
     onTertiaryContainer = preset.tertiaryLight,
-    background = BackgroundLight,
+    background = Color.Transparent,
     onBackground = OnSurfaceLight,
-    surface = SurfaceLight,
+    surface = Color.White.copy(alpha = 0.55f),
     onSurface = OnSurfaceLight,
-    surfaceVariant = Color(0xFFE8E8F0),
+    surfaceVariant = Color.White.copy(alpha = 0.4f),
     onSurfaceVariant = OnSurfaceVariantLight,
     error = ErrorLight,
     onError = Color.White,
-    outline = Color(0xFFB0B0C8),
-    outlineVariant = Color(0xFFD8D8E8)
+    outline = Color(0x20FFFFFF),
+    outlineVariant = Color(0x30FFFFFF)
 )
 
 private fun buildDarkScheme(preset: ColorPreset) = darkColorScheme(
@@ -80,16 +80,16 @@ private fun buildDarkScheme(preset: ColorPreset) = darkColorScheme(
     onTertiary = Color(0xFF1A1C30),
     tertiaryContainer = preset.tertiaryDark.copy(alpha = 0.15f),
     onTertiaryContainer = preset.tertiaryDark,
-    background = BackgroundDark,
+    background = Color.Transparent,
     onBackground = OnSurfaceDark,
-    surface = SurfaceDark,
+    surface = Color.White.copy(alpha = 0.08f),
     onSurface = OnSurfaceDark,
-    surfaceVariant = Color(0xFF2A2C40),
+    surfaceVariant = Color.White.copy(alpha = 0.06f),
     onSurfaceVariant = OnSurfaceVariantDark,
     error = ErrorDark,
     onError = Color(0xFF1A1C30),
-    outline = Color(0xFF5A5A70),
-    outlineVariant = Color(0xFF3A3A50)
+    outline = Color(0x15FFFFFF),
+    outlineVariant = Color(0x10FFFFFF)
 )
 
 @Composable

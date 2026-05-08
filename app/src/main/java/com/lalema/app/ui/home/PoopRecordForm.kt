@@ -4,6 +4,7 @@ import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,9 +45,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lalema.app.data.PoopAmount
@@ -77,6 +81,7 @@ fun PoopRecordForm(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
+    val isDark = isSystemInDarkTheme()
     var timeHour by remember { mutableIntStateOf(java.time.LocalTime.now().hour) }
     var timeMinute by remember { mutableIntStateOf(java.time.LocalTime.now().minute) }
     var selectedAmount by remember { mutableStateOf(PoopAmount.NORMAL.name) }
@@ -88,10 +93,14 @@ fun PoopRecordForm(
     var hasMucus by remember { mutableStateOf(false) }
     var notes by remember { mutableStateOf("") }
 
+    val sheetContainerColor = if (isDark) Color(0xFF1A1C30) else Color(0xFFF0F0FA)
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = sheetContainerColor,
+        scrimColor = Color.Black.copy(alpha = 0.4f)
     ) {
         Column(
             modifier = Modifier
@@ -103,12 +112,14 @@ fun PoopRecordForm(
                 text = "记录排便",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Card(
+            GlassTimeCard(
+                timeHour = timeHour,
+                timeMinute = timeMinute,
                 onClick = {
                     TimePickerDialog(
                         context,
@@ -120,30 +131,8 @@ fun PoopRecordForm(
                         timeMinute,
                         true
                     ).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccessTime,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "时间: ${String.format("%02d:%02d", timeHour, timeMinute)}",
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
                 }
-            }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -281,15 +270,18 @@ fun PoopRecordForm(
                 onValueChange = { notes = it },
                 placeholder = { Text(text = "备注（可选）") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    focusedContainerColor = if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.50f),
+                    unfocusedContainerColor = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.40f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
                 )
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            val primaryColor = MaterialTheme.colorScheme.primary
             Button(
                 onClick = {
                     onSubmit(
@@ -307,8 +299,10 @@ fun PoopRecordForm(
                     onDismiss()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = primaryColor.copy(alpha = if (isDark) 0.80f else 0.90f)
+                )
             ) {
                 Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
@@ -321,29 +315,117 @@ fun PoopRecordForm(
 }
 
 @Composable
+private fun GlassTimeCard(
+    timeHour: Int,
+    timeMinute: Int,
+    onClick: () -> Unit
+) {
+    val isDark = isSystemInDarkTheme()
+    val shape = RoundedCornerShape(16.dp)
+
+    val glassBg = if (isDark) {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.10f),
+                Color.White.copy(alpha = 0.04f)
+            )
+        )
+    } else {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.60f),
+                Color.White.copy(alpha = 0.35f)
+            )
+        )
+    }
+
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.50f)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(brush = glassBg)
+            .border(width = 1.dp, color = borderColor, shape = shape)
+            .drawBehind {
+                val h = size.height
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = if (isDark) 0.05f else 0.30f),
+                            Color.Transparent
+                        ),
+                        startY = 0f,
+                        endY = h * 0.35f
+                    )
+                )
+            }
+            .clickable(onClick = onClick)
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.AccessTime,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "时间: ${String.format("%02d:%02d", timeHour, timeMinute)}",
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
 fun ChoiceChip(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    val isDark = isSystemInDarkTheme()
+    val shape = RoundedCornerShape(10.dp)
+
+    val bgColor = if (selected) {
+        MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.30f else 0.20f)
+    } else {
+        if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f)
+    }
+
+    val borderColor = if (selected) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+    } else {
+        if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
+    }
+
+    val textColor = if (selected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+
+    Box(
         modifier = modifier
             .padding(2.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-            contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 4.dp else 2.dp)
+            .clip(shape)
+            .background(bgColor)
+            .border(width = 1.dp, color = borderColor, shape = shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
             fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            color = textColor,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -368,8 +450,8 @@ fun ColorChip(
                 .clip(CircleShape)
                 .background(android.graphics.Color.parseColor(colorHex).let { Color(it) })
                 .border(
-                    width = 2.dp,
-                    color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    width = if (selected) 2.5.dp else 1.dp,
+                    color = if (selected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.3f),
                     shape = CircleShape
                 )
         )
@@ -377,6 +459,7 @@ fun ColorChip(
             text = displayName,
             fontSize = 10.sp,
             color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             modifier = Modifier.padding(top = 2.dp)
         )
     }

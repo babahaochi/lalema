@@ -103,3 +103,13 @@ val ErrorDark = Color(0xFFEF5350)
 val Brown500 = Color(0xFF8D6E63)
 val Brown700 = Color(0xFF4E342E)
 val Green500 = Color(0xFF4CAF50)
+
+val GlassBgLight1 = Color(0xFFD4DEFF)
+val GlassBgLight2 = Color(0xFFC8B6E0)
+val GlassBgLight3 = Color(0xFFB8D0F0)
+val GlassBgLight4 = Color(0xFFE0D0F0)
+
+val GlassBgDark1 = Color(0xFF0A0E1A)
+val GlassBgDark2 = Color(0xFF14102A)
+val GlassBgDark3 = Color(0xFF0E1628)
+val GlassBgDark4 = Color(0xFF1A1030)
