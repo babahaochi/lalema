@@ -89,7 +89,8 @@ data class UpdateInfo(
 @Composable
 fun SettingsScreen(
     navController: NavHostController,
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
+    onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -> Unit = {}
 ) {
     val context = LocalContext.current
     val currentSettings = LocalThemeSettings.current
@@ -238,9 +239,7 @@ fun SettingsScreen(
                                 onClick = {
                                     val newSettings = currentSettings.copy(themeMode = mode)
                                     ThemePreferences.save(context, newSettings)
-                                    navController.currentBackStackEntry
-                                        ?.savedStateHandle
-                                        ?.set("theme_changed", true)
+                                    onThemeSettingsChanged(newSettings)
                                 }
                             )
                         }
@@ -269,9 +268,7 @@ fun SettingsScreen(
                                 onClick = {
                                     val newSettings = currentSettings.copy(colorSchemeIndex = index)
                                     ThemePreferences.save(context, newSettings)
-                                    navController.currentBackStackEntry
-                                        ?.savedStateHandle
-                                        ?.set("theme_changed", true)
+                                    onThemeSettingsChanged(newSettings)
                                 }
                             )
                         }

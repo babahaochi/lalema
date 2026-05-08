@@ -126,23 +126,10 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
                     composable(Screen.Home.route) { HomeScreen(navController) }
                     composable(Screen.Calendar.route) { CalendarScreen(navController) }
                     composable(Screen.Settings.route) {
-                        SettingsScreen(navController)
-                        DisposableEffect(Unit) {
-                            val entry = navController.getBackStackEntry(Screen.Settings.route)
-                            val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-                                if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                                    val changed = entry.savedStateHandle.get<Boolean>("theme_changed") ?: false
-                                    if (changed) {
-                                        val ctx = navController.context
-                                        val newSettings = com.lalema.app.ui.theme.ThemePreferences.load(ctx)
-                                        onThemeSettingsChanged(newSettings)
-                                        entry.savedStateHandle["theme_changed"] = false
-                                    }
-                                }
-                            }
-                            entry.lifecycle.addObserver(observer)
-                            onDispose { entry.lifecycle.removeObserver(observer) }
-                        }
+                        SettingsScreen(
+                            navController = navController,
+                            onThemeSettingsChanged = onThemeSettingsChanged
+                        )
                     }
                 }
             }

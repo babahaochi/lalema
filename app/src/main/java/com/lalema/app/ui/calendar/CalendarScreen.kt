@@ -234,9 +234,10 @@ fun CalendarScreen(
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(7),
-                        modifier = Modifier.height(320.dp),
+                        modifier = Modifier.height(360.dp),
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        userScrollEnabled = false
                     ) {
                         items(
                             count = totalCells,

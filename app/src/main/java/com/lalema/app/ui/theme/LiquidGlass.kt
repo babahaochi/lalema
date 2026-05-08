@@ -147,41 +147,15 @@ fun LiquidGlassCard(
     val shape = RoundedCornerShape(cornerRadius)
 
     val glassBg = if (isDark) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.12f),
-                Color.White.copy(alpha = 0.05f)
-            )
-        )
+        Color.White.copy(alpha = 0.08f)
     } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.70f),
-                Color.White.copy(alpha = 0.45f)
-            )
-        )
+        Color.White.copy(alpha = 0.55f)
     }
 
     val glassBorder = if (isDark) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.20f),
-                Color.White.copy(alpha = 0.06f)
-            )
-        )
+        Color.White.copy(alpha = 0.15f)
     } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.90f),
-                Color.White.copy(alpha = 0.40f)
-            )
-        )
-    }
-
-    val highlightColor = if (isDark) {
-        Color.White.copy(alpha = 0.08f)
-    } else {
-        Color.White.copy(alpha = 0.60f)
+        Color.White.copy(alpha = 0.70f)
     }
 
     val shadowColor = if (isDark) {
@@ -209,26 +183,31 @@ fun LiquidGlassCard(
             )
             .then(clickableModifier)
             .clip(shape)
-            .background(brush = glassBg)
-            .border(width = 1.dp, brush = glassBorder, shape = shape)
+            .background(glassBg)
+            .border(width = 1.dp, color = glassBorder, shape = shape)
             .drawBehind {
                 val w = size.width
                 val h = size.height
+                // Top highlight - simulates light reflection on glass
                 drawRect(
                     brush = Brush.verticalGradient(
-                        colors = listOf(highlightColor, Color.Transparent),
-                        startY = 0f,
-                        endY = h * 0.3f
-                    )
-                )
-                drawRect(
-                    brush = Brush.radialGradient(
                         colors = listOf(
-                            highlightColor.copy(alpha = 0.3f),
+                            Color.White.copy(alpha = if (isDark) 0.10f else 0.50f),
                             Color.Transparent
                         ),
-                        center = Offset(w * 0.3f, 0f),
-                        radius = w * 0.6f
+                        startY = 0f,
+                        endY = h * 0.25f
+                    )
+                )
+                // Left edge highlight
+                drawRect(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = if (isDark) 0.06f else 0.30f),
+                            Color.Transparent
+                        ),
+                        startX = 0f,
+                        endX = w * 0.15f
                     )
                 )
             }
@@ -256,19 +235,9 @@ fun LiquidGlassButton(
     val primaryColor = MaterialTheme.colorScheme.primary
 
     val glassBg = if (isDark) {
-        Brush.verticalGradient(
-            colors = listOf(
-                primaryColor.copy(alpha = 0.35f),
-                primaryColor.copy(alpha = 0.15f)
-            )
-        )
+        primaryColor.copy(alpha = 0.20f)
     } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                primaryColor.copy(alpha = 0.25f),
-                primaryColor.copy(alpha = 0.10f)
-            )
-        )
+        primaryColor.copy(alpha = 0.12f)
     }
 
     val borderColor = if (isDark) {
@@ -288,14 +257,14 @@ fun LiquidGlassButton(
                 spotColor = primaryColor.copy(alpha = 0.15f)
             )
             .clip(shape)
-            .background(brush = glassBg)
+            .background(glassBg)
             .border(width = 1.dp, color = borderColor, shape = shape)
             .drawBehind {
                 val h = size.height
                 drawRect(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = if (isDark) 0.06f else 0.30f),
+                            Color.White.copy(alpha = if (isDark) 0.08f else 0.35f),
                             Color.Transparent
                         ),
                         startY = 0f,
@@ -331,28 +300,16 @@ fun LiquidGlassStatCard(
     val shape = RoundedCornerShape(20.dp)
 
     val glassBg = if (isDark) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.10f),
-                Color.White.copy(alpha = 0.04f)
-            )
-        )
+        Color.White.copy(alpha = 0.06f)
     } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.65f),
-                Color.White.copy(alpha = 0.40f)
-            )
-        )
+        Color.White.copy(alpha = 0.50f)
     }
 
     val glassBorder = if (isDark) {
         Color.White.copy(alpha = 0.12f)
     } else {
-        Color.White.copy(alpha = 0.60f)
+        Color.White.copy(alpha = 0.65f)
     }
-
-    val highlightAlpha = if (isDark) 0.06f else 0.45f
 
     Box(
         modifier = modifier
@@ -362,18 +319,31 @@ fun LiquidGlassStatCard(
                 spotColor = if (isDark) Color.Black.copy(alpha = 0.3f) else Color(0xFF6080C0).copy(alpha = 0.08f)
             )
             .clip(shape)
-            .background(brush = glassBg)
+            .background(glassBg)
             .border(width = 1.dp, color = glassBorder, shape = shape)
             .drawBehind {
+                val w = size.width
                 val h = size.height
+                // Top highlight
                 drawRect(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = highlightAlpha),
+                            Color.White.copy(alpha = if (isDark) 0.08f else 0.40f),
                             Color.Transparent
                         ),
                         startY = 0f,
-                        endY = h * 0.35f
+                        endY = h * 0.30f
+                    )
+                )
+                // Left edge highlight
+                drawRect(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = if (isDark) 0.05f else 0.25f),
+                            Color.Transparent
+                        ),
+                        startX = 0f,
+                        endX = w * 0.12f
                     )
                 )
             }
@@ -432,39 +402,28 @@ fun LiquidGlassSurface(
     val shape = RoundedCornerShape(cornerRadius)
 
     val glassBg = if (isDark) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.08f),
-                Color.White.copy(alpha = 0.03f)
-            )
-        )
+        Color.White.copy(alpha = 0.05f)
     } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.50f),
-                Color.White.copy(alpha = 0.30f)
-            )
-        )
+        Color.White.copy(alpha = 0.45f)
     }
 
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.50f)
-    val highlightAlpha = if (isDark) 0.05f else 0.35f
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.60f)
 
     Box(
         modifier = modifier
             .clip(shape)
-            .background(brush = glassBg)
+            .background(glassBg)
             .border(width = 1.dp, color = borderColor, shape = shape)
             .drawBehind {
                 val h = size.height
                 drawRect(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = highlightAlpha),
+                            Color.White.copy(alpha = if (isDark) 0.06f else 0.35f),
                             Color.Transparent
                         ),
                         startY = 0f,
-                        endY = h * 0.3f
+                        endY = h * 0.25f
                     )
                 )
             }
