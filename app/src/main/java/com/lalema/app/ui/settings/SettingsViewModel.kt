@@ -3,10 +3,12 @@ package com.lalema.app.ui.settings
 import android.app.AlarmManager
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import com.lalema.app.reminder.BootReceiver
 import com.lalema.app.reminder.ReminderManager
+import com.lalema.app.reminder.LiveActivityService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,6 +51,7 @@ class SettingsViewModel @Inject constructor(
         val newValue = !_notificationEnabled.value
         _notificationEnabled.value = newValue
         prefs.edit().putBoolean("notification_enabled", newValue).apply()
+        applyLiveActivity()
         applyReminders()
     }
 
@@ -66,6 +69,7 @@ class SettingsViewModel @Inject constructor(
         _reminderMinute.value = minute
         prefs.edit().putInt("hour", hour).putInt("minute", minute).apply()
         applyReminders()
+        applyLiveActivity()
     }
 
     private fun applyReminders() {
@@ -79,6 +83,23 @@ class SettingsViewModel @Inject constructor(
             reminderManager.setDailyReminder(hour, minute)
         } else {
             reminderManager.cancelDailyReminder()
+        }
+    }
+
+    private fun applyLiveActivity() {
+        val context = getApplication<Application>()
+        if (_notificationEnabled.value) {
+            val intent = Intent(context, LiveActivityService::class.java).apply {
+                action = LiveActivityService.ACTION_START
+                putExtra("hour", _reminderHour.value)
+                putExtra("minute", _reminderMinute.value)
+            }
+            context.startService(intent)
+        } else {
+            val intent = Intent(context, LiveActivityService::class.java).apply {
+                action = LiveActivityService.ACTION_STOP
+            }
+            context.startService(intent)
         }
     }
 

@@ -1,6 +1,5 @@
 package com.lalema.app.ui.settings
 
-import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -104,6 +103,8 @@ fun SettingsScreen(
     val reminderHour by viewModel.reminderHour.collectAsState()
     val reminderMinute by viewModel.reminderMinute.collectAsState()
     val anyReminderEnabled = alarmEnabled || notificationEnabled || calendarEnabled
+
+    var showTimePicker by remember { mutableStateOf(false) }
 
     updateDialogInfo?.let { info ->
         AlertDialog(
@@ -231,17 +232,7 @@ fun SettingsScreen(
                     SettingItem(
                         title = "提醒时间",
                         subtitle = "${reminderHour}:${String.format("%02d", reminderMinute)}",
-                        onClick = {
-                            TimePickerDialog(
-                                context,
-                                { _, hour, minute ->
-                                    viewModel.setReminderTime(hour, minute)
-                                },
-                                reminderHour,
-                                reminderMinute,
-                                true
-                            ).show()
-                        }
+                        onClick = { showTimePicker = true }
                     )
 
                     SettingItem(
@@ -252,6 +243,18 @@ fun SettingsScreen(
                         }
                     )
                 }
+            }
+
+            if (showTimePicker) {
+                GlassTimePickerDialog(
+                    currentHour = reminderHour,
+                    currentMinute = reminderMinute,
+                    onConfirm = { hour, minute ->
+                        viewModel.setReminderTime(hour, minute)
+                        showTimePicker = false
+                    },
+                    onDismiss = { showTimePicker = false }
+                )
             }
 
             SettingsSection(title = "外观设置") {
@@ -575,8 +578,15 @@ fun fetchLatestRelease(): UpdateInfo? {
     val connection = url.openConnection() as HttpURLConnection
     connection.requestMethod = "GET"
     connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
-    connection.connectTimeout = 8000
-    connection.readTimeout = 8000
+    connection.connectTimeout = 10000
+    connection.readTimeout = 10000
+    connection.instanceFollowRedirects = true
+
+    val responseCode = connection.responseCode
+    if (responseCode != 200) {
+        connection.disconnect()
+        return null
+    }
 
     val response = connection.inputStream.bufferedReader().readText()
     connection.disconnect()
@@ -587,26 +597,23 @@ fun fetchLatestRelease(): UpdateInfo? {
     val htmlUrl = obj.getString("html_url")
     val publishedAt = obj.optString("published_at", "")
 
+    val currentVersionName = BuildConfig.VERSION_NAME
+    if (tagName == "v$currentVersionName" || tagName == currentVersionName) {
+        return null
+    }
+
     val assets = obj.optJSONArray("assets")
     var versionCode = 0L
-    var isForceUpdate = false
 
     if (assets != null && assets.length() > 0) {
         for (i in 0 until assets.length()) {
             val asset = assets.getJSONObject(i)
             val name = asset.getString("name")
             if (name.endsWith(".apk")) {
-                val downloadUrl = asset.getString("browser_download_url")
-                val verCode = downloadUrl.substringAfter("app-").substringBefore("/").toLongOrNull() ?: 0L
-                versionCode = verCode
+                versionCode = name.substringAfter("-").substringBefore(".apk").toLongOrNull() ?: 0L
                 break
             }
         }
-    }
-
-    val latestVersionCode = versionCode
-    if (latestVersionCode <= BuildConfig.VERSION_CODE) {
-        return null
     }
 
     return UpdateInfo(
@@ -615,6 +622,185 @@ fun fetchLatestRelease(): UpdateInfo? {
         htmlUrl = htmlUrl,
         publishedAt = publishedAt.substringBefore("T"),
         versionCode = versionCode,
-        isForceUpdate = isForceUpdate
+        isForceUpdate = false
+    )
+}
+
+@Composable
+private fun GlassTimePickerDialog(
+    currentHour: Int,
+    currentMinute: Int,
+    onConfirm: (Int, Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    var selectedHour by remember { mutableStateOf(currentHour) }
+    var selectedMinute by remember { mutableStateOf(currentMinute) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = if (isDark) Color(0xFF1A1C30) else Color(0xFFF0F0FA),
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text(
+                text = "选择提醒时间",
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "时",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
+                                    )
+                                    .clickable { selectedHour = (selectedHour + 1) % 24 },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "▲", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp, 48.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(
+                                        if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.60f)
+                                    )
+                                    .border(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                        RoundedCornerShape(14.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = String.format("%02d", selectedHour),
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
+                                    )
+                                    .clickable { selectedHour = (selectedHour - 1 + 24) % 24 },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "▼", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Text(
+                        text = ":",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "分",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
+                                    )
+                                    .clickable { selectedMinute = (selectedMinute + 1) % 60 },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "▲", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp, 48.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(
+                                        if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.60f)
+                                    )
+                                    .border(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                        RoundedCornerShape(14.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = String.format("%02d", selectedMinute),
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
+                                    )
+                                    .clickable { selectedMinute = (selectedMinute - 1 + 60) % 60 },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "▼", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(selectedHour, selectedMinute) },
+                shape = RoundedCornerShape(14.dp),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                )
+            ) {
+                Text("确定", color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
     )
 }
