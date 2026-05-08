@@ -74,11 +74,9 @@ import com.lalema.app.ui.theme.LocalThemeSettings
 import com.lalema.app.ui.theme.ThemeMode
 import com.lalema.app.ui.theme.ThemeSettings
 import com.lalema.app.ui.theme.colorPresets
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -275,25 +273,20 @@ fun SettingsScreen(
                     subtitle = "当前版本 v${BuildConfig.VERSION_NAME}",
                     icon = Icons.Default.Update,
                     onClick = {
-                        if (isCheckingUpdate) return@SettingClickableItem
                         isCheckingUpdate = true
                         scope.launch {
+                            var result: UpdateInfo? = null
+                            var errorMsg: String? = null
                             try {
-                                val info = withTimeoutOrNull(15000L) {
-                                    checkForUpdate()
-                                }
-                                isCheckingUpdate = false
-                                if (info != null) {
-                                    updateDialogInfo = info
-                                } else {
-                                    Toast.makeText(context, "已是最新版本", Toast.LENGTH_SHORT).show()
-                                }
-                            } catch (e: CancellationException) {
-                                isCheckingUpdate = false
-                                throw e
+                                result = withContext(Dispatchers.IO) { fetchLatestRelease() }
                             } catch (_: Throwable) {
-                                isCheckingUpdate = false
-                                Toast.makeText(context, "检查更新失败，请稍后重试", Toast.LENGTH_SHORT).show()
+                                errorMsg = "检查更新失败，请稍后重试"
+                            }
+                            isCheckingUpdate = false
+                            when {
+                                result != null -> updateDialogInfo = result
+                                errorMsg != null -> Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                                else -> Toast.makeText(context, "已是最新版本", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -393,43 +386,31 @@ private data class UpdateInfo(
     val body: String
 )
 
-private suspend fun checkForUpdate(): UpdateInfo? {
-    return withContext(Dispatchers.IO) {
-        var connection: HttpURLConnection? = null
-        try {
-            val url = URL("https://api.github.com/repos/babahaochi/lalema/releases/latest")
-            connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.connectTimeout = 10000
-            connection.readTimeout = 10000
-            connection.setRequestProperty("Accept", "application/vnd.github+json")
-            connection.setRequestProperty("User-Agent", "LaLeMa-Android")
-            connection.instanceFollowRedirects = true
+private fun fetchLatestRelease(): UpdateInfo? {
+    val url = URL("https://api.github.com/repos/babahaochi/lalema/releases/latest")
+    val conn = url.openConnection() as HttpURLConnection
+    conn.connectTimeout = 10000
+    conn.readTimeout = 10000
+    conn.setRequestProperty("Accept", "application/vnd.github+json")
+    conn.setRequestProperty("User-Agent", "LaLeMa-Android")
+    conn.instanceFollowRedirects = true
 
-            val code = connection.responseCode
-            if (code != 200) return@withContext null
+    val code = conn.responseCode
+    if (code != 200) return null
 
-            val text = connection.inputStream.bufferedReader().use { it.readText() }
-            val json = JSONObject(text)
-            val tagName = json.getString("tag_name")
-            val htmlUrl = json.getString("html_url")
-            val body = json.optString("body", "")
+    val text = conn.inputStream.bufferedReader().use { it.readText() }
+    val json = JSONObject(text)
+    val tagName = json.getString("tag_name")
+    val htmlUrl = json.getString("html_url")
+    val body = json.optString("body", "")
 
-            val latestVersion = tagName.removePrefix("v")
-            val currentVersion = BuildConfig.VERSION_NAME
+    val latestVersion = tagName.removePrefix("v")
+    val currentVersion = BuildConfig.VERSION_NAME
 
-            if (isNewerVersion(latestVersion, currentVersion)) {
-                UpdateInfo(tagName, htmlUrl, body.take(200))
-            } else {
-                null
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Throwable) {
-            null
-        } finally {
-            try { connection?.disconnect() } catch (_: Throwable) {}
-        }
+    return if (isNewerVersion(latestVersion, currentVersion)) {
+        UpdateInfo(tagName, htmlUrl, body.take(200))
+    } else {
+        null
     }
 }
 
