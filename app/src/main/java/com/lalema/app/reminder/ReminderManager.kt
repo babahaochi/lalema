@@ -269,15 +269,60 @@ class ReminderReceiver : BroadcastReceiver() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
 
-        val notification = android.app.Notification.Builder(context, channelId)
+        val notification = if (Build.VERSION.SDK_INT >= 36) {
+            buildProgressStyleNotification(context, channelId, pendingIntent)
+        } else {
+            android.app.Notification.Builder(context, channelId)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("该上厕所啦！")
+                .setContentText("记得记录今天的排便情况哦")
+                .setPriority(android.app.Notification.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .build()
+        }
+
+        notificationManager.notify(1, notification)
+    }
+
+    private fun buildProgressStyleNotification(
+        context: Context,
+        channelId: String,
+        pendingIntent: PendingIntent
+    ): android.app.Notification {
+        val builder = android.app.Notification.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("该上厕所啦！")
             .setContentText("记得记录今天的排便情况哦")
-            .setPriority(android.app.Notification.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
-            .build()
 
-        notificationManager.notify(1, notification)
+        try {
+            val progressStyleClass = Class.forName("android.app.Notification\$ProgressStyle")
+            val progressStyleConstructor = progressStyleClass.getDeclaredConstructor()
+            progressStyleConstructor.isAccessible = true
+            val progressStyle = progressStyleConstructor.newInstance()
+
+            val setProgressMethod = progressStyleClass.getDeclaredMethod(
+                "setProgress", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType
+            )
+            setProgressMethod.isAccessible = true
+            setProgressMethod.invoke(progressStyle, 1, 0)
+
+            val setProgressEndMethod = progressStyleClass.getDeclaredMethod(
+                "setProgressEnd", Boolean::class.javaPrimitiveType
+            )
+            setProgressEndMethod.isAccessible = true
+            setProgressEndMethod.invoke(progressStyle, false)
+
+            val setStyleMethod = android.app.Notification.Builder::class.java.getDeclaredMethod(
+                "setStyle", Class.forName("android.app.Notification\$Style")
+            )
+            setStyleMethod.isAccessible = true
+            setStyleMethod.invoke(builder, progressStyle)
+        } catch (_: Exception) {
+        }
+
+        return builder.build()
     }
 }

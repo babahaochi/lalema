@@ -98,9 +98,12 @@ fun SettingsScreen(
     var isCheckingUpdate by remember { mutableStateOf(false) }
     var updateDialogInfo by remember { mutableStateOf<UpdateInfo?>(null) }
 
-    val reminderEnabled by viewModel.reminderEnabled.collectAsState()
+    val alarmEnabled by viewModel.alarmEnabled.collectAsState()
+    val notificationEnabled by viewModel.notificationEnabled.collectAsState()
+    val calendarEnabled by viewModel.calendarEnabled.collectAsState()
     val reminderHour by viewModel.reminderHour.collectAsState()
     val reminderMinute by viewModel.reminderMinute.collectAsState()
+    val anyReminderEnabled = alarmEnabled || notificationEnabled || calendarEnabled
 
     updateDialogInfo?.let { info ->
         AlertDialog(
@@ -182,17 +185,49 @@ fun SettingsScreen(
                             modifier = Modifier.size(24.dp)
                         )
                     },
-                    title = "每日提醒",
-                    subtitle = if (reminderEnabled) "提醒时间：${reminderHour}:${String.format("%02d", reminderMinute)}" else "已关闭",
+                    title = "闹钟提醒",
+                    subtitle = if (alarmEnabled) "${reminderHour}:${String.format("%02d", reminderMinute)} 响铃" else "已关闭",
                     trailing = {
                         SwitchButton(
-                            checked = reminderEnabled,
-                            onCheckedChange = { viewModel.toggleReminder() }
+                            checked = alarmEnabled,
+                            onCheckedChange = { viewModel.toggleAlarm() }
                         )
                     }
                 )
 
-                if (reminderEnabled) {
+                SettingItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Update,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    title = "实况通知提醒",
+                    subtitle = if (notificationEnabled) {
+                        if (viewModel.isAtLeastAndroid16) "灵动岛 + 通知栏" else "通知栏提醒"
+                    } else "已关闭",
+                    trailing = {
+                        SwitchButton(
+                            checked = notificationEnabled,
+                            onCheckedChange = { viewModel.toggleNotification() }
+                        )
+                    }
+                )
+
+                SettingItem(
+                    title = "日历日程提醒",
+                    subtitle = if (calendarEnabled) "已在系统日历创建每日日程" else "已关闭",
+                    trailing = {
+                        SwitchButton(
+                            checked = calendarEnabled,
+                            onCheckedChange = { viewModel.toggleCalendar() }
+                        )
+                    }
+                )
+
+                if (anyReminderEnabled) {
                     SettingItem(
                         title = "提醒时间",
                         subtitle = "${reminderHour}:${String.format("%02d", reminderMinute)}",
