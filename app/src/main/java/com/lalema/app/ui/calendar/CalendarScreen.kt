@@ -313,19 +313,19 @@ fun CalendarScreen(
                                         }
                                         isFuture -> Text(
                                             text = day.toString(),
-                                            color = MaterialTheme.colorScheme.outline,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                         isMakeupAvailable -> Text(
                                             text = day.toString(),
-                                            color = WarningLight,
+                                            color = MaterialTheme.colorScheme.primary,
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Medium
                                         )
                                         else -> Text(
                                             text = day.toString(),
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                         )
                                     }
                                 }

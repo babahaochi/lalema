@@ -55,7 +55,7 @@ private fun buildLightScheme(preset: ColorPreset) = lightColorScheme(
     onTertiary = Color.White,
     tertiaryContainer = preset.tertiaryLight.copy(alpha = 0.12f),
     onTertiaryContainer = preset.tertiaryLight,
-    background = Color.Transparent,
+    background = Color(0xFFF0F0FA),
     onBackground = OnSurfaceLight,
     surface = Color.White.copy(alpha = 0.55f),
     onSurface = OnSurfaceLight,
@@ -80,7 +80,7 @@ private fun buildDarkScheme(preset: ColorPreset) = darkColorScheme(
     onTertiary = Color(0xFF1A1C30),
     tertiaryContainer = preset.tertiaryDark.copy(alpha = 0.15f),
     onTertiaryContainer = preset.tertiaryDark,
-    background = Color.Transparent,
+    background = Color(0xFF0A0C18),
     onBackground = OnSurfaceDark,
     surface = Color.White.copy(alpha = 0.08f),
     onSurface = OnSurfaceDark,
@@ -95,7 +95,6 @@ private fun buildDarkScheme(preset: ColorPreset) = darkColorScheme(
 @Composable
 fun LaLeMaTheme(
     themeSettings: ThemeSettings = ThemeSettings(),
-    key: Int = 0,
     content: @Composable () -> Unit
 ) {
     val presetIndex = themeSettings.colorSchemeIndex.coerceIn(0, colorPresets.size - 1)
