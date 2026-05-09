@@ -3,20 +3,24 @@ package com.lalema.app.ui.settings
 import android.app.AlarmManager
 import android.app.Application
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.lalema.app.data.PoopRecord
+import com.lalema.app.domain.PoopRepository
 import com.lalema.app.reminder.BootReceiver
 import com.lalema.app.reminder.ReminderManager
 import com.lalema.app.reminder.LiveActivityService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    application: Application
+    application: Application,
+    private val poopRepository: PoopRepository
 ) : AndroidViewModel(application) {
 
     private val prefs = application.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
@@ -39,6 +43,15 @@ class SettingsViewModel @Inject constructor(
 
     private val _calendarEnabled = MutableStateFlow(prefs.getBoolean("calendar_enabled", false))
     val calendarEnabled: StateFlow<Boolean> = _calendarEnabled
+
+    private val _allRecords = MutableStateFlow<List<PoopRecord>>(emptyList())
+    val allRecords: StateFlow<List<PoopRecord>> = _allRecords
+
+    init {
+        viewModelScope.launch {
+            poopRepository.getAllFlow().collect { _allRecords.value = it }
+        }
+    }
 
     fun toggleAlarm() {
         val newValue = !_alarmEnabled.value
@@ -89,17 +102,9 @@ class SettingsViewModel @Inject constructor(
     private fun applyLiveActivity() {
         val context = getApplication<Application>()
         if (_notificationEnabled.value) {
-            val intent = Intent(context, LiveActivityService::class.java).apply {
-                action = LiveActivityService.ACTION_START
-                putExtra("hour", _reminderHour.value)
-                putExtra("minute", _reminderMinute.value)
-            }
-            context.startService(intent)
+            LiveActivityService.start(context, _reminderHour.value, _reminderMinute.value)
         } else {
-            val intent = Intent(context, LiveActivityService::class.java).apply {
-                action = LiveActivityService.ACTION_STOP
-            }
-            context.startService(intent)
+            LiveActivityService.stop(context)
         }
     }
 
