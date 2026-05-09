@@ -1,9 +1,12 @@
 package com.lalema.app.ui.calendar
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -30,13 +33,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,6 +74,7 @@ import com.lalema.app.data.PoopConsistency
 import com.lalema.app.data.PoopRecord
 import com.lalema.app.data.PoopSmell
 import com.lalema.app.ui.home.PoopRecordForm
+import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.PrimaryLight
 import com.lalema.app.ui.theme.SuccessLight
@@ -97,39 +101,6 @@ fun CalendarScreen(
     )
 
     var recordToDelete by remember { mutableStateOf<PoopRecord?>(null) }
-
-    if (state.showDetailDialog && state.selectedRecords.isNotEmpty()) {
-        val selectedDate = LocalDate.parse(state.selectedDate, dateFormatter)
-        AlertDialog(
-            onDismissRequest = { viewModel.dismissDialog() },
-            title = {
-                Text(
-                    "${selectedDate.monthValue}月${selectedDate.dayOfMonth}日 记录",
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(state.selectedRecords) { record ->
-                        RecordDetailCard(
-                            record = record,
-                            onDelete = { recordToDelete = record }
-                        )
-                        if (record != state.selectedRecords.last()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { viewModel.dismissDialog() }) {
-                    Text("关闭", color = MaterialTheme.colorScheme.primary)
-                }
-            }
-        )
-    }
 
     recordToDelete?.let { record ->
         AlertDialog(
@@ -213,6 +184,85 @@ fun CalendarScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+            AnimatedVisibility(
+                visible = state.showDetailDialog && state.selectedDate != null,
+                enter = expandVertically(animationSpec = tween(300)) + fadeIn(animationSpec = tween(200)),
+                exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(150))
+            ) {
+                val selectedDate = state.selectedDate?.let { LocalDate.parse(it, dateFormatter) }
+
+                LiquidGlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    cornerRadius = 20.dp
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = selectedDate?.let { "${it.monthValue}月${it.dayOfMonth}日" } ?: "",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            IconButton(onClick = { viewModel.dismissDialog() }) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "关闭",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+
+                        if (state.selectedRecords.isEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "暂无记录",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        } else {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            state.selectedRecords.forEach { record ->
+                                RecordDetailCard(
+                                    record = record,
+                                    onDelete = { recordToDelete = record }
+                                )
+                                if (record != state.selectedRecords.last()) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            LiquidGlassButton(
+                                text = "添加记录",
+                                onClick = {
+                                    viewModel.dismissDialog()
+                                    state.selectedDate?.let {
+                                        viewModel.showRecordFormForDate(it)
+                                    }
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -291,7 +341,7 @@ fun CalendarScreen(
                                     modifier = Modifier
                                         .aspectRatio(1f)
                                         .then(
-                                            if (isMakeupAvailable || (isToday && !isRecorded) || isRecorded)
+                                            if (!isFuture)
                                                 Modifier.clickable { viewModel.onDateClick(dateStr) }
                                             else Modifier
                                         ),
@@ -422,16 +472,16 @@ private fun RecordDetailCard(
     onDelete: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(14.dp)
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = shape,
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.50f)
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f))
+            .border(1.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.45f), shape)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

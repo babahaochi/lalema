@@ -96,7 +96,9 @@ fun GlassBackground(modifier: Modifier = Modifier) {
                         brush = Brush.verticalGradient(
                             colors = listOf(
                                 Color(0xFFD8E0FF),
+                                Color(0xFFE0DCF8),
                                 Color(0xFFE8E0F8),
+                                Color(0xFFD8D8FC),
                                 Color(0xFFD0D8FF)
                             )
                         )
@@ -200,20 +202,22 @@ fun LiquidGlassCard(
                     brush = Brush.verticalGradient(
                         colors = listOf(
                             Color.White.copy(alpha = if (isDark) 0.10f else 0.50f),
+                            Color.White.copy(alpha = if (isDark) 0.06f else 0.30f),
                             Color.Transparent
                         ),
                         startY = 0f,
-                        endY = h * 0.25f
+                        endY = h * 0.30f
                     )
                 )
                 drawRect(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
                             Color.White.copy(alpha = if (isDark) 0.06f else 0.30f),
+                            Color.White.copy(alpha = if (isDark) 0.03f else 0.15f),
                             Color.Transparent
                         ),
                         startX = 0f,
-                        endX = w * 0.15f
+                        endX = w * 0.18f
                     )
                 )
             }
@@ -271,10 +275,11 @@ fun LiquidGlassButton(
                     brush = Brush.verticalGradient(
                         colors = listOf(
                             Color.White.copy(alpha = if (isDark) 0.08f else 0.35f),
+                            Color.White.copy(alpha = if (isDark) 0.04f else 0.18f),
                             Color.Transparent
                         ),
                         startY = 0f,
-                        endY = h * 0.4f
+                        endY = h * 0.45f
                     )
                 )
             }
@@ -340,20 +345,22 @@ fun LiquidGlassStatCard(
                     brush = Brush.verticalGradient(
                         colors = listOf(
                             Color.White.copy(alpha = if (isDark) 0.08f else 0.40f),
+                            Color.White.copy(alpha = if (isDark) 0.04f else 0.20f),
                             Color.Transparent
                         ),
                         startY = 0f,
-                        endY = h * 0.30f
+                        endY = h * 0.35f
                     )
                 )
                 drawRect(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
                             Color.White.copy(alpha = if (isDark) 0.05f else 0.25f),
+                            Color.White.copy(alpha = if (isDark) 0.02f else 0.12f),
                             Color.Transparent
                         ),
                         startX = 0f,
-                        endX = w * 0.12f
+                        endX = w * 0.15f
                     )
                 )
             }
@@ -393,7 +400,9 @@ fun LiquidGlassDivider(modifier: Modifier = Modifier) {
                 brush = Brush.horizontalGradient(
                     colors = listOf(
                         Color.Transparent,
+                        color.copy(alpha = color.alpha * 0.5f),
                         color,
+                        color.copy(alpha = color.alpha * 0.5f),
                         Color.Transparent
                     )
                 )
@@ -434,10 +443,11 @@ fun LiquidGlassSurface(
                     brush = Brush.verticalGradient(
                         colors = listOf(
                             Color.White.copy(alpha = if (isDark) 0.06f else 0.35f),
+                            Color.White.copy(alpha = if (isDark) 0.03f else 0.18f),
                             Color.Transparent
                         ),
                         startY = 0f,
-                        endY = h * 0.25f
+                        endY = h * 0.30f
                     )
                 )
             }

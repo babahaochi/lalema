@@ -12,7 +12,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 data class CalendarUiState(
@@ -57,21 +56,16 @@ class CalendarViewModel @Inject constructor(
     fun onDateClick(date: String) {
         val today = LocalDate.now()
         val clickedDate = LocalDate.parse(date, dateFormatter)
-        val daysDiff = ChronoUnit.DAYS.between(clickedDate, today)
+        val isFuture = clickedDate.isAfter(today)
 
-        if (date in _uiState.value.recordedDates) {
-            viewModelScope.launch {
-                val records = repository.getByDate(date)
-                _uiState.value = _uiState.value.copy(
-                    selectedDate = date,
-                    selectedRecords = records,
-                    showDetailDialog = true
-                )
-            }
-        } else if (daysDiff in 0..6) {
+        if (isFuture) return
+
+        viewModelScope.launch {
+            val records = repository.getByDate(date)
             _uiState.value = _uiState.value.copy(
                 selectedDate = date,
-                showRecordForm = true
+                selectedRecords = records,
+                showDetailDialog = true
             )
         }
     }
@@ -125,6 +119,14 @@ class CalendarViewModel @Inject constructor(
             showRecordForm = false,
             selectedDate = null,
             selectedRecords = emptyList()
+        )
+    }
+
+    fun showRecordFormForDate(date: String) {
+        _uiState.value = _uiState.value.copy(
+            selectedDate = date,
+            showDetailDialog = false,
+            showRecordForm = true
         )
     }
 
