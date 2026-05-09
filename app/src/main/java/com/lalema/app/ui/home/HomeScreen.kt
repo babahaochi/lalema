@@ -1,8 +1,14 @@
 package com.lalema.app.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -91,6 +97,16 @@ fun HomeScreen(
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
         label = "buttonScale"
     )
+    val infiniteTransition = rememberInfiniteTransition(label = "buttonPulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.04f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
+    )
     var showContent by remember { mutableStateOf(false) }
     val isDark = LocalIsDarkTheme.current
 
@@ -144,8 +160,8 @@ fun HomeScreen(
         ) {
             AnimatedVisibility(
                 visible = showContent,
-                enter = fadeIn(animationSpec = tween(600)) + slideInVertically(
-                    animationSpec = tween(600),
+                enter = fadeIn(animationSpec = tween(500, easing = FastOutSlowInEasing)) + slideInVertically(
+                    animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f),
                     initialOffsetY = { -30 }
                 )
             ) {
@@ -162,8 +178,8 @@ fun HomeScreen(
 
             AnimatedVisibility(
                 visible = showContent,
-                enter = fadeIn(animationSpec = tween(800, delayMillis = 200)) + slideInVertically(
-                    animationSpec = tween(800, delayMillis = 200),
+                enter = fadeIn(animationSpec = tween(600, delayMillis = 150, easing = FastOutSlowInEasing)) + slideInVertically(
+                    animationSpec = spring(dampingRatio = 0.75f, stiffness = 250f),
                     initialOffsetY = { 50 }
                 )
             ) {
@@ -197,7 +213,7 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .size(180.dp)
-                        .scale(scale)
+                        .scale(scale * pulseScale)
                         .shadow(
                             elevation = 16.dp,
                             shape = buttonShape,
@@ -270,8 +286,8 @@ fun HomeScreen(
 
             AnimatedVisibility(
                 visible = showContent,
-                enter = fadeIn(animationSpec = tween(800, delayMillis = 400)) + slideInVertically(
-                    animationSpec = tween(800, delayMillis = 400),
+                enter = fadeIn(animationSpec = tween(600, delayMillis = 300, easing = FastOutSlowInEasing)) + slideInVertically(
+                    animationSpec = spring(dampingRatio = 0.75f, stiffness = 200f),
                     initialOffsetY = { 30 }
                 )
             ) {
@@ -325,8 +341,8 @@ fun HomeScreen(
 
             AnimatedVisibility(
                 visible = showContent,
-                enter = fadeIn(animationSpec = tween(800, delayMillis = 600)) + slideInVertically(
-                    animationSpec = tween(800, delayMillis = 600),
+                enter = fadeIn(animationSpec = tween(600, delayMillis = 450, easing = FastOutSlowInEasing)) + slideInVertically(
+                    animationSpec = spring(dampingRatio = 0.75f, stiffness = 180f),
                     initialOffsetY = { 30 }
                 )
             ) {

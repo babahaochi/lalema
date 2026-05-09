@@ -1,5 +1,6 @@
 package com.lalema.app.ui.theme
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -144,28 +145,35 @@ fun LiquidGlassCard(
 ) {
     val isDark = LocalIsDarkTheme.current
     val shape = RoundedCornerShape(cornerRadius)
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed && onClick != null) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 600f),
+        label = "cardScale"
+    )
 
-    val glassBg = if (isDark) {
-        Color.White.copy(alpha = 0.08f)
-    } else {
-        Color.White.copy(alpha = 0.55f)
-    }
+    val glassBg by animateColorAsState(
+        targetValue = if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.55f),
+        animationSpec = tween(500),
+        label = "cardBg"
+    )
 
-    val glassBorder = if (isDark) {
-        Color.White.copy(alpha = 0.15f)
-    } else {
-        Color.White.copy(alpha = 0.70f)
-    }
+    val glassBorder by animateColorAsState(
+        targetValue = if (isDark) Color.White.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.70f),
+        animationSpec = tween(500),
+        label = "cardBorder"
+    )
 
-    val shadowColor = if (isDark) {
-        Color.Black.copy(alpha = 0.4f)
-    } else {
-        Color(0xFF6080C0).copy(alpha = 0.10f)
-    }
+    val shadowColor by animateColorAsState(
+        targetValue = if (isDark) Color.Black.copy(alpha = 0.4f) else Color(0xFF6080C0).copy(alpha = 0.10f),
+        animationSpec = tween(500),
+        label = "cardShadow"
+    )
 
     val clickableModifier = if (onClick != null) {
         Modifier.clickable(
-            interactionSource = remember { MutableInteractionSource() },
+            interactionSource = interactionSource,
             indication = null
         ) { onClick() }
     } else {
@@ -174,6 +182,7 @@ fun LiquidGlassCard(
 
     Box(
         modifier = modifier
+            .scale(scale)
             .shadow(
                 elevation = 12.dp,
                 shape = shape,
@@ -231,17 +240,17 @@ fun LiquidGlassButton(
     val isDark = LocalIsDarkTheme.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    val glassBg = if (isDark) {
-        primaryColor.copy(alpha = 0.20f)
-    } else {
-        primaryColor.copy(alpha = 0.12f)
-    }
+    val glassBg by animateColorAsState(
+        targetValue = if (isDark) primaryColor.copy(alpha = 0.20f) else primaryColor.copy(alpha = 0.12f),
+        animationSpec = tween(500),
+        label = "btnBg"
+    )
 
-    val borderColor = if (isDark) {
-        primaryColor.copy(alpha = 0.40f)
-    } else {
-        primaryColor.copy(alpha = 0.30f)
-    }
+    val borderColor by animateColorAsState(
+        targetValue = if (isDark) primaryColor.copy(alpha = 0.40f) else primaryColor.copy(alpha = 0.30f),
+        animationSpec = tween(500),
+        label = "btnBorder"
+    )
 
     val shape = RoundedCornerShape(16.dp)
 
@@ -296,24 +305,30 @@ fun LiquidGlassStatCard(
     val isDark = LocalIsDarkTheme.current
     val shape = RoundedCornerShape(20.dp)
 
-    val glassBg = if (isDark) {
-        Color.White.copy(alpha = 0.06f)
-    } else {
-        Color.White.copy(alpha = 0.50f)
-    }
+    val glassBg by animateColorAsState(
+        targetValue = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.50f),
+        animationSpec = tween(500),
+        label = "statBg"
+    )
 
-    val glassBorder = if (isDark) {
-        Color.White.copy(alpha = 0.12f)
-    } else {
-        Color.White.copy(alpha = 0.65f)
-    }
+    val glassBorder by animateColorAsState(
+        targetValue = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.65f),
+        animationSpec = tween(500),
+        label = "statBorder"
+    )
+
+    val shadowSpot by animateColorAsState(
+        targetValue = if (isDark) Color.Black.copy(alpha = 0.3f) else Color(0xFF6080C0).copy(alpha = 0.08f),
+        animationSpec = tween(500),
+        label = "statShadow"
+    )
 
     Box(
         modifier = modifier
             .shadow(
                 elevation = 10.dp,
                 shape = shape,
-                spotColor = if (isDark) Color.Black.copy(alpha = 0.3f) else Color(0xFF6080C0).copy(alpha = 0.08f)
+                spotColor = shadowSpot
             )
             .clip(shape)
             .background(glassBg)
@@ -396,13 +411,17 @@ fun LiquidGlassSurface(
     val isDark = LocalIsDarkTheme.current
     val shape = RoundedCornerShape(cornerRadius)
 
-    val glassBg = if (isDark) {
-        Color.White.copy(alpha = 0.05f)
-    } else {
-        Color.White.copy(alpha = 0.45f)
-    }
+    val glassBg by animateColorAsState(
+        targetValue = if (isDark) Color.White.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.45f),
+        animationSpec = tween(500),
+        label = "surfaceBg"
+    )
 
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.60f)
+    val borderColor by animateColorAsState(
+        targetValue = if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.60f),
+        animationSpec = tween(500),
+        label = "surfaceBorder"
+    )
 
     Box(
         modifier = modifier

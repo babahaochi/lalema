@@ -1,5 +1,12 @@
 package com.lalema.app.ui.calendar
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -224,13 +231,29 @@ fun CalendarScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    val yearMonth = state.currentYearMonth
-                    val firstDayOffset = yearMonth.atDay(1).dayOfWeek.value % 7
-                    val daysInMonth = yearMonth.lengthOfMonth()
-                    val totalRawCells = firstDayOffset + daysInMonth
-                    val remainder = totalRawCells % 7
-                    val totalCells = if (remainder == 0) totalRawCells else totalRawCells + (7 - remainder)
                     val today = LocalDate.now()
+
+                    AnimatedContent(
+                        targetState = state.currentYearMonth,
+                        transitionSpec = {
+                            val direction = if (targetState > initialState) 1 else -1
+                            (slideInHorizontally(
+                                initialOffsetX = { fullWidth -> direction * fullWidth / 3 },
+                                animationSpec = tween(300)
+                            ) + fadeIn(tween(200))) togetherWith
+                            (slideOutHorizontally(
+                                targetOffsetX = { fullWidth -> -direction * fullWidth / 3 },
+                                animationSpec = tween(300)
+                            ) + fadeOut(tween(200)))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = "monthTransition"
+                    ) { yearMonth ->
+                        val firstDayOffset = yearMonth.atDay(1).dayOfWeek.value % 7
+                        val daysInMonth = yearMonth.lengthOfMonth()
+                        val totalRawCells = firstDayOffset + daysInMonth
+                        val remainder = totalRawCells % 7
+                        val totalCells = if (remainder == 0) totalRawCells else totalRawCells + (7 - remainder)
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(7),
@@ -331,6 +354,7 @@ fun CalendarScreen(
                                 }
                             }
                         }
+                    }
                     }
                 }
             }

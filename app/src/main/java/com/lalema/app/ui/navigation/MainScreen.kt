@@ -1,5 +1,8 @@
 package com.lalema.app.ui.navigation
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -8,10 +11,16 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import com.lalema.app.ui.theme.LocalIsDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -27,6 +36,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -101,26 +111,26 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
                     enterTransition = {
                         slideInHorizontally(
                             initialOffsetX = { fullWidth -> if (direction > 0) fullWidth else -fullWidth },
-                            animationSpec = tween(300)
-                        ) + fadeIn(animationSpec = tween(300))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        ) + fadeIn(animationSpec = tween(250))
                     },
                     exitTransition = {
                         slideOutHorizontally(
                             targetOffsetX = { fullWidth -> if (direction > 0) -fullWidth else fullWidth },
-                            animationSpec = tween(300)
-                        ) + fadeOut(animationSpec = tween(300))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        ) + fadeOut(animationSpec = tween(200))
                     },
                     popEnterTransition = {
                         slideInHorizontally(
                             initialOffsetX = { fullWidth -> if (direction > 0) -fullWidth else fullWidth },
-                            animationSpec = tween(300)
-                        ) + fadeIn(animationSpec = tween(300))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        ) + fadeIn(animationSpec = tween(250))
                     },
                     popExitTransition = {
                         slideOutHorizontally(
                             targetOffsetX = { fullWidth -> if (direction > 0) fullWidth else -fullWidth },
-                            animationSpec = tween(300)
-                        ) + fadeOut(animationSpec = tween(300))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        ) + fadeOut(animationSpec = tween(200))
                     }
                 ) {
                     composable(Screen.Home.route) { HomeScreen(navController) }
@@ -161,14 +171,39 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
                     }
                     .windowInsetsPadding(WindowInsets.navigationBars)
             ) {
-                screens.forEach { screen ->
+                screens.forEachIndexed { _, screen ->
                     val selected = currentRoute == screen.route
+                    val indicatorWidth by animateDpAsState(
+                        targetValue = if (selected) 24.dp else 0.dp,
+                        animationSpec = tween(300, easing = FastOutSlowInEasing),
+                        label = "indicatorWidth"
+                    )
+                    val indicatorAlpha by androidx.compose.animation.core.animateFloatAsState(
+                        targetValue = if (selected) 1f else 0f,
+                        animationSpec = tween(250),
+                        label = "indicatorAlpha"
+                    )
+
                     NavigationBarItem(
                         icon = {
-                            Icon(
-                                imageVector = screen.icon,
-                                contentDescription = screen.title
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = screen.icon,
+                                    contentDescription = screen.title
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .width(indicatorWidth)
+                                        .height(3.dp)
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(
+                                            MaterialTheme.colorScheme.primary.copy(alpha = indicatorAlpha)
+                                        )
+                                )
+                            }
                         },
                         label = {
                             Text(

@@ -6,9 +6,16 @@ import android.net.Uri
 import android.os.PowerManager
 import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import com.lalema.app.ui.theme.LocalIsDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,12 +61,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.offset
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.lalema.app.BuildConfig
@@ -377,11 +386,34 @@ private fun SwitchButton(
     val primaryColor = MaterialTheme.colorScheme.primary
     val isDark = LocalIsDarkTheme.current
 
-    val bgColor = if (checked) {
-        if (isDark) primaryColor.copy(alpha = 0.35f) else primaryColor.copy(alpha = 0.25f)
-    } else {
-        if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.40f)
-    }
+    val bgColor by animateColorAsState(
+        targetValue = if (checked) {
+            if (isDark) primaryColor.copy(alpha = 0.35f) else primaryColor.copy(alpha = 0.25f)
+        } else {
+            if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.40f)
+        },
+        animationSpec = tween(300),
+        label = "switchBg"
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = if (checked) primaryColor.copy(alpha = 0.4f) else
+            if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.50f),
+        animationSpec = tween(300),
+        label = "switchBorder"
+    )
+
+    val thumbColor by animateColorAsState(
+        targetValue = if (checked) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(300),
+        label = "switchThumb"
+    )
+
+    val thumbOffset by animateDpAsState(
+        targetValue = if (checked) 24.dp else 0.dp,
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = 400f),
+        label = "switchThumbOffset"
+    )
 
     Box(
         modifier = Modifier
@@ -391,19 +423,19 @@ private fun SwitchButton(
             .background(bgColor)
             .border(
                 width = 1.dp,
-                color = if (checked) primaryColor.copy(alpha = 0.4f) else
-                    if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.50f),
+                color = borderColor,
                 shape = RoundedCornerShape(14.dp)
             )
             .clickable { onCheckedChange(!checked) }
             .padding(3.dp),
-        contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
+        contentAlignment = Alignment.CenterStart
     ) {
         Box(
             modifier = Modifier
                 .size(22.dp)
+                .offset(x = thumbOffset)
                 .clip(CircleShape)
-                .background(if (checked) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant)
+                .background(thumbColor)
         )
     }
 }
@@ -665,19 +697,8 @@ private fun GlassTimePickerDialog(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(
-                                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
-                                    )
-                                    .clickable { selectedHour = (selectedHour + 1) % 24 },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "▲", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
+                            GlassArrowButton(isDark = isDark) { selectedHour = (selectedHour + 1) % 24 }
+                            Spacer(modifier = Modifier.width(4.dp))
                             Box(
                                 modifier = Modifier
                                     .size(56.dp, 48.dp)
@@ -699,19 +720,8 @@ private fun GlassTimePickerDialog(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(
-                                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
-                                    )
-                                    .clickable { selectedHour = (selectedHour - 1 + 24) % 24 },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "▼", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
-                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            GlassArrowButton(isDark = isDark, isUp = false) { selectedHour = (selectedHour - 1 + 24) % 24 }
                         }
                     }
 
@@ -734,19 +744,8 @@ private fun GlassTimePickerDialog(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(
-                                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
-                                    )
-                                    .clickable { selectedMinute = (selectedMinute + 1) % 60 },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "▲", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
+                            GlassArrowButton(isDark = isDark) { selectedMinute = (selectedMinute + 1) % 60 }
+                            Spacer(modifier = Modifier.width(4.dp))
                             Box(
                                 modifier = Modifier
                                     .size(56.dp, 48.dp)
@@ -768,19 +767,8 @@ private fun GlassTimePickerDialog(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(
-                                        if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
-                                    )
-                                    .clickable { selectedMinute = (selectedMinute - 1 + 60) % 60 },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "▼", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
-                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            GlassArrowButton(isDark = isDark, isUp = false) { selectedMinute = (selectedMinute - 1 + 60) % 60 }
                         }
                     }
                 }
@@ -803,4 +791,39 @@ private fun GlassTimePickerDialog(
             }
         }
     )
+}
+
+@Composable
+private fun GlassArrowButton(
+    isDark: Boolean,
+    isUp: Boolean = true,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.8f else 1f,
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 500f),
+        label = "arrowScale"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = if (isUp) "▲" else "▼",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
 }

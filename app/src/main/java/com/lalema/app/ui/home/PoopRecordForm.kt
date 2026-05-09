@@ -1,9 +1,19 @@
 package com.lalema.app.ui.home
 
-import android.app.TimePickerDialog
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import com.lalema.app.ui.theme.LocalIsDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -80,7 +91,6 @@ fun PoopRecordForm(
     if (!show) return
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val context = LocalContext.current
     val isDark = LocalIsDarkTheme.current
     var timeHour by remember { mutableIntStateOf(java.time.LocalTime.now().hour) }
     var timeMinute by remember { mutableIntStateOf(java.time.LocalTime.now().minute) }
@@ -92,6 +102,7 @@ fun PoopRecordForm(
     var hasBlood by remember { mutableStateOf(false) }
     var hasMucus by remember { mutableStateOf(false) }
     var notes by remember { mutableStateOf("") }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     val sheetContainerColor = if (isDark) Color(0xFF1A1C30) else Color(0xFFF0F0FA)
 
@@ -120,19 +131,22 @@ fun PoopRecordForm(
             GlassTimeCard(
                 timeHour = timeHour,
                 timeMinute = timeMinute,
-                onClick = {
-                    TimePickerDialog(
-                        context,
-                        { _, hour, minute ->
-                            timeHour = hour
-                            timeMinute = minute
-                        },
-                        timeHour,
-                        timeMinute,
-                        true
-                    ).show()
-                }
+                onClick = { showTimePicker = !showTimePicker }
             )
+
+            AnimatedVisibility(
+                visible = showTimePicker,
+                enter = expandVertically(animationSpec = tween(300)) + fadeIn(animationSpec = tween(200)),
+                exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(150))
+            ) {
+                Spacer(modifier = Modifier.height(12.dp))
+                GlassInlineTimePicker(
+                    hour = timeHour,
+                    minute = timeMinute,
+                    onHourChange = { timeHour = it },
+                    onMinuteChange = { timeMinute = it }
+                )
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -282,6 +296,14 @@ fun PoopRecordForm(
             Spacer(modifier = Modifier.height(24.dp))
 
             val primaryColor = MaterialTheme.colorScheme.primary
+            val submitInteractionSource = remember { MutableInteractionSource() }
+            val isSubmitPressed by submitInteractionSource.collectIsPressedAsState()
+            val submitScale by animateFloatAsState(
+                targetValue = if (isSubmitPressed) 0.96f else 1f,
+                animationSpec = spring(dampingRatio = 0.6f, stiffness = 600f),
+                label = "submitScale"
+            )
+
             Button(
                 onClick = {
                     onSubmit(
@@ -298,11 +320,14 @@ fun PoopRecordForm(
                     )
                     onDismiss()
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .scale(submitScale),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = primaryColor.copy(alpha = if (isDark) 0.80f else 0.90f)
-                )
+                ),
+                interactionSource = submitInteractionSource
             ) {
                 Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
@@ -392,23 +417,35 @@ fun ChoiceChip(
     val isDark = LocalIsDarkTheme.current
     val shape = RoundedCornerShape(10.dp)
 
-    val bgColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.30f else 0.20f)
-    } else {
-        if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f)
-    }
+    val bgColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.30f else 0.20f)
+        } else {
+            if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f)
+        },
+        animationSpec = tween(250),
+        label = "chipBg"
+    )
 
-    val borderColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-    } else {
-        if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
-    }
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+        } else {
+            if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
+        },
+        animationSpec = tween(250),
+        label = "chipBorder"
+    )
 
-    val textColor = if (selected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
+    val textColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        animationSpec = tween(250),
+        label = "chipText"
+    )
 
     Box(
         modifier = modifier
@@ -438,6 +475,18 @@ fun ColorChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.3f),
+        animationSpec = tween(250),
+        label = "colorChipBorder"
+    )
+
+    val textColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(250),
+        label = "colorChipText"
+    )
+
     Column(
         modifier = modifier
             .padding(2.dp)
@@ -451,16 +500,132 @@ fun ColorChip(
                 .background(android.graphics.Color.parseColor(colorHex).let { Color(it) })
                 .border(
                     width = if (selected) 2.5.dp else 1.dp,
-                    color = if (selected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.3f),
+                    color = borderColor,
                     shape = CircleShape
                 )
         )
         Text(
             text = displayName,
             fontSize = 10.sp,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = textColor,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             modifier = Modifier.padding(top = 2.dp)
+        )
+    }
+}
+
+@Composable
+private fun GlassInlineTimePicker(
+    hour: Int,
+    minute: Int,
+    onHourChange: (Int) -> Unit,
+    onMinuteChange: (Int) -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    val shape = RoundedCornerShape(16.dp)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f))
+            .border(1.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.45f), shape)
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                GlassFormArrowButton(isDark = isDark) { onHourChange((hour + 1) % 24) }
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .size(56.dp, 48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.60f))
+                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(14.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = String.format("%02d", hour),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                GlassFormArrowButton(isDark = isDark, isUp = false) { onHourChange((hour - 1 + 24) % 24) }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Text(
+                text = ":",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                GlassFormArrowButton(isDark = isDark) { onMinuteChange((minute + 1) % 60) }
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .size(56.dp, 48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.60f))
+                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(14.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = String.format("%02d", minute),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                GlassFormArrowButton(isDark = isDark, isUp = false) { onMinuteChange((minute - 1 + 60) % 60) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GlassFormArrowButton(
+    isDark: Boolean,
+    isUp: Boolean = true,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.8f else 1f,
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 500f),
+        label = "formArrowScale"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = if (isUp) "▲" else "▼",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }
