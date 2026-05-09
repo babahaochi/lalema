@@ -128,45 +128,27 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = navBarShape,
-                        spotColor = if (isDark) Color.Black.copy(alpha = 0.15f) else Color(0xFF6080C0).copy(alpha = 0.05f)
-                    )
                     .clip(navBarShape)
                     .background(
                         brush = Brush.verticalGradient(
                             colors = if (isDark) {
                                 listOf(
-                                    Color(0xFF0D0F1A).copy(alpha = 0.55f),
-                                    Color(0xFF0D0F1A).copy(alpha = 0.65f)
+                                    Color(0xFF0D0F1A).copy(alpha = 0.30f),
+                                    Color(0xFF0D0F1A).copy(alpha = 0.45f)
                                 )
                             } else {
                                 listOf(
-                                    Color.White.copy(alpha = 0.45f),
-                                    Color.White.copy(alpha = 0.55f)
+                                    Color.White.copy(alpha = 0.25f),
+                                    Color.White.copy(alpha = 0.40f)
                                 )
                             }
                         )
                     )
                     .border(
-                        width = 1.dp,
-                        color = if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.35f),
+                        width = 0.5.dp,
+                        color = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.25f),
                         shape = navBarShape
                     )
-                    .drawBehind {
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = if (isDark) 0.06f else 0.40f),
-                                    Color.White.copy(alpha = if (isDark) 0.03f else 0.20f),
-                                    Color.Transparent
-                                ),
-                                startY = 0f,
-                                endY = size.height * 0.35f
-                            )
-                        )
-                    }
                     .windowInsetsPadding(WindowInsets.navigationBars)
             ) {
                 Row(

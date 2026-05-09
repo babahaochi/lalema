@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.lalema.app.ui.calendar
 
 import androidx.compose.animation.AnimatedContent
@@ -44,11 +46,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -84,7 +88,6 @@ import java.time.format.DateTimeFormatter
 
 private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     navController: NavHostController,
@@ -121,6 +124,20 @@ fun CalendarScreen(
                 TextButton(onClick = { recordToDelete = null }) {
                     Text("取消")
                 }
+            }
+        )
+    }
+
+    if (state.showDetailDialog && state.selectedDate != null) {
+        DateDetailBottomSheet(
+            state = state,
+            onDismiss = { viewModel.dismissDialog() },
+            onAddRecord = { date ->
+                viewModel.dismissDialog()
+                viewModel.showRecordFormForDate(date)
+            },
+            onDeleteRecord = { record ->
+                viewModel.deleteRecord(record.id)
             }
         )
     }
@@ -183,85 +200,6 @@ fun CalendarScreen(
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
-
-            AnimatedVisibility(
-                visible = state.showDetailDialog && state.selectedDate != null,
-                enter = expandVertically(animationSpec = tween(300)) + fadeIn(animationSpec = tween(200)),
-                exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(150))
-            ) {
-                val selectedDate = state.selectedDate?.let { LocalDate.parse(it, dateFormatter) }
-
-                LiquidGlassCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    cornerRadius = 20.dp
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = selectedDate?.let { "${it.monthValue}月${it.dayOfMonth}日" } ?: "",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            IconButton(onClick = { viewModel.dismissDialog() }) {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "关闭",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-
-                        if (state.selectedRecords.isEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "暂无记录",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                        } else {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            state.selectedRecords.forEach { record ->
-                                RecordDetailCard(
-                                    record = record,
-                                    onDelete = { recordToDelete = record }
-                                )
-                                if (record != state.selectedRecords.last()) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            LiquidGlassButton(
-                                text = "添加记录",
-                                onClick = {
-                                    viewModel.dismissDialog()
-                                    state.selectedDate?.let {
-                                        viewModel.showRecordFormForDate(it)
-                                    }
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -617,5 +555,134 @@ private fun getPainLevelText(level: Int): String {
         2 -> "中等"
         3 -> "严重"
         else -> "未知"
+    }
+}
+
+@Composable
+private fun DateDetailBottomSheet(
+    state: CalendarUiState,
+    onDismiss: () -> Unit,
+    onAddRecord: (String) -> Unit,
+    onDeleteRecord: (PoopRecord) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val isDark = LocalIsDarkTheme.current
+    val selectedDate = state.selectedDate?.let { LocalDate.parse(it, dateFormatter) }
+    var recordToDelete by remember { mutableStateOf<PoopRecord?>(null) }
+
+    recordToDelete?.let { record ->
+        AlertDialog(
+            onDismissRequest = { recordToDelete = null },
+            title = { Text("删除记录") },
+            text = { Text("确定要删除这条 ${record.timeHour}:${String.format("%02d", record.timeMinute)} 的记录吗？") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteRecord(record)
+                        recordToDelete = null
+                    }
+                ) {
+                    Text("删除", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { recordToDelete = null }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = if (isDark) Color(0xFF1A1C30) else Color(0xFFF0F0FA),
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .padding(top = 12.dp, bottom = 8.dp)
+                    .width(40.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.15f))
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = selectedDate?.let { "${it.monthValue}月${it.dayOfMonth}日" } ?: "",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "关闭",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (state.selectedRecords.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "暂无记录",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "点击下方按钮添加记录",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+            } else {
+                state.selectedRecords.forEach { record ->
+                    RecordDetailCard(
+                        record = record,
+                        onDelete = { recordToDelete = record }
+                    )
+                    if (record != state.selectedRecords.last()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LiquidGlassButton(
+                text = "添加记录",
+                onClick = {
+                    state.selectedDate?.let { onAddRecord(it) }
+                    onDismiss()
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
     }
 }

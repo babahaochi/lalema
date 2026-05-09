@@ -42,11 +42,15 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.TagFaces
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -64,6 +68,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -108,7 +113,14 @@ fun HomeScreen(
         label = "pulseScale"
     )
     var showContent by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
     val isDark = LocalIsDarkTheme.current
+
+    LaunchedEffect(uiState.todayRecords) {
+        if (uiState.todayRecords.isNotEmpty() && !uiState.showRecordForm) {
+            showSuccessDialog = true
+        }
+    }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val isHomeActive = navBackStackEntry?.destination?.route == Screen.Home.route
@@ -130,6 +142,46 @@ fun HomeScreen(
             viewModel.recordToday(timeHour, timeMinute, amount, consistency, color, smell, painLevel, blood, mucus, notes)
         }
     )
+
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showSuccessDialog = false },
+            containerColor = if (isDark) Color(0xFF1A1C30) else Color(0xFFF0F0FA),
+            shape = RoundedCornerShape(24.dp),
+            title = {
+                Text(
+                    text = "打卡成功！",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            },
+            text = {
+                Text(
+                    text = "今天已记录 ${uiState.todayRecords.size} 次排便，继续保持！",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSuccessDialog = false
+                        navController.navigate(Screen.Settings.route)
+                    },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                    )
+                ) {
+                    Text("去生成海报", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSuccessDialog = false }) {
+                    Text("关闭", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {

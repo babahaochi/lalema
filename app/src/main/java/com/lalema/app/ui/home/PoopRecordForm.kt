@@ -104,14 +104,24 @@ fun PoopRecordForm(
     var notes by remember { mutableStateOf("") }
     var showTimePicker by remember { mutableStateOf(false) }
 
-    val sheetContainerColor = if (isDark) Color(0xFF1A1C30) else Color(0xFFF0F0FA)
+    val sheetContainerColor = if (isDark) Color(0xFF0D0F1A).copy(alpha = 0.95f) else Color(0xFFF0F0FA).copy(alpha = 0.95f)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         containerColor = sheetContainerColor,
-        scrimColor = Color.Black.copy(alpha = 0.4f)
+        scrimColor = Color.Black.copy(alpha = 0.3f),
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .padding(top = 12.dp, bottom = 8.dp)
+                    .width(40.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.15f))
+            )
+        }
     ) {
         Column(
             modifier = Modifier
@@ -262,19 +272,64 @@ fun PoopRecordForm(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Checkbox(
-                    checked = hasBlood,
-                    onCheckedChange = { hasBlood = it },
-                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.error)
-                )
-                Text(text = "有血", fontSize = 14.sp)
+                val checkboxShape = RoundedCornerShape(6.dp)
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(checkboxShape)
+                        .background(
+                            if (hasBlood) MaterialTheme.colorScheme.error.copy(alpha = 0.25f)
+                            else if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.35f)
+                        )
+                        .border(
+                            1.dp,
+                            if (hasBlood) MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                            else if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.45f),
+                            checkboxShape
+                        )
+                        .clickable { hasBlood = !hasBlood },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (hasBlood) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "有血", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.width(24.dp))
-                Checkbox(
-                    checked = hasMucus,
-                    onCheckedChange = { hasMucus = it },
-                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.error)
-                )
-                Text(text = "有粘液", fontSize = 14.sp)
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(checkboxShape)
+                        .background(
+                            if (hasMucus) MaterialTheme.colorScheme.error.copy(alpha = 0.25f)
+                            else if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.35f)
+                        )
+                        .border(
+                            1.dp,
+                            if (hasMucus) MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                            else if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.45f),
+                            checkboxShape
+                        )
+                        .clickable { hasMucus = !hasMucus },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (hasMucus) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "有粘液", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
             }
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+
 package com.lalema.app.ui.settings
 
 import android.content.ContentValues
@@ -118,7 +120,6 @@ enum class UpdateCheckResult {
     HAS_UPDATE, UP_TO_DATE, NETWORK_ERROR
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     navController: NavHostController,
@@ -144,8 +145,11 @@ fun SettingsScreen(
     var isExporting by remember { mutableStateOf(false) }
 
     updateDialogInfo?.let { info ->
+        val isDark = LocalIsDarkTheme.current
         AlertDialog(
             onDismissRequest = { updateDialogInfo = null },
+            containerColor = if (isDark) Color(0xFF1A1C30) else Color(0xFFF0F0FA),
+            shape = RoundedCornerShape(24.dp),
             title = {
                 Text(
                     "发现新版本 ${info.tagName}",
@@ -170,17 +174,23 @@ fun SettingsScreen(
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.htmlUrl))
-                    context.startActivity(intent)
-                    updateDialogInfo = null
-                }) {
+                Button(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.htmlUrl))
+                        context.startActivity(intent)
+                        updateDialogInfo = null
+                    },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                    )
+                ) {
                     Text("前往下载", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { updateDialogInfo = null }) {
-                    Text("稍后提醒")
+                    Text("稍后提醒", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -191,34 +201,33 @@ fun SettingsScreen(
         ExportDataDialog(
             records = allRecords,
             isExporting = isExporting,
-            onExport = { format ->
-                isExporting = true
-                val currentRecords = allRecords
-                scope.launch {
-                    val result = withContext(Dispatchers.IO) {
-                        val (content, fileName, mimeType) = when (format) {
-                            "csv" -> Triple(
-                                DataExportManager.exportToCsv(currentRecords),
-                                "lalema_export_${SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())}.csv",
-                                "text/csv"
-                            )
-                            else -> Triple(
-                                DataExportManager.exportToJson(currentRecords),
-                                "lalema_export_${SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())}.json",
-                                "application/json"
-                            )
+            onExport = { format, filteredRecords ->
+                        isExporting = true
+                        scope.launch {
+                            val result = withContext(Dispatchers.IO) {
+                                val (content, fileName, mimeType) = when (format) {
+                                    "csv" -> Triple(
+                                        DataExportManager.exportToCsv(filteredRecords),
+                                        "lalema_export_${SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())}.csv",
+                                        "text/csv"
+                                    )
+                                    else -> Triple(
+                                        DataExportManager.exportToJson(filteredRecords),
+                                        "lalema_export_${SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())}.json",
+                                        "application/json"
+                                    )
+                                }
+                                if (DataExportManager.saveToFile(context, content, fileName, mimeType)) fileName else null
+                            }
+                            isExporting = false
+                            showExportDialog = false
+                            if (result != null) {
+                                Toast.makeText(context, "已导出到 Documents/LaLeMa/$result", Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(context, "导出失败", Toast.LENGTH_SHORT).show()
+                            }
                         }
-                        if (DataExportManager.saveToFile(context, content, fileName, mimeType)) fileName else null
-                    }
-                    isExporting = false
-                    showExportDialog = false
-                    if (result != null) {
-                        Toast.makeText(context, "已导出到 Documents/LaLeMa/$result", Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(context, "导出失败", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            },
+                    },
             onDismiss = { showExportDialog = false }
         )
     }
@@ -936,10 +945,35 @@ private fun GlassArrowButton(
 private fun ExportDataDialog(
     records: List<PoopRecord>,
     isExporting: Boolean,
-    onExport: (String) -> Unit,
+    onExport: (String, List<PoopRecord>) -> Unit,
     onDismiss: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
+    var selectedRange by remember { mutableStateOf("all") }
+
+    val filteredRecords = when (selectedRange) {
+        "month" -> records.filter {
+            it.date.startsWith(java.time.YearMonth.now().toString())
+        }
+        "week" -> records.filter {
+            val date = java.time.LocalDate.parse(it.date)
+            val weekAgo = java.time.LocalDate.now().minusDays(7)
+            !date.isBefore(weekAgo)
+        }
+        "30days" -> records.filter {
+            val date = java.time.LocalDate.parse(it.date)
+            val monthAgo = java.time.LocalDate.now().minusDays(30)
+            !date.isBefore(monthAgo)
+        }
+        else -> records
+    }
+
+    val rangeOptions = listOf(
+        "all" to "全部",
+        "month" to "本月",
+        "week" to "最近7天",
+        "30days" to "最近30天"
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -955,20 +989,62 @@ private fun ExportDataDialog(
         text = {
             Column {
                 Text(
-                    text = "共 ${records.size} 条记录",
+                    text = "共 ${filteredRecords.size} 条记录",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    rangeOptions.forEach { (key, label) ->
+                        val selected = selectedRange == key
+                        val bgColor by animateColorAsState(
+                            targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f) else if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f),
+                            animationSpec = tween(200),
+                            label = "rangeBg"
+                        )
+                        val borderColor by animateColorAsState(
+                            targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f),
+                            animationSpec = tween(200),
+                            label = "rangeBorder"
+                        )
+                        val textColor by animateColorAsState(
+                            targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            animationSpec = tween(200),
+                            label = "rangeText"
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(bgColor)
+                                .border(1.dp, borderColor, RoundedCornerShape(10.dp))
+                                .clickable { selectedRange = key }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = 13.sp,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                                color = textColor
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = { onExport("csv") },
+                        onClick = { onExport("csv", filteredRecords) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(14.dp),
-                        enabled = !isExporting && records.isNotEmpty(),
+                        enabled = !isExporting && filteredRecords.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
                         )
@@ -976,10 +1052,10 @@ private fun ExportDataDialog(
                         Text("CSV", color = Color.White)
                     }
                     Button(
-                        onClick = { onExport("json") },
+                        onClick = { onExport("json", filteredRecords) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(14.dp),
-                        enabled = !isExporting && records.isNotEmpty(),
+                        enabled = !isExporting && filteredRecords.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
                         )
