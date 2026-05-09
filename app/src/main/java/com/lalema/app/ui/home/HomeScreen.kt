@@ -57,6 +57,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -114,12 +115,15 @@ fun HomeScreen(
     )
     var showContent by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
+    var lastRecordCount by remember { mutableIntStateOf(-1) }
     val isDark = LocalIsDarkTheme.current
 
-    LaunchedEffect(uiState.todayRecords) {
-        if (uiState.todayRecords.isNotEmpty() && !uiState.showRecordForm) {
+    LaunchedEffect(uiState.todayRecords.size) {
+        val currentCount = uiState.todayRecords.size
+        if (lastRecordCount >= 0 && currentCount > lastRecordCount) {
             showSuccessDialog = true
         }
+        lastRecordCount = currentCount
     }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()

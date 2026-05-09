@@ -40,14 +40,14 @@ class HomeViewModel @Inject constructor(
             val todayRecords = repository.getByDate(todayStr)
             val isRecorded = todayRecords.isNotEmpty()
             val streak = repository.getStreak()
-            val monthCount = repository.getRecordCountByMonth(today.year, today.monthValue)
-            val monthDays = YearMonth.of(today.year, today.monthValue).lengthOfMonth()
-            val monthRate = if (monthDays > 0) monthCount.toFloat() / monthDays else 0f
+            val monthRecordDays = repository.getCountByMonth(today.year, today.monthValue)
+            val dayOfMonth = today.dayOfMonth
+            val monthRate = if (dayOfMonth > 0) monthRecordDays.toFloat() / dayOfMonth else 0f
 
             _uiState.value = HomeUiState(
                 isTodayRecorded = isRecorded,
                 streak = streak,
-                monthCount = monthCount,
+                monthCount = monthRecordDays,
                 monthRate = monthRate,
                 todayRecords = todayRecords
             )

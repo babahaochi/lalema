@@ -108,7 +108,11 @@ class CalendarViewModel @Inject constructor(
         viewModelScope.launch {
             repository.deleteRecord(id)
             refreshMonthData()
-            _uiState.value = _uiState.value.copy(showDetailDialog = false)
+            val date = _uiState.value.selectedDate
+            if (date != null) {
+                val records = repository.getByDate(date)
+                _uiState.value = _uiState.value.copy(selectedRecords = records)
+            }
         }
     }
 

@@ -42,6 +42,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -94,6 +96,7 @@ fun CalendarScreen(
     viewModel: CalendarViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val isDark = LocalIsDarkTheme.current
 
     PoopRecordForm(
         show = state.showRecordForm,
@@ -108,21 +111,38 @@ fun CalendarScreen(
     recordToDelete?.let { record ->
         AlertDialog(
             onDismissRequest = { recordToDelete = null },
-            title = { Text("删除记录") },
-            text = { Text("确定要删除这条 ${record.timeHour}:${String.format("%02d", record.timeMinute)} 的记录吗？") },
+            containerColor = if (isDark) Color(0xFF1A1C30) else Color(0xFFF0F0FA),
+            shape = RoundedCornerShape(24.dp),
+            title = {
+                Text(
+                    "删除记录",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    "确定要删除这条 ${record.timeHour}:${String.format("%02d", record.timeMinute)} 的记录吗？",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         viewModel.deleteRecord(record.id)
                         recordToDelete = null
-                    }
+                    },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
+                    )
                 ) {
-                    Text("删除", color = Color.Red)
+                    Text("删除", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { recordToDelete = null }) {
-                    Text("取消")
+                    Text("取消", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -133,7 +153,6 @@ fun CalendarScreen(
             state = state,
             onDismiss = { viewModel.dismissDialog() },
             onAddRecord = { date ->
-                viewModel.dismissDialog()
                 viewModel.showRecordFormForDate(date)
             },
             onDeleteRecord = { record ->
@@ -573,21 +592,38 @@ private fun DateDetailBottomSheet(
     recordToDelete?.let { record ->
         AlertDialog(
             onDismissRequest = { recordToDelete = null },
-            title = { Text("删除记录") },
-            text = { Text("确定要删除这条 ${record.timeHour}:${String.format("%02d", record.timeMinute)} 的记录吗？") },
+            containerColor = if (isDark) Color(0xFF1A1C30) else Color(0xFFF0F0FA),
+            shape = RoundedCornerShape(24.dp),
+            title = {
+                Text(
+                    "删除记录",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    "确定要删除这条 ${record.timeHour}:${String.format("%02d", record.timeMinute)} 的记录吗？",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         onDeleteRecord(record)
                         recordToDelete = null
-                    }
+                    },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
+                    )
                 ) {
-                    Text("删除", color = Color.Red)
+                    Text("删除", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { recordToDelete = null }) {
-                    Text("取消")
+                    Text("取消", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -597,7 +633,7 @@ private fun DateDetailBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = if (isDark) Color(0xFF1A1C30) else Color(0xFFF0F0FA),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         dragHandle = {
             Box(
                 modifier = Modifier
