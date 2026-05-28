@@ -85,12 +85,12 @@ public class PoopRecordService {
     }
 
     public Map<String, Object> getMonthStats(Long userId, int year, int month) {
-        String pattern = String.format("%04d-%02d-%%", year, month);
-        List<Map<String, Object>> recordDays = mapper.getMonthRecordDays(userId, pattern);
+        String monthPrefix = String.format("%04d-%02d", year, month);
+        List<Map<String, Object>> recordDays = mapper.getMonthRecordDays(userId, monthPrefix);
         int totalRecords = mapper.selectCount(
             new LambdaQueryWrapper<PoopRecord>()
                 .eq(PoopRecord::getUserId, userId)
-                .likeRight(PoopRecord::getDate, String.format("%04d-%02d", year, month))
+                .likeRight(PoopRecord::getDate, monthPrefix)
         ).intValue();
         Map<String, Object> commonHour = mapper.getMostCommonHour(userId);
 

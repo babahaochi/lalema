@@ -1,6 +1,7 @@
 package com.lalema.app.ui.navigation
 
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -23,7 +24,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -46,6 +49,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,7 +94,7 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
     val primaryColor = MaterialTheme.colorScheme.primary
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
-        Box(modifier = Modifier.fillMaxSize().padding(bottom = 64.dp)) {
+        Box(modifier = Modifier.fillMaxSize().padding(bottom = 80.dp)) {
             NavHost(
                     navController = navController,
                     startDestination = Screen.Home.route,
@@ -135,120 +139,134 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
                 }
             }
 
+        // Glassmorphism Bottom Navigation Bar - centered
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = 20.dp, vertical = 8.dp)
-                .shadow(
-                    elevation = 16.dp,
-                    shape = pillShape,
-                    ambientColor = if (isDark) Color.Black.copy(alpha = 0.40f) else Color(0xFF6080C0).copy(alpha = 0.14f),
-                    spotColor = if (isDark) Color.Black.copy(alpha = 0.50f) else Color(0xFF6080C0).copy(alpha = 0.18f)
-                )
-                .shadow(
-                    elevation = 4.dp,
-                    shape = pillShape,
-                    ambientColor = if (isDark) primaryColor.copy(alpha = 0.06f) else primaryColor.copy(alpha = 0.03f),
-                    spotColor = if (isDark) primaryColor.copy(alpha = 0.08f) else primaryColor.copy(alpha = 0.05f)
-                )
-                .clip(pillShape)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = if (isDark) {
-                            listOf(
-                                Color.White.copy(alpha = 0.10f),
-                                Color.White.copy(alpha = 0.05f),
-                                Color.White.copy(alpha = 0.03f)
-                            )
-                        } else {
-                            listOf(
-                                Color.White.copy(alpha = 0.88f),
-                                Color.White.copy(alpha = 0.75f),
-                                Color.White.copy(alpha = 0.65f)
-                            )
-                        }
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.verticalGradient(
-                        colors = if (isDark) {
-                            listOf(
-                                Color.White.copy(alpha = 0.18f),
-                                Color.White.copy(alpha = 0.06f)
-                            )
-                        } else {
-                            listOf(
-                                Color.White.copy(alpha = 0.90f),
-                                Color.White.copy(alpha = 0.40f)
-                            )
-                        }
-                    ),
-                    shape = pillShape
-                )
-                .drawBehind {
-                    val w = size.width
-                    val h = size.height
-                    // Top highlight strip
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = if (isDark) 0.12f else 0.55f),
-                                Color.Transparent
-                            ),
-                            startY = 0f,
-                            endY = h * 0.30f
-                        )
-                    )
-                    // Left subtle glow
-                    drawRect(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = if (isDark) 0.06f else 0.30f),
-                                Color.Transparent
-                            ),
-                            startX = 0f,
-                            endX = w * 0.15f
-                        )
-                    )
-                    // Inner glow from primary color
-                    drawRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                primaryColor.copy(alpha = if (isDark) 0.04f else 0.02f),
-                                Color.Transparent
-                            ),
-                            center = Offset(w * 0.5f, h * 0.3f),
-                            radius = w * 0.6f
-                        )
-                    )
-                }
-                .padding(bottom = 8.dp)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            Row(
+            // Deep ambient shadow layer
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                screens.forEach { screen ->
-                    val selected = currentRoute == screen.route
-                    PillNavItem(
-                        screen = screen,
-                        selected = selected,
-                        primaryColor = primaryColor,
-                        isDark = isDark,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
+                    .matchParentSize()
+                    .shadow(
+                        elevation = 24.dp,
+                        shape = pillShape,
+                        ambientColor = Color.Black.copy(alpha = 0.50f),
+                        spotColor = Color.Black.copy(alpha = 0.35f)
                     )
+            )
+            // Colored subtle glow shadow
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = pillShape,
+                        ambientColor = primaryColor.copy(alpha = if (isDark) 0.12f else 0.08f),
+                        spotColor = primaryColor.copy(alpha = if (isDark) 0.15f else 0.10f)
+                    )
+            )
+            // Main glass container
+            Box(
+                modifier = Modifier
+                    .clip(pillShape)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = if (isDark) {
+                                listOf(
+                                    Color.White.copy(alpha = 0.12f),
+                                    Color.White.copy(alpha = 0.06f),
+                                    Color.White.copy(alpha = 0.03f)
+                                )
+                            } else {
+                                listOf(
+                                    Color.White.copy(alpha = 0.72f),
+                                    Color.White.copy(alpha = 0.55f),
+                                    Color.White.copy(alpha = 0.40f)
+                                )
+                            }
+                        )
+                    )
+                    .border(
+                        width = 0.5.dp,
+                        brush = Brush.verticalGradient(
+                            colors = if (isDark) {
+                                listOf(
+                                    Color.White.copy(alpha = 0.20f),
+                                    Color.White.copy(alpha = 0.06f)
+                                )
+                            } else {
+                                listOf(
+                                    Color.White.copy(alpha = 0.80f),
+                                    Color.White.copy(alpha = 0.30f)
+                                )
+                            }
+                        ),
+                        shape = pillShape
+                    )
+                    .drawBehind {
+                        val w = size.width
+                        val h = size.height
+                        // Top highlight strip - glass edge reflection
+                        drawRect(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = if (isDark) 0.15f else 0.50f),
+                                    Color.Transparent
+                                ),
+                                startY = 0f,
+                                endY = h * 0.25f
+                            )
+                        )
+                        // Left subtle glow
+                        drawRect(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = if (isDark) 0.08f else 0.25f),
+                                    Color.Transparent
+                                ),
+                                startX = 0f,
+                                endX = w * 0.12f
+                            )
+                        )
+                        // Inner glow from primary color
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    primaryColor.copy(alpha = if (isDark) 0.06f else 0.03f),
+                                    Color.Transparent
+                                ),
+                                center = Offset(w * 0.5f, h * 0.3f),
+                                radius = w * 0.55f
+                            )
+                        )
+                    }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 6.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    screens.forEach { screen ->
+                        val selected = currentRoute == screen.route
+                        GlassNavItem(
+                            screen = screen,
+                            selected = selected,
+                            primaryColor = primaryColor,
+                            isDark = isDark,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -256,7 +274,7 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
 }
 
 @Composable
-private fun PillNavItem(
+private fun GlassNavItem(
     screen: Screen,
     selected: Boolean,
     primaryColor: Color,
@@ -264,7 +282,7 @@ private fun PillNavItem(
     onClick: () -> Unit
 ) {
     val iconColor by animateColorAsState(
-        targetValue = if (selected) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        targetValue = if (selected) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
         animationSpec = tween(300, easing = FastOutSlowInEasing),
         label = "navIconColor"
     )
@@ -273,14 +291,9 @@ private fun PillNavItem(
         animationSpec = tween(300, easing = FastOutSlowInEasing),
         label = "navTextColor"
     )
-    val bgAlpha by animateFloatAsState(
-        targetValue = if (selected) 1f else 0f,
-        animationSpec = tween(350, easing = FastOutSlowInEasing),
-        label = "bgAlpha"
-    )
     val iconScale by animateFloatAsState(
-        targetValue = if (selected) 1.1f else 1f,
-        animationSpec = spring(dampingRatio = 0.65f, stiffness = 400f),
+        targetValue = if (selected) 1.08f else 1f,
+        animationSpec = spring(dampingRatio = 0.60f, stiffness = 350f),
         label = "iconScale"
     )
     val indicatorAlpha by animateFloatAsState(
@@ -288,51 +301,83 @@ private fun PillNavItem(
         animationSpec = tween(300, easing = FastOutSlowInEasing),
         label = "indicatorAlpha"
     )
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (selected) 0.15f else 0f,
+        animationSpec = tween(350, easing = FastOutSlowInEasing),
+        label = "glowAlpha"
+    )
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .clip(RoundedCornerShape(18.dp))
-            .background(
-                color = if (isDark) {
-                    primaryColor.copy(alpha = 0.14f * bgAlpha)
-                } else {
-                    primaryColor.copy(alpha = 0.10f * bgAlpha)
-                }
-            )
+            .clip(RoundedCornerShape(20.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        // Active indicator background glow
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .alpha(glowAlpha)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            primaryColor.copy(alpha = 0.4f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                )
+        )
+
+        if (selected) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                val iconOffset by animateDpAsState(
+                    targetValue = (-1).dp,
+                    animationSpec = tween(300, easing = FastOutSlowInEasing),
+                    label = "iconOffset"
+                )
+                Icon(
+                    imageVector = screen.icon,
+                    contentDescription = screen.title,
+                    tint = iconColor,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .scale(iconScale)
+                        .offset(y = iconOffset)
+                )
+                Spacer(modifier = Modifier.height(1.dp))
+                Text(
+                    text = screen.title,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = textColor,
+                    lineHeight = 12.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Box(
+                    modifier = Modifier
+                        .size(3.dp)
+                        .alpha(indicatorAlpha)
+                        .clip(CircleShape)
+                        .background(primaryColor)
+                )
+            }
+        } else {
             Icon(
                 imageVector = screen.icon,
                 contentDescription = screen.title,
                 tint = iconColor,
                 modifier = Modifier
-                    .size(22.dp)
+                    .size(24.dp)
                     .scale(iconScale)
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = screen.title,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                color = textColor
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            // Dot indicator
-            Box(
-                modifier = Modifier
-                    .size(3.dp)
-                    .alpha(indicatorAlpha)
-                    .clip(CircleShape)
-                    .background(primaryColor)
             )
         }
     }

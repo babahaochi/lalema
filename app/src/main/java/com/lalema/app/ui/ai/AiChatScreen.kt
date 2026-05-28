@@ -208,7 +208,7 @@ fun AiChatScreen(
             ) {
                 OutlinedTextField(
                     value = inputText,
-                    onValueChange = { inputText = it },
+                    onValueChange = { if (it.length <= 500) inputText = it },
                     placeholder = { Text("输入您的问题...") },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(20.dp),

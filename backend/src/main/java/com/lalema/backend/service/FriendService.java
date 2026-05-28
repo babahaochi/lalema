@@ -43,10 +43,22 @@ public class FriendService {
         }).collect(Collectors.toList());
     }
 
+    private static final int MAX_MESSAGE_LENGTH = 200;
+
     @Transactional
     public void sendRequest(Long senderId, Long receiverId, String message) {
         if (senderId.equals(receiverId)) throw new RuntimeException("不能添加自己为好友");
         if (isFriend(senderId, receiverId)) throw new RuntimeException("已经是好友了");
+
+        String sanitizedMessage = null;
+        if (message != null) {
+            String trimmed = message.trim();
+            if (trimmed.length() > MAX_MESSAGE_LENGTH) {
+                trimmed = trimmed.substring(0, MAX_MESSAGE_LENGTH);
+            }
+            sanitizedMessage = trimmed.replaceAll("[<>\"'&]", "");
+        }
+
         FriendRequest existing = requestMapper.selectOne(
             new LambdaQueryWrapper<FriendRequest>()
                 .eq(FriendRequest::getSenderId, senderId)
@@ -69,7 +81,7 @@ public class FriendService {
         FriendRequest req = new FriendRequest();
         req.setSenderId(senderId);
         req.setReceiverId(receiverId);
-        req.setMessage(message);
+        req.setMessage(sanitizedMessage);
         req.setStatus("PENDING");
         requestMapper.insert(req);
     }

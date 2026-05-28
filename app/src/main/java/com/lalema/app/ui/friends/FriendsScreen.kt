@@ -1,6 +1,8 @@
 package com.lalema.app.ui.friends
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -47,6 +49,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,9 +77,19 @@ fun FriendsScreen(
     val isDark = LocalIsDarkTheme.current
     var selectedTab by remember { mutableStateOf(0) }
     var searchQuery by remember { mutableStateOf("") }
+    val searchQueryFlow = remember { MutableStateFlow("") }
 
     LaunchedEffect(Unit) {
         viewModel.loadData()
+    }
+
+    LaunchedEffect(searchQueryFlow) {
+        searchQueryFlow
+            .debounce(500)
+            .filter { it.isNotBlank() }
+            .collect { query ->
+                viewModel.searchUsers(query)
+            }
     }
 
     Scaffold(
@@ -161,7 +176,9 @@ fun FriendsScreen(
                     friends = uiState.friends,
                     isLoading = uiState.isLoading,
                     onRemove = { viewModel.removeFriend(it) },
-                    onSearch = { query -> viewModel.searchUsers(query) },
+                    onSearch = { query ->
+                        searchQueryFlow.value = query
+                    },
                     searchResults = uiState.searchResults,
                     onSendRequest = { userId -> viewModel.sendRequest(userId) },
                     searchQuery = searchQuery,
@@ -205,7 +222,13 @@ private fun FriendsListTab(
         ) {
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { onSearchQueryChange(it) },
+                onValueChange = {
+                    onSearchQueryChange(it)
+                    if (it.isNotBlank()) {
+                        showSearch = true
+                        onSearch(it)
+                    }
+                },
                 placeholder = { Text("搜索用户名或昵称") },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp),
@@ -321,24 +344,33 @@ private fun FriendsListTab(
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else if (friends.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.PersonSearch,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "还没有好友",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "搜索用户名添加好友",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
+            AnimatedVisibility(
+                visible = !isLoading,
+                enter = fadeIn(animationSpec = tween(400)) + slideInVertically(
+                    animationSpec = spring(dampingRatio = 0.75f, stiffness = 200f),
+                    initialOffsetY = { 30 }
+                ),
+                exit = fadeOut()
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.PersonSearch,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "还没有好友",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "搜索用户名添加好友",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
         } else {
@@ -416,19 +448,28 @@ private fun RequestsTab(
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
     } else if (requests.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Default.PersonAdd,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    modifier = Modifier.size(48.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "暂无好友请求",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        AnimatedVisibility(
+            visible = !isLoading,
+            enter = fadeIn(animationSpec = tween(400)) + slideInVertically(
+                animationSpec = spring(dampingRatio = 0.75f, stiffness = 200f),
+                initialOffsetY = { 30 }
+            ),
+            exit = fadeOut()
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.PersonAdd,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "暂无好友请求",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     } else {
@@ -537,19 +578,28 @@ private fun LeaderboardTab(
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
     } else if (leaderboard.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Default.Leaderboard,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    modifier = Modifier.size(48.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "暂无排行数据",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        AnimatedVisibility(
+            visible = !isLoading,
+            enter = fadeIn(animationSpec = tween(400)) + slideInVertically(
+                animationSpec = spring(dampingRatio = 0.75f, stiffness = 200f),
+                initialOffsetY = { 30 }
+            ),
+            exit = fadeOut()
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Leaderboard,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "暂无排行数据",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     } else {

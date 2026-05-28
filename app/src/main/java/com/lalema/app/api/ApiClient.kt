@@ -3,6 +3,7 @@ package com.lalema.app.api
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.lalema.app.BuildConfig
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -11,7 +12,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    private const val BASE_URL = "http://47.109.151.2:8080/api/"
+    private const val BASE_URL = "https://5ichat.online:8080/api/"
     private var apiService: ApiService? = null
     private var tokenProvider: (() -> String?)? = null
 
@@ -66,7 +67,7 @@ object ApiClient {
     fun getService(context: Context): ApiService {
         if (apiService == null) {
             val logging = HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
             }
             val client = OkHttpClient.Builder()
                 .addInterceptor(Interceptor { chain ->
