@@ -57,6 +57,7 @@ import androidx.navigation.compose.rememberNavController
 import com.lalema.app.ui.ai.AiChatScreen
 import com.lalema.app.ui.ai.AiConfigScreen
 import com.lalema.app.ui.ai.AiScreen
+import com.lalema.app.ui.auth.AuthScreen
 import com.lalema.app.ui.calendar.CalendarScreen
 import com.lalema.app.ui.home.HomeScreen
 import com.lalema.app.ui.settings.SettingsScreen
@@ -128,6 +129,7 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
                     }
                     composable("ai_config") { AiConfigScreen(navController) }
                     composable("ai_chat") { AiChatScreen(navController) }
+                    composable("auth") { AuthScreen(navController) }
                 }
             }
 

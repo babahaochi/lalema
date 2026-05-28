@@ -48,6 +48,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Update
@@ -89,6 +90,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.lalema.app.BuildConfig
+import com.lalema.app.api.ApiClient
 import com.lalema.app.ui.theme.GlassInlineTimePicker
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LocalThemeSettings
@@ -267,6 +269,42 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            val isLoggedIn = ApiClient.isLoggedIn(context)
+            SettingsSection(title = "账号") {
+                if (isLoggedIn) {
+                    SettingItem(
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        title = "已登录",
+                        subtitle = "点击退出登录",
+                        onClick = {
+                            ApiClient.clearToken(context)
+                            Toast.makeText(context, "已退出登录", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                } else {
+                    SettingItem(
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        title = "登录 / 注册",
+                        subtitle = "登录后可同步数据到云端",
+                        onClick = { navController.navigate("auth") }
+                    )
+                }
+            }
+
             SettingsSection(title = "提醒设置") {
                 SettingItem(
                     icon = {
