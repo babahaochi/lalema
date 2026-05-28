@@ -19,13 +19,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -56,6 +54,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.lalema.app.ui.ai.AiChatScreen
+import com.lalema.app.ui.ai.AiConfigScreen
+import com.lalema.app.ui.ai.AiScreen
 import com.lalema.app.ui.calendar.CalendarScreen
 import com.lalema.app.ui.home.HomeScreen
 import com.lalema.app.ui.settings.SettingsScreen
@@ -67,7 +68,7 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     var previousIndex by remember { mutableIntStateOf(0) }
 
-    val screens = listOf(Screen.Home, Screen.Calendar, Screen.Settings)
+    val screens = listOf(Screen.Home, Screen.Calendar, Screen.Ai, Screen.Settings)
 
     DisposableEffect(navBackStackEntry) {
         val currentEntry = navBackStackEntry
@@ -86,10 +87,9 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
     val pillShape = RoundedCornerShape(50)
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    Box(modifier = Modifier.background(Color.Transparent)) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Box(modifier = Modifier.weight(1f)) {
-                NavHost(
+    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
+        Box(modifier = Modifier.fillMaxSize().padding(bottom = 64.dp)) {
+            NavHost(
                     navController = navController,
                     startDestination = Screen.Home.route,
                     enterTransition = {
@@ -119,15 +119,17 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
                 ) {
                     composable(Screen.Home.route) { HomeScreen(navController) }
                     composable(Screen.Calendar.route) { CalendarScreen(navController) }
+                    composable(Screen.Ai.route) { AiScreen(navController) }
                     composable(Screen.Settings.route) {
                         SettingsScreen(
                             navController = navController,
                             onThemeSettingsChanged = onThemeSettingsChanged
                         )
                     }
+                    composable("ai_config") { AiConfigScreen(navController) }
+                    composable("ai_chat") { AiChatScreen(navController) }
                 }
             }
-        }
 
         Box(
             modifier = Modifier
@@ -217,7 +219,7 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
                         )
                     )
                 }
-                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = 8.dp)
         ) {
             Row(
                 modifier = Modifier

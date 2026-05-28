@@ -5,11 +5,7 @@ import com.lalema.app.data.PoopRecordDao
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
-class PoopRepository @Inject constructor(
+class PoopRepository(
     private val dao: PoopRecordDao
 ) {
 
@@ -60,6 +56,10 @@ class PoopRepository @Inject constructor(
 
     fun getAllFlow(): Flow<List<PoopRecord>> {
         return dao.getAll()
+    }
+
+    suspend fun getAll(): List<PoopRecord> {
+        return dao.getAllList()
     }
 
     suspend fun getCountByMonth(year: Int, month: Int): Int {

@@ -6,6 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.lalema.app.data.AppDatabase
 import com.lalema.app.data.PoopRecordDao
+import com.lalema.app.domain.PoopRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,5 +44,11 @@ object DatabaseModule {
     @Provides
     fun providePoopRecordDao(database: AppDatabase): PoopRecordDao {
         return database.poopRecordDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePoopRepository(dao: PoopRecordDao): PoopRepository {
+        return PoopRepository(dao)
     }
 }

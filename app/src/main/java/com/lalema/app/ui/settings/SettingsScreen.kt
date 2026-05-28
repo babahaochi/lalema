@@ -49,6 +49,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -434,6 +435,22 @@ fun SettingsScreen(
                 )
             }
 
+            SettingsSection(title = "AI设置") {
+                SettingItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.SmartToy,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    title = "AI配置",
+                    subtitle = "配置AI服务提供商和API Key",
+                    onClick = { navController.navigate("ai_config") }
+                )
+            }
+
             SettingsSection(title = "其他") {
                 SettingItem(
                     icon = {
@@ -753,7 +770,7 @@ private fun SettingItem(
 fun fetchLatestRelease(): Pair<UpdateCheckResult, UpdateInfo?> {
     var connection: HttpURLConnection? = null
     try {
-        val url = URL("https://api.github.com/repos/babahaochi/lalema/releases/latest")
+        val url = URL("https://api.github.com/repos/ScLiuxx/lalema/releases/latest")
         connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
         connection.setRequestProperty("Accept", "application/vnd.github.v3+json")

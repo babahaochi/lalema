@@ -21,6 +21,9 @@ interface PoopRecordDao {
     @Query("SELECT * FROM poop_records ORDER BY date DESC, time_hour DESC, time_minute DESC")
     fun getAll(): Flow<List<PoopRecord>>
 
+    @Query("SELECT * FROM poop_records ORDER BY date DESC, time_hour DESC, time_minute DESC")
+    suspend fun getAllList(): List<PoopRecord>
+
     @Query("SELECT COUNT(DISTINCT date) FROM poop_records WHERE date LIKE :monthPattern")
     suspend fun getCountByMonth(monthPattern: String): Int
 
