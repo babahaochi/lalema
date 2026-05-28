@@ -371,14 +371,14 @@ fun LiquidGlassStatCard(
                     )
                 )
             }
-            .padding(16.dp)
+            .padding(12.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             icon?.invoke()
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(4.dp))
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(2.dp))
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineSmall,

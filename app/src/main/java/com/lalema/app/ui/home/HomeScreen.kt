@@ -201,7 +201,7 @@ fun HomeScreen(
                     containerColor = Color.Transparent,
                     titleContentColor = MaterialTheme.colorScheme.onBackground
                 ),
-                modifier = Modifier.height(48.dp)
+                modifier = Modifier.height(44.dp)
             )
         },
         containerColor = Color.Transparent
@@ -211,7 +211,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AnimatedVisibility(
@@ -268,7 +268,7 @@ fun HomeScreen(
 
                 Box(
                     modifier = Modifier
-                        .size(180.dp)
+                        .size(160.dp)
                         .scale(scale * pulseScale)
                         .shadow(
                             elevation = 16.dp,
@@ -318,13 +318,13 @@ fun HomeScreen(
                             imageVector = Icons.Default.Add,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(42.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = "记录",
                             color = MaterialTheme.colorScheme.primary,
-                            fontSize = 22.sp,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -349,7 +349,7 @@ fun HomeScreen(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     LiquidGlassStatCard(
                         value = "${uiState.streak}",
@@ -359,7 +359,7 @@ fun HomeScreen(
                                 imageVector = Icons.Default.LocalFireDepartment,
                                 contentDescription = null,
                                 tint = TertiaryLight,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         },
                         modifier = Modifier.weight(1f)
@@ -372,7 +372,7 @@ fun HomeScreen(
                                 imageVector = Icons.Default.TagFaces,
                                 contentDescription = null,
                                 tint = PrimaryLight,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         },
                         modifier = Modifier.weight(1f)
@@ -385,7 +385,7 @@ fun HomeScreen(
                                 imageVector = Icons.Default.PieChart,
                                 contentDescription = null,
                                 tint = SuccessLight,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         },
                         modifier = Modifier.weight(1f)

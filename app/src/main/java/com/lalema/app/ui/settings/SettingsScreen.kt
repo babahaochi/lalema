@@ -253,7 +253,7 @@ fun SettingsScreen(
                     containerColor = Color.Transparent,
                     titleContentColor = MaterialTheme.colorScheme.onBackground
                 ),
-                modifier = Modifier.height(48.dp)
+                modifier = Modifier.height(44.dp)
             )
         },
         containerColor = Color.Transparent
@@ -263,8 +263,8 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             SettingsSection(title = "提醒设置") {
                 SettingItem(
@@ -683,14 +683,16 @@ private fun SettingsSection(
         modifier = Modifier.fillMaxWidth(),
         cornerRadius = 20.dp
     ) {
-        Column {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             content()
         }
     }
@@ -714,11 +716,11 @@ private fun SettingItem(
                 if (isDark) Color.White.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.25f),
                 RoundedCornerShape(12.dp)
             )
-            .padding(horizontal = 12.dp, vertical = 12.dp)
+            .padding(horizontal = 10.dp, vertical = 10.dp)
     } else {
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 12.dp)
+            .padding(horizontal = 10.dp, vertical = 10.dp)
     }
 
     Row(

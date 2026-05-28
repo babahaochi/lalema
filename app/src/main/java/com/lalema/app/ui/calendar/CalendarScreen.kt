@@ -175,7 +175,7 @@ fun CalendarScreen(
                     containerColor = Color.Transparent,
                     titleContentColor = MaterialTheme.colorScheme.onBackground
                 ),
-                modifier = Modifier.height(48.dp)
+                modifier = Modifier.height(44.dp)
             )
         },
         containerColor = Color.Transparent
@@ -188,7 +188,7 @@ fun CalendarScreen(
             LiquidGlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Column {
                     Row(
@@ -218,7 +218,7 @@ fun CalendarScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -236,7 +236,7 @@ fun CalendarScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     val today = LocalDate.now()
 
@@ -264,7 +264,7 @@ fun CalendarScreen(
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(7),
-                        modifier = Modifier.height(360.dp),
+                        modifier = Modifier.height(320.dp),
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                         userScrollEnabled = false
@@ -648,7 +648,7 @@ private fun DateDetailBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 32.dp)
         ) {
             Row(
