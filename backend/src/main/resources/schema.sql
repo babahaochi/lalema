@@ -35,3 +35,27 @@ CREATE TABLE IF NOT EXISTS poop_records (
     INDEX idx_user_date (user_id, date),
     INDEX idx_local_id (user_id, local_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS friend_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sender_id BIGINT NOT NULL,
+    receiver_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    message VARCHAR(200),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_sender (sender_id),
+    INDEX idx_receiver (receiver_id),
+    UNIQUE KEY uk_sender_receiver (sender_id, receiver_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS friendships (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    friend_id BIGINT NOT NULL,
+    remark VARCHAR(50),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user (user_id),
+    INDEX idx_friend (friend_id),
+    UNIQUE KEY uk_user_friend (user_id, friend_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

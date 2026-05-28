@@ -36,6 +36,36 @@ interface ApiService {
 
     @DELETE("records/{id}")
     suspend fun deleteRecord(@Path("id") id: Long): ApiResult<Unit>
+
+    @GET("friends/search")
+    suspend fun searchFriends(@Query("keyword") keyword: String): ApiResult<List<FriendUser>>
+
+    @POST("friends/request")
+    suspend fun sendFriendRequest(@Body body: Map<String, Any>): ApiResult<Unit>
+
+    @POST("friends/accept/{requestId}")
+    suspend fun acceptFriendRequest(@Path("requestId") requestId: Long): ApiResult<Unit>
+
+    @POST("friends/reject/{requestId}")
+    suspend fun rejectFriendRequest(@Path("requestId") requestId: Long): ApiResult<Unit>
+
+    @DELETE("friends/{friendId}")
+    suspend fun removeFriend(@Path("friendId") friendId: Long): ApiResult<Unit>
+
+    @GET("friends/list")
+    suspend fun getFriends(): ApiResult<List<FriendUser>>
+
+    @GET("friends/requests")
+    suspend fun getFriendRequests(): ApiResult<List<FriendRequestData>>
+
+    @GET("friends/requests/count")
+    suspend fun getFriendRequestCount(): ApiResult<Int>
+
+    @GET("friends/leaderboard")
+    suspend fun getLeaderboard(): ApiResult<List<LeaderboardItem>>
+
+    @GET("friends/stats/{friendId}")
+    suspend fun getFriendStats(@Path("friendId") friendId: Long): ApiResult<FriendStats>
 }
 
 data class PagedRecords(

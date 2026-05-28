@@ -61,3 +61,34 @@ data class MonthStats(
     @SerializedName("checkInRate") val checkInRate: Double,
     @SerializedName("mostCommonHour") val mostCommonHour: Int?
 )
+
+data class FriendUser(
+    @SerializedName("userId") val userId: Long,
+    @SerializedName("username") val username: String,
+    @SerializedName("nickname") val nickname: String,
+    @SerializedName("isFriend") val isFriend: Boolean = false,
+    @SerializedName("remark") val remark: String = ""
+)
+
+data class FriendRequestData(
+    @SerializedName("requestId") val requestId: Long,
+    @SerializedName("senderId") val senderId: Long,
+    @SerializedName("username") val username: String,
+    @SerializedName("nickname") val nickname: String,
+    @SerializedName("message") val message: String?,
+    @SerializedName("createdAt") val createdAt: String
+)
+
+data class LeaderboardItem(
+    @SerializedName("userId") val userId: Long,
+    @SerializedName("nickname") val nickname: String,
+    @SerializedName("monthRecords") val monthRecords: Int,
+    @SerializedName("isMe") val isMe: Boolean
+)
+
+data class FriendStats(
+    @SerializedName("userId") val userId: Long,
+    @SerializedName("nickname") val nickname: String,
+    @SerializedName("monthRecords") val monthRecords: Int,
+    @SerializedName("totalRecords") val totalRecords: Int
+)

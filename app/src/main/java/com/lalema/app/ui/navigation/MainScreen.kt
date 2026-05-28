@@ -59,6 +59,7 @@ import com.lalema.app.ui.ai.AiConfigScreen
 import com.lalema.app.ui.ai.AiScreen
 import com.lalema.app.ui.auth.AuthScreen
 import com.lalema.app.ui.calendar.CalendarScreen
+import com.lalema.app.ui.friends.FriendsScreen
 import com.lalema.app.ui.home.HomeScreen
 import com.lalema.app.ui.settings.SettingsScreen
 
@@ -69,7 +70,7 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     var previousIndex by remember { mutableIntStateOf(0) }
 
-    val screens = listOf(Screen.Home, Screen.Calendar, Screen.Ai, Screen.Settings)
+    val screens = listOf(Screen.Home, Screen.Calendar, Screen.Friends, Screen.Ai, Screen.Settings)
 
     DisposableEffect(navBackStackEntry) {
         val currentEntry = navBackStackEntry
@@ -120,6 +121,7 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
                 ) {
                     composable(Screen.Home.route) { HomeScreen(navController) }
                     composable(Screen.Calendar.route) { CalendarScreen(navController) }
+                    composable(Screen.Friends.route) { FriendsScreen(navController) }
                     composable(Screen.Ai.route) { AiScreen(navController) }
                     composable(Screen.Settings.route) {
                         SettingsScreen(
