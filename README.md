@@ -1,6 +1,6 @@
 # LaLeMa（拉了吗）
 
-一个基于 Android 的个人排便记录应用，帮助你养成良好的排便习惯。采用 Jetpack Compose + Material 3 构建，支持真正的 Liquid Glass 液态玻璃设计风格。
+一个基于 Android 的个人排便记录应用，帮助你养成良好的排便习惯。采用 Jetpack Compose + Material 3 构建，支持真正的 Liquid Glass 液态玻璃设计风格，内置 AI 健康分析功能。
 
 ## 功能特性
 
@@ -21,11 +21,21 @@
 - 🩸 特殊标记（有血、有粘液）
 - 📝 备注信息
 
-### 数据展示
-- 🔥 连续打卡天数
-- 📊 月度排便次数
-- 📈 月度打卡率（打卡天数/当月总天数）
-- 📱 支持同一天多条记录
+### AI 健康分析（v2.0.0）
+- 🧠 **AI 健康评分** - 基于排便记录的健康评分（0-100分）
+- 🍎 **AI 饮食建议** - 根据排便情况推荐个性化饮食方案
+- 📈 **AI 趋势预测** - 预测未来排便趋势和异常预警
+- ⏰ **AI 智能提醒** - 基于历史数据推荐最佳提醒时间
+- 💬 **AI 对话助手** - 支持与大模型对话咨询肠道健康问题
+- 🔧 **混合 AI 模式** - 端侧规则引擎 + 云端大模型 API
+- 🌐 **多模型支持** - OpenAI / DeepSeek / 通义千问 / 自定义
+- 🔒 **数据安全** - API Key 加密存储，支持仅本地 AI 模式
+
+### 后端服务
+- 🔐 **用户认证** - JWT 无状态认证，支持 Token 自动刷新
+- ☁️ **数据同步** - 多设备数据同步，冲突自动解决
+- 📊 **统计分析** - 服务端月度统计、趋势分析
+- 📦 **Docker 部署** - 一键部署 MySQL + Redis + App
 
 ### 界面设计
 - 🍸 **真正的 Liquid Glass 液态玻璃设计**
@@ -48,6 +58,8 @@
 
 ## 技术栈
 
+### Android 客户端
+
 | 技术 | 版本 |
 |------|------|
 | 语言 | Kotlin 1.9.22 |
@@ -55,9 +67,94 @@
 | 架构 | MVVM + Repository |
 | 依赖注入 | Hilt 2.50 |
 | 数据库 | Room 2.6.1 |
+| 网络 | Retrofit 2.9.0 + OkHttp 4.12.0 |
+| 安全 | EncryptedSharedPreferences |
 | 导航 | Navigation Compose 2.7.6 |
 | 最低 SDK | Android 8.0 (API 26) |
 | 目标 SDK | Android 16 (API 36) |
+
+### 后端服务
+
+| 技术 | 版本 |
+|------|------|
+| 框架 | Spring Boot 3.2.5 |
+| 安全 | Spring Security + JWT |
+| ORM | MyBatis-Plus 3.5.5 |
+| 数据库 | MySQL 8.0 |
+| 缓存 | Redis 7 |
+| 文档 | Knife4j 4.4.0 |
+| 容器 | Docker + Docker Compose |
+
+## 项目结构
+
+```
+lalema/
+├── app/src/main/java/com/lalema/app/
+│   ├── ai/                    # AI 模块
+│   │   ├── AiConfig.kt        # AI 配置数据类
+│   │   ├── AiConfigManager.kt # 加密存储管理
+│   │   ├── AiModels.kt        # AI 分析结果数据类
+│   │   ├── CloudAiService.kt  # 云端 API 调用
+│   │   └── LocalAiEngine.kt   # 端侧规则引擎
+│   ├── api/                   # 后端 API 对接
+│   │   ├── ApiClient.kt       # Retrofit + JWT 拦截器
+│   │   ├── ApiModels.kt       # API 数据类
+│   │   └── ApiService.kt      # API 接口定义
+│   ├── data/                  # 数据层
+│   │   ├── AppDatabase.kt     # Room 数据库
+│   │   ├── PoopRecord.kt      # 实体类 + 枚举
+│   │   ├── PoopRecordDao.kt   # DAO 接口
+│   │   ├── SyncManager.kt     # 数据同步管理
+│   │   └── di/DatabaseModule.kt
+│   ├── domain/
+│   │   └── PoopRepository.kt  # 业务逻辑层
+│   ├── ui/
+│   │   ├── ai/                # AI 功能页面
+│   │   │   ├── AiScreen.kt    # AI 助手主页
+│   │   │   ├── AiChatScreen.kt# AI 对话页面
+│   │   │   └── AiConfigScreen.kt # AI 配置页面
+│   │   ├── auth/
+│   │   │   └── AuthScreen.kt  # 登录/注册页面
+│   │   ├── home/              # 主页
+│   │   ├── calendar/          # 日历
+│   │   ├── settings/          # 设置
+│   │   ├── navigation/        # 导航框架
+│   │   └── theme/             # 主题 + Liquid Glass 组件
+│   ├── reminder/              # 提醒功能
+│   └── LaLeMaApplication.kt  # Hilt 入口
+│
+└── backend/                   # Spring Boot 后端
+    ├── pom.xml
+    ├── Dockerfile
+    ├── docker-compose.yml
+    └── src/main/
+        ├── java/com/lalema/backend/
+        │   ├── config/        # Security + MyBatis 配置
+        │   ├── controller/    # REST 控制器
+        │   ├── service/       # 业务逻辑
+        │   ├── mapper/        # MyBatis Mapper
+        │   ├── entity/        # 数据库实体
+        │   ├── dto/           # 请求/响应 DTO
+        │   └── util/          # JWT 工具类
+        └── resources/
+            ├── application.yml
+            └── schema.sql     # 建表 SQL
+```
+
+## 后端 API
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/auth/register` | 注册 |
+| POST | `/api/auth/login` | 登录 |
+| GET | `/api/auth/me` | 获取当前用户 |
+| POST | `/api/records` | 保存记录 |
+| POST | `/api/records/sync` | 批量同步 |
+| GET | `/api/records` | 分页查询 |
+| GET | `/api/records/date/{date}` | 按日期查询 |
+| GET | `/api/records/range` | 按范围查询 |
+| GET | `/api/records/stats` | 月度统计 |
+| DELETE | `/api/records/{id}` | 删除记录 |
 
 ## 环境要求
 
@@ -67,107 +164,78 @@
 
 ## 构建方式
 
-### 使用本地 Gradle
+### Android 客户端
 
 ```bash
+# 使用本地 Gradle
 ./gradle-local/gradle-8.2/bin/gradle assembleRelease
-```
 
-### 使用 Gradle Wrapper
-
-```bash
+# 使用 Gradle Wrapper
 ./gradlew assembleRelease
 ```
 
 APK 输出路径：`app/build/outputs/apk/release/app-release.apk`
 
-## 项目结构
+### 后端服务
 
-```
-app/src/main/java/com/lalema/app/
-├── data/                    # 数据层
-│   ├── AppDatabase.kt       # Room 数据库定义
-│   ├── PoopRecord.kt        # 实体类 + 枚举定义
-│   ├── PoopRecordDao.kt     # DAO 接口
-│   └── di/
-│       └── DatabaseModule.kt # Hilt 依赖注入模块
-├── domain/
-│   └── PoopRepository.kt   # 业务逻辑层（打卡、统计、连续天数）
-├── ui/
-│   ├── home/
-│   │   ├── HomeScreen.kt    # 主页 UI
-│   │   ├── HomeViewModel.kt # 主页状态管理
-│   │   └── PoopRecordForm.kt# 记录表单（底部弹窗）
-│   ├── calendar/
-│   │   ├── CalendarScreen.kt # 日历视图
-│   │   └── CalendarViewModel.kt
-│   ├── settings/
-│   │   ├── SettingsScreen.kt # 设置页（主题/提醒/更新）
-│   │   └── SettingsViewModel.kt
-│   ├── navigation/
-│   │   ├── MainScreen.kt    # 主框架 + 底部导航
-│   │   └── Screen.kt        # 路由定义
-│   └── theme/
-│       ├── Color.kt         # 颜色定义
-│       ├── Theme.kt         # 主题配置
-│       ├── Type.kt          # 字体样式
-│       └── LiquidGlass.kt   # 液态玻璃组件库
-├── reminder/
-│   ├── ReminderManager.kt   # 闹钟管理 + 日历事件
-│   └── BootReceiver.kt      # 开机恢复闹钟
-├── LaLeMaApplication.kt     # Hilt 入口
-└── MainActivity.kt          # 主 Activity
+```bash
+cd backend
+docker-compose up -d
 ```
 
 ## 版本历史
 
+### v2.0.0
+- 🧠 **AI 健康分析** - 健康评分、饮食建议、趋势预测、智能提醒、对话助手
+- 🔧 **混合 AI 模式** - 端侧规则引擎 + 云端大模型 API（OpenAI/DeepSeek/通义千问）
+- 🔐 **用户系统** - 注册/登录，JWT 认证，Token 加密存储
+- ☁️ **数据同步** - 多设备数据同步，冲突自动解决
+- 📦 **后端服务** - Spring Boot + MySQL + Redis + Docker 一键部署
+- 📱 **4个底部导航 Tab** - 主页、日历、AI 助手、设置
+
+### v1.9.0
+- 📐 全面优化界面布局，缩小底栏和各组件尺寸
+- 🎯 统一间距规范，提升视觉紧凑度
+
+### v1.8.0
+- 🐛 修复打卡成功提醒重复弹出
+- 🐛 修复日历添加记录无响应
+- 🐛 修复打卡率计算错误
+- 🎨 统一弹窗样式（Glass 风格）
+
 ### v1.7.0
-- 🍸 **真正的 Liquid Glass 液态玻璃设计**
-  - 真实玻璃半透明磨砂质感，带光影折射反射
-  - 流体悬浮流动感，界面分层悬浮有景深
-  - 底层内容穿透，自适应明暗背景
-  - 柔和大圆角无硬边，细腻渐变玻璃光泽
-  - 物理级自然缓动动效
-- 🐛 **修复主题切换失效** - 使用 key 强制重组
-- 🐛 **修复打卡率计算** - 改为打卡天数/当月总天数
-- 🐛 **修复日历显示不全** - 增加 LazyVerticalGrid 高度
-- 🐛 **修复提醒功能消失** - 恢复 ReminderManager 调度
+- 🍸 真正的 Liquid Glass 液态玻璃设计
+- 🐛 修复主题切换失效
+- 🐛 修复打卡率计算
+- 🐛 修复日历显示不全
+- 🐛 修复提醒功能消失
 
 ### v1.6.0
-- 🎨 **增强文字可读性** - 优化配色对比度
-- 🌓 **主题模式切换** - 支持跟随系统/浅色/深色三种模式
-- 🎨 **6套配色方案** - 蓝紫、樱花粉、薄荷绿、琥珀橙、靛蓝、玫瑰红
-- 🔢 **修复应用内版本号** - 从 BuildConfig 动态读取
-- 📱 **安卓16实况通知** - API 36+ 使用 ProgressStyle 显示打卡进度
-- 🔄 **应用内检查更新** - 通过 GitHub API 检查最新版本
-- 📦 **升级目标SDK** - 从 API 34 升级到 API 36
+- 🎨 增强文字可读性
+- 🌓 主题模式切换（跟随系统/浅色/深色）
+- 🎨 6套配色方案
+- 📱 安卓16实况通知
+- 🔄 应用内检查更新
 
 ### v1.5.0
-- 🐛 **修复连续打卡无限循环** - 添加365天上限保护
-- 🐛 **修复导航返回数据不刷新** - 基于路由感知的智能刷新
-- 🧹 **代码清理** - 移除重复调用、死代码和无效注解
+- 🐛 修复连续打卡无限循环
+- 🐛 修复导航返回数据不刷新
 
 ### v1.4.0
-- 🎨 **全新蓝紫配色** - 更现代、更清新的视觉体验
-- 🌙 **完善深色模式** - 自动适配系统日间/夜间主题
-- 🔔 **修复闹钟重启丢失** - 添加 BootReceiver，开机自动恢复
-- 📅 **修复日历创建失败** - 优化日历账户检测和错误提示
+- 🎨 全新蓝紫配色
+- 🌙 完善深色模式
+- 🔔 修复闹钟重启丢失
 
 ### v1.3.0
 - ✨ 全新 Liquid Glass 设计风格
 - 🎨 优化界面 UI 和配色方案
-- 📐 重新设计主页和日历布局
-- 💫 添加毛玻璃效果组件
-- 📊 改进统计卡片展示
 - 🔔 支持自定义提醒时间
 
 ### v1.2.0
-- ✨ 优化主页统计：本月次数改为统计排便次数
-- 🎨 新增详细记录表单（时间、量、干稀、颜色、气味、疼痛、血、粘液等）
+- 🎨 新增详细记录表单
 - ⏰ 新增自定义时间选择器
-- 📊 支持同一天多条排便记录
+- 📊 支持同一天多条记录
 - 🗑️ 日历支持删除单条记录
-- 🐛 修复底部导航栏切换问题
 
 ### v1.0.0
 - 初始版本
@@ -182,6 +250,12 @@ app/src/main/java/com/lalema/app/
 - [x] 多主题配色方案
 - [x] 应用内检查更新
 - [x] 真正的 Liquid Glass 液态玻璃设计
+- [x] AI 健康分析功能
+- [x] 用户系统 + 数据同步
+- [x] Spring Boot 后端服务
 - [ ] 数据导出功能
-- [ ] 健康数据分析报告
 - [ ] 多语言支持
+
+## License
+
+MIT License
