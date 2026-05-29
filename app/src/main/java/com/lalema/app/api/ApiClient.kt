@@ -16,7 +16,7 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 object ApiClient {
-    private const val BASE_URL = "https://5ichat.online/api/"
+    private const val BASE_URL = "https://47.109.151.2/api/"
     private var apiService: ApiService? = null
     private var tokenProvider: (() -> String?)? = null
 
@@ -86,34 +86,51 @@ object ApiClient {
 
     fun getService(context: Context): ApiService {
         if (apiService == null) {
-            init(context)
+            try {
+                android.util.Log.e("ApiClient", "=== Starting ApiClient initialization ===")
+                android.util.Log.e("ApiClient", "BASE_URL: $BASE_URL")
+                init(context)
+                android.util.Log.e("ApiClient", "init() completed")
 
-            val logging = HttpLoggingInterceptor().apply {
-                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+                val logging = HttpLoggingInterceptor().apply {
+                    level = HttpLoggingInterceptor.Level.BODY
+                }
+                android.util.Log.e("ApiClient", "Creating unsafe OkHttp client...")
+                val unsafeBuilder = createUnsafeOkHttpClient()
+                android.util.Log.e("ApiClient", "Unsafe client builder created")
+                
+                val client = unsafeBuilder
+                    .addInterceptor(Interceptor { chain ->
+                        val token = tokenProvider?.invoke()
+                        val request = if (token != null) {
+                            chain.request().newBuilder()
+                                .addHeader("Authorization", "Bearer $token")
+                                .build()
+                        } else {
+                            chain.request()
+                        }
+                        chain.proceed(request)
+                    })
+                    .addInterceptor(logging)
+                    .connectTimeout(15, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .build()
+                android.util.Log.e("ApiClient", "OkHttp client built successfully")
+
+                android.util.Log.e("ApiClient", "Creating Retrofit with baseUrl: $BASE_URL")
+                apiService = Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .client(client)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                    .create(ApiService::class.java)
+                android.util.Log.e("ApiClient", "=== ApiClient initialization SUCCESS ===")
+            } catch (e: Exception) {
+                android.util.Log.e("ApiClient", "=== ApiClient initialization FAILED ===", e)
+                android.util.Log.e("ApiClient", "Exception type: ${e.javaClass.name}")
+                android.util.Log.e("ApiClient", "Exception message: ${e.message}")
+                throw e
             }
-            val client = createUnsafeOkHttpClient()
-                .addInterceptor(Interceptor { chain ->
-                    val token = tokenProvider?.invoke()
-                    val request = if (token != null) {
-                        chain.request().newBuilder()
-                            .addHeader("Authorization", "Bearer $token")
-                            .build()
-                    } else {
-                        chain.request()
-                    }
-                    chain.proceed(request)
-                })
-                .addInterceptor(logging)
-                .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .build()
-
-            apiService = Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .client(client)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(ApiService::class.java)
         }
         return apiService!!
     }

@@ -1,5 +1,11 @@
 package com.lalema.app.ui.ai
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -188,11 +195,7 @@ fun AiChatScreen(
                                     .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.50f))
                                     .padding(12.dp)
                             ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                SimpleLoadingDot()
                             }
                         }
                     }
@@ -246,6 +249,26 @@ fun AiChatScreen(
             }
         }
     }
+}
+
+@Composable
+private fun SimpleLoadingDot() {
+    val infiniteTransition = rememberInfiniteTransition(label = "dot")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dotScale"
+    )
+    Box(
+        modifier = Modifier
+            .size(20.dp)
+            .scale(scale)
+            .background(MaterialTheme.colorScheme.primary, CircleShape)
+    )
 }
 
 @Composable

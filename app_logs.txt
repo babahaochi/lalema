@@ -1,0 +1,1 @@
+05-29 23:11:09.391   839   839 E AndroidRuntime: 	Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [androidx.compose.runtime.PausableMonotonicFrameClock@8aa970e, androidx.compose.ui.platform.MotionDurationScaleImpl@d7cc52f, StandaloneCoroutine{Cancelling}@38e773c, AndroidUiDispatcher@653cc5]

@@ -4,6 +4,12 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -46,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -179,14 +187,20 @@ fun AuthScreen(navController: NavController) {
                                 }
                                 isLoading = true
                                 errorMsg = null
+                                android.util.Log.e("AuthScreen", "=== Button clicked, isLogin=$isLogin ===")
                                 scope.launch {
                                     try {
+                                        android.util.Log.e("AuthScreen", "Getting API service...")
                                         val api = ApiClient.getService(context)
+                                        android.util.Log.e("AuthScreen", "API service obtained")
                                         val response = if (isLogin) {
+                                            android.util.Log.e("AuthScreen", "Calling login API...")
                                             api.login(LoginRequest(username, password))
                                         } else {
+                                            android.util.Log.e("AuthScreen", "Calling register API...")
                                             api.register(RegisterRequest(username, password, nickname.ifBlank { null }))
                                         }
+                                        android.util.Log.e("AuthScreen", "API response: code=${response.code}, message=${response.message}")
                                         if (response.code == 200 && response.data != null) {
                                             ApiClient.setToken(context, response.data.token)
                                             navController.popBackStack()
@@ -194,6 +208,9 @@ fun AuthScreen(navController: NavController) {
                                             errorMsg = response.message
                                         }
                                     } catch (e: Exception) {
+                                        android.util.Log.e("AuthScreen", "=== API call FAILED ===", e)
+                                        android.util.Log.e("AuthScreen", "Exception type: ${e.javaClass.name}")
+                                        android.util.Log.e("AuthScreen", "Exception message: ${e.message}")
                                         errorMsg = "网络错误：${e.message}"
                                     } finally {
                                         isLoading = false
@@ -204,11 +221,7 @@ fun AuthScreen(navController: NavController) {
                         contentAlignment = Alignment.Center
                     ) {
                         if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
+                            SimpleLoadingDot(color = Color.White)
                         } else {
                             Text(
                                 text = if (isLogin) "登录" else "注册",
@@ -242,6 +255,26 @@ fun AuthScreen(navController: NavController) {
             }
         }
     }
+}
+
+@Composable
+private fun SimpleLoadingDot(color: Color = MaterialTheme.colorScheme.primary) {
+    val infiniteTransition = rememberInfiniteTransition(label = "dot")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dotScale"
+    )
+    Box(
+        modifier = Modifier
+            .size(20.dp)
+            .scale(scale)
+            .background(color, CircleShape)
+    )
 }
 
 @Composable

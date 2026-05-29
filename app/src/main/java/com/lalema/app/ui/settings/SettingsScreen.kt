@@ -13,8 +13,13 @@ import android.provider.MediaStore
 import android.provider.Settings as AndroidSettings
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -1150,11 +1155,7 @@ private fun PosterDialog(
                 )
             ) {
                 if (isGenerating) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
+                    SimpleLoadingDot(color = Color.White)
                 } else {
                     Text("保存海报", color = Color.White)
                 }
@@ -1165,6 +1166,26 @@ private fun PosterDialog(
                 Text("取消", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+    )
+}
+
+@Composable
+private fun SimpleLoadingDot(color: Color = MaterialTheme.colorScheme.primary) {
+    val infiniteTransition = rememberInfiniteTransition(label = "dot")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dotScale"
+    )
+    Box(
+        modifier = Modifier
+            .size(18.dp)
+            .scale(scale)
+            .background(color, CircleShape)
     )
 }
 

@@ -1,0 +1,1 @@
+05-30 00:04:11.905 10561 10561 E AuthScreen: Exception message: failed to connect to 5ichat.online/8.137.105.194 (port 443) from /192.168.31.234 (port 48164) after 15000ms
