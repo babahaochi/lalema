@@ -66,12 +66,14 @@ object ApiClient {
 
     fun getService(context: Context): ApiService {
         if (apiService == null) {
+            init(context)
+
             val logging = HttpLoggingInterceptor().apply {
                 level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
             }
             val client = OkHttpClient.Builder()
                 .addInterceptor(Interceptor { chain ->
-                    val token = getToken(context)
+                    val token = tokenProvider?.invoke()
                     val request = if (token != null) {
                         chain.request().newBuilder()
                             .addHeader("Authorization", "Bearer $token")
