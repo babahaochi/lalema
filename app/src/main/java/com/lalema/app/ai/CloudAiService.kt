@@ -24,6 +24,10 @@ class CloudAiService @Inject constructor(
             else -> config.provider.baseUrl
         }
 
+        if (baseUrl.isBlank()) return null
+
+        val normalizedBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
@@ -41,12 +45,16 @@ class CloudAiService @Inject constructor(
             .readTimeout(60, TimeUnit.SECONDS)
             .build()
 
-        return Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(OpenAiApi::class.java)
+        return try {
+            Retrofit.Builder()
+                .baseUrl(normalizedBaseUrl)
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(OpenAiApi::class.java)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     suspend fun chat(messages: List<ChatMessage>): Result<String> {

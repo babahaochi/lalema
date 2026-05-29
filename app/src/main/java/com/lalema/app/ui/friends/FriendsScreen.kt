@@ -609,7 +609,7 @@ private fun LeaderboardTab(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(leaderboard.size) { index ->
-                LeaderboardItem(
+                LeaderboardItemRow(
                     rank = index + 1,
                     item = leaderboard[index]
                 )
@@ -619,7 +619,7 @@ private fun LeaderboardTab(
 }
 
 @Composable
-private fun LeaderboardItem(rank: Int, item: LeaderboardItem) {
+private fun LeaderboardItemRow(rank: Int, item: LeaderboardItem) {
     val rankColor = when (rank) {
         1 -> Color(0xFFFFD700)
         2 -> Color(0xFFC0C0C0)
