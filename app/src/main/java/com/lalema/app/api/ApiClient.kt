@@ -9,10 +9,14 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 object ApiClient {
-    private const val BASE_URL = "https://5ichat.online:8080/api/"
+    private const val BASE_URL = "https://5ichat.online/api/"
     private var apiService: ApiService? = null
     private var tokenProvider: (() -> String?)? = null
 
@@ -64,6 +68,22 @@ object ApiClient {
         return getToken(context) != null
     }
 
+    private fun createUnsafeOkHttpClient(): OkHttpClient.Builder {
+        val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+            override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+            override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+        })
+
+        val sslContext = SSLContext.getInstance("SSL").apply {
+            init(null, trustAllCerts, java.security.SecureRandom())
+        }
+
+        return OkHttpClient.Builder()
+            .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
+            .hostnameVerifier { _, _ -> true }
+    }
+
     fun getService(context: Context): ApiService {
         if (apiService == null) {
             init(context)
@@ -71,7 +91,7 @@ object ApiClient {
             val logging = HttpLoggingInterceptor().apply {
                 level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
             }
-            val client = OkHttpClient.Builder()
+            val client = createUnsafeOkHttpClient()
                 .addInterceptor(Interceptor { chain ->
                     val token = tokenProvider?.invoke()
                     val request = if (token != null) {
