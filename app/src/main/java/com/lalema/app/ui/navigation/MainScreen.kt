@@ -245,7 +245,8 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(horizontal = 6.dp, vertical = 6.dp),
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -316,7 +317,7 @@ private fun GlassNavItem(
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         // Active indicator background glow
         Box(

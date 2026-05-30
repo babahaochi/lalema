@@ -318,26 +318,36 @@ private fun FriendsListTab(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            if (user.isFriend) {
-                                Text(
-                                    text = "已是好友",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                        .clickable { onSendRequest(user.userId) }
-                                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                                ) {
+                            when {
+                                user.isFriend -> {
                                     Text(
-                                        text = "添加",
+                                        text = "已是好友",
                                         fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Medium
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
+                                }
+                                user.requestSent -> {
+                                    Text(
+                                        text = "已发送",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                else -> {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                            .clickable { onSendRequest(user.userId) }
+                                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = "添加",
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -386,8 +396,16 @@ private fun FriendsListTab(
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(friends) { friend ->
-                    FriendItem(friend = friend, onRemove = { onRemove(friend.userId) })
+                items(friends, key = { it.userId }) { friend ->
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
+                            animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f),
+                            initialOffsetY = { 20 }
+                        )
+                    ) {
+                        FriendItem(friend = friend, onRemove = { onRemove(friend.userId) })
+                    }
                 }
             }
         }

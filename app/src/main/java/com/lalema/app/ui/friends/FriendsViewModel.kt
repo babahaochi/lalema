@@ -69,14 +69,19 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val api = ApiClient.getService(context)
-                api.sendFriendRequest(mapOf("receiverId" to receiverId))
-                _uiState.value = _uiState.value.copy(
-                    searchResults = _uiState.value.searchResults.map {
-                        if (it.userId == receiverId) it.copy(isFriend = true) else it
-                    }
-                )
+                val result = api.sendFriendRequest(mapOf("receiverId" to receiverId))
+                if (result.code == 200) {
+                    _uiState.value = _uiState.value.copy(
+                        searchResults = _uiState.value.searchResults.map {
+                            if (it.userId == receiverId) it.copy(requestSent = true) else it
+                        },
+                        error = "好友请求已发送"
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(error = result.message ?: "发送失败")
+                }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = "网络错误: ${e.message}")
             }
         }
     }
