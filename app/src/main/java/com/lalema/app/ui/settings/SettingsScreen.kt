@@ -75,6 +75,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -96,6 +97,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.lalema.app.BuildConfig
 import com.lalema.app.api.ApiClient
+import com.lalema.app.api.UserData
 import com.lalema.app.ui.theme.GlassInlineTimePicker
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LocalThemeSettings
@@ -275,24 +277,80 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             val isLoggedIn = ApiClient.isLoggedIn(context)
-            SettingsSection(title = "账号") {
+            var userInfo by remember { mutableStateOf<UserData?>(null) }
+            
+            LaunchedEffect(isLoggedIn) {
                 if (isLoggedIn) {
-                    SettingItem(
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        },
-                        title = "已登录",
-                        subtitle = "点击退出登录",
-                        onClick = {
-                            ApiClient.clearToken(context)
-                            Toast.makeText(context, "已退出登录", Toast.LENGTH_SHORT).show()
+                    try {
+                        val api = ApiClient.getService(context)
+                        val result = api.getMe()
+                        if (result.code == 200) {
+                            userInfo = result.data
                         }
-                    )
+                    } catch (_: Exception) {
+                    }
+                }
+            }
+            
+            SettingsSection(title = "账号") {
+                if (isLoggedIn && userInfo != null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = userInfo!!.nickname.take(1),
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 28.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = userInfo!!.nickname,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "@${userInfo!!.username}",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
+                                    .clickable {
+                                        ApiClient.clearToken(context)
+                                        userInfo = null
+                                        Toast.makeText(context, "已退出登录", Toast.LENGTH_SHORT).show()
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = "退出登录",
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 } else {
                     SettingItem(
                         icon = {
