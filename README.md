@@ -93,6 +93,7 @@
 | 缓存 | Redis 7 |
 | 文档 | Knife4j 4.4.0 |
 | 容器 | Docker + Docker Compose |
+| 反向代理 | Nginx + SSL |
 
 ## 项目结构
 
@@ -163,19 +164,19 @@ lalema/
 | POST | `/api/records/sync` | 批量同步 |
 | GET | `/api/records` | 分页查询 |
 | GET | `/api/records/date/{date}` | 按日期查询 |
-| GET | `/api/records/range` | 按范围查询 |
 | GET | `/api/records/stats` | 月度统计 |
 | DELETE | `/api/records/{id}` | 删除记录 |
 | **好友接口** ||
 | GET | `/api/friends/search` | 搜索用户 |
-| POST | `/api/friends/requests` | 发送好友请求 |
-| POST | `/api/friends/requests/{id}/accept` | 接受请求 |
-| POST | `/api/friends/requests/{id}/reject` | 拒绝请求 |
+| POST | `/api/friends/request` | 发送好友请求 |
+| POST | `/api/friends/accept/{requestId}` | 接受请求 |
+| POST | `/api/friends/reject/{requestId}` | 拒绝请求 |
 | DELETE | `/api/friends/{friendId}` | 删除好友 |
-| GET | `/api/friends` | 获取好友列表 |
-| GET | `/api/friends/requests` | 获取收到的请求 |
-| GET | `/api/friends/requests/sent` | 获取发送的请求 |
+| GET | `/api/friends/list` | 获取好友列表 |
+| GET | `/api/friends/requests` | 获取待处理请求 |
+| GET | `/api/friends/requests/count` | 获取请求数量 |
 | GET | `/api/friends/leaderboard` | 获取排行榜 |
+| GET | `/api/friends/stats/{friendId}` | 获取好友统计 |
 
 ## 环境要求
 
@@ -205,6 +206,12 @@ docker-compose up -d
 ```
 
 ## 版本历史
+
+### v2.1.1
+- 🐛 **修复添加好友无响应** - 后端返回强类型 DTO 替代 Map，解决 Gson 反序列化问题
+- 🔒 **SSL 证书部署** - 配置 HTTPS 访问，支持域名 www.5ichat.online
+- 🎨 **优化底栏样式** - 底栏左右更宽，视觉更平衡
+- 👤 **设置页个人信息** - 登录后显示头像、昵称、用户名
 
 ### v2.1.0
 - 👥 **好友系统** - 搜索用户、发送/接受/拒绝好友请求、删除好友
@@ -281,6 +288,7 @@ docker-compose up -d
 - [x] 用户系统 + 数据同步
 - [x] Spring Boot 后端服务
 - [x] 好友系统 + 排行榜
+- [x] HTTPS + 域名部署
 - [ ] 数据导出功能
 - [ ] 多语言支持
 

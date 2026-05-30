@@ -85,6 +85,7 @@ fun FriendsScreen(
     var selectedTab by remember { mutableStateOf(0) }
     var searchQuery by remember { mutableStateOf("") }
     val searchQueryFlow = remember { MutableStateFlow("") }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.loadData()
@@ -97,6 +98,13 @@ fun FriendsScreen(
             .collect { query ->
                 viewModel.searchUsers(query)
             }
+    }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { message ->
+            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
     }
 
     Scaffold(
