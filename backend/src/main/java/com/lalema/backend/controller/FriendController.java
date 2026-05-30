@@ -1,5 +1,8 @@
 package com.lalema.backend.controller;
 
+import com.lalema.backend.dto.FriendRequestDTO;
+import com.lalema.backend.dto.FriendUserDTO;
+import com.lalema.backend.dto.LeaderboardItemDTO;
 import com.lalema.backend.dto.Result;
 import com.lalema.backend.service.FriendService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,7 +23,7 @@ public class FriendController {
 
     @GetMapping("/search")
     @Operation(summary = "搜索用户")
-    public Result<List<Map<String, Object>>> search(Authentication auth, @RequestParam String keyword) {
+    public Result<List<FriendUserDTO>> search(Authentication auth, @RequestParam String keyword) {
         Long userId = (Long) auth.getPrincipal();
         return Result.success(service.searchUsers(userId, keyword));
     }
@@ -61,14 +64,14 @@ public class FriendController {
 
     @GetMapping("/list")
     @Operation(summary = "好友列表")
-    public Result<List<Map<String, Object>>> getFriends(Authentication auth) {
+    public Result<List<FriendUserDTO>> getFriends(Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
         return Result.success(service.getFriends(userId));
     }
 
     @GetMapping("/requests")
     @Operation(summary = "待处理请求")
-    public Result<List<Map<String, Object>>> getRequests(Authentication auth) {
+    public Result<List<FriendRequestDTO>> getRequests(Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
         return Result.success(service.getPendingRequests(userId));
     }
@@ -82,7 +85,7 @@ public class FriendController {
 
     @GetMapping("/leaderboard")
     @Operation(summary = "好友排行榜")
-    public Result<List<Map<String, Object>>> getLeaderboard(Authentication auth) {
+    public Result<List<LeaderboardItemDTO>> getLeaderboard(Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
         return Result.success(service.getLeaderboard(userId));
     }

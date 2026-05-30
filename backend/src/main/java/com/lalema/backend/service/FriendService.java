@@ -1,6 +1,9 @@
 package com.lalema.backend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.lalema.backend.dto.FriendRequestDTO;
+import com.lalema.backend.dto.FriendUserDTO;
+import com.lalema.backend.dto.LeaderboardItemDTO;
 import com.lalema.backend.entity.FriendRequest;
 import com.lalema.backend.entity.Friendship;
 import com.lalema.backend.entity.PoopRecord;
@@ -25,7 +28,7 @@ public class FriendService {
     private final UserMapper userMapper;
     private final PoopRecordMapper recordMapper;
 
-    public List<Map<String, Object>> searchUsers(Long userId, String keyword) {
+    public List<FriendUserDTO> searchUsers(Long userId, String keyword) {
         List<User> users = userMapper.selectList(
             new LambdaQueryWrapper<User>()
                 .ne(User::getId, userId)
@@ -34,12 +37,12 @@ public class FriendService {
         );
         Set<Long> friendIds = getFriendIds(userId);
         return users.stream().map(u -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("userId", u.getId());
-            map.put("username", u.getUsername());
-            map.put("nickname", u.getNickname() != null ? u.getNickname() : u.getUsername());
-            map.put("isFriend", friendIds.contains(u.getId()));
-            return map;
+            FriendUserDTO dto = new FriendUserDTO();
+            dto.setUserId(u.getId());
+            dto.setUsername(u.getUsername());
+            dto.setNickname(u.getNickname() != null ? u.getNickname() : u.getUsername());
+            dto.setIsFriend(friendIds.contains(u.getId()));
+            return dto;
         }).collect(Collectors.toList());
     }
 
@@ -111,7 +114,7 @@ public class FriendService {
             .eq(Friendship::getUserId, friendId).eq(Friendship::getFriendId, userId));
     }
 
-    public List<Map<String, Object>> getFriends(Long userId) {
+    public List<FriendUserDTO> getFriends(Long userId) {
         List<Friendship> friendships = friendshipMapper.selectList(
             new LambdaQueryWrapper<Friendship>().eq(Friendship::getUserId, userId)
         );
@@ -121,17 +124,17 @@ public class FriendService {
         Map<Long, Friendship> remarkMap = friendships.stream()
             .collect(Collectors.toMap(Friendship::getFriendId, f -> f));
         return friends.stream().map(u -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("userId", u.getId());
-            map.put("username", u.getUsername());
-            map.put("nickname", u.getNickname() != null ? u.getNickname() : u.getUsername());
+            FriendUserDTO dto = new FriendUserDTO();
+            dto.setUserId(u.getId());
+            dto.setUsername(u.getUsername());
+            dto.setNickname(u.getNickname() != null ? u.getNickname() : u.getUsername());
             Friendship fs = remarkMap.get(u.getId());
-            map.put("remark", fs != null && fs.getRemark() != null ? fs.getRemark() : "");
-            return map;
+            dto.setRemark(fs != null && fs.getRemark() != null ? fs.getRemark() : "");
+            return dto;
         }).collect(Collectors.toList());
     }
 
-    public List<Map<String, Object>> getPendingRequests(Long userId) {
+    public List<FriendRequestDTO> getPendingRequests(Long userId) {
         List<FriendRequest> requests = requestMapper.selectList(
             new LambdaQueryWrapper<FriendRequest>()
                 .eq(FriendRequest::getReceiverId, userId)
@@ -144,14 +147,14 @@ public class FriendService {
         Map<Long, User> senderMap = senders.stream().collect(Collectors.toMap(User::getId, u -> u));
         return requests.stream().map(r -> {
             User sender = senderMap.get(r.getSenderId());
-            Map<String, Object> map = new HashMap<>();
-            map.put("requestId", r.getId());
-            map.put("senderId", r.getSenderId());
-            map.put("username", sender != null ? sender.getUsername() : "");
-            map.put("nickname", sender != null && sender.getNickname() != null ? sender.getNickname() : "");
-            map.put("message", r.getMessage());
-            map.put("createdAt", r.getCreatedAt());
-            return map;
+            FriendRequestDTO dto = new FriendRequestDTO();
+            dto.setRequestId(r.getId());
+            dto.setSenderId(r.getSenderId());
+            dto.setUsername(sender != null ? sender.getUsername() : "");
+            dto.setNickname(sender != null && sender.getNickname() != null ? sender.getNickname() : "");
+            dto.setMessage(r.getMessage());
+            dto.setCreatedAt(r.getCreatedAt() != null ? r.getCreatedAt().toString() : "");
+            return dto;
         }).collect(Collectors.toList());
     }
 
@@ -163,7 +166,7 @@ public class FriendService {
         ).intValue();
     }
 
-    public List<Map<String, Object>> getLeaderboard(Long userId) {
+    public List<LeaderboardItemDTO> getLeaderboard(Long userId) {
         Set<Long> friendIds = getFriendIds(userId);
         friendIds.add(userId);
         List<User> users = userMapper.selectBatchIds(friendIds);
@@ -174,13 +177,13 @@ public class FriendService {
                     .eq(PoopRecord::getUserId, u.getId())
                     .likeRight(PoopRecord::getDate, monthPattern)
             ).intValue();
-            Map<String, Object> map = new HashMap<>();
-            map.put("userId", u.getId());
-            map.put("nickname", u.getNickname() != null ? u.getNickname() : u.getUsername());
-            map.put("monthRecords", monthRecords);
-            map.put("isMe", u.getId().equals(userId));
-            return map;
-        }).sorted((a, b) -> Integer.compare((int) b.get("monthRecords"), (int) a.get("monthRecords")))
+            LeaderboardItemDTO dto = new LeaderboardItemDTO();
+            dto.setUserId(u.getId());
+            dto.setNickname(u.getNickname() != null ? u.getNickname() : u.getUsername());
+            dto.setMonthRecords(monthRecords);
+            dto.setIsMe(u.getId().equals(userId));
+            return dto;
+        }).sorted((a, b) -> Integer.compare(b.getMonthRecords(), a.getMonthRecords()))
           .collect(Collectors.toList());
     }
 

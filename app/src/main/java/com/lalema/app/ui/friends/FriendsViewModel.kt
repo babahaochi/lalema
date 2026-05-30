@@ -1,6 +1,7 @@
 package com.lalema.app.ui.friends
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lalema.app.api.ApiClient
@@ -48,6 +49,7 @@ class FriendsViewModel @Inject constructor(
                     isLoading = false
                 )
             } catch (e: Exception) {
+                Log.e("FriendsViewModel", "loadData failed", e)
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
             }
         }
@@ -58,8 +60,10 @@ class FriendsViewModel @Inject constructor(
             try {
                 val api = ApiClient.getService(context)
                 val result = api.searchFriends(keyword)
+                Log.d("FriendsViewModel", "searchUsers result: code=${result.code}, data size=${result.data?.size}")
                 _uiState.value = _uiState.value.copy(searchResults = result.data ?: emptyList())
             } catch (e: Exception) {
+                Log.e("FriendsViewModel", "searchUsers failed", e)
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
@@ -68,8 +72,12 @@ class FriendsViewModel @Inject constructor(
     fun sendRequest(receiverId: Long) {
         viewModelScope.launch {
             try {
+                Log.d("FriendsViewModel", "sendRequest called with receiverId=$receiverId")
                 val api = ApiClient.getService(context)
-                val result = api.sendFriendRequest(mapOf("receiverId" to receiverId))
+                val body = mapOf("receiverId" to receiverId)
+                Log.d("FriendsViewModel", "sendRequest body: $body")
+                val result = api.sendFriendRequest(body)
+                Log.d("FriendsViewModel", "sendRequest result: code=${result.code}, message=${result.message}")
                 if (result.code == 200) {
                     _uiState.value = _uiState.value.copy(
                         searchResults = _uiState.value.searchResults.map {
@@ -81,6 +89,7 @@ class FriendsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(error = result.message ?: "发送失败")
                 }
             } catch (e: Exception) {
+                Log.e("FriendsViewModel", "sendRequest failed", e)
                 _uiState.value = _uiState.value.copy(error = "网络错误: ${e.message}")
             }
         }
@@ -93,6 +102,7 @@ class FriendsViewModel @Inject constructor(
                 api.acceptFriendRequest(requestId)
                 loadData()
             } catch (e: Exception) {
+                Log.e("FriendsViewModel", "acceptRequest failed", e)
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
@@ -105,6 +115,7 @@ class FriendsViewModel @Inject constructor(
                 api.rejectFriendRequest(requestId)
                 loadData()
             } catch (e: Exception) {
+                Log.e("FriendsViewModel", "rejectRequest failed", e)
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
@@ -117,6 +128,7 @@ class FriendsViewModel @Inject constructor(
                 api.removeFriend(friendId)
                 loadData()
             } catch (e: Exception) {
+                Log.e("FriendsViewModel", "removeFriend failed", e)
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
