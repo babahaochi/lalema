@@ -84,7 +84,10 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
     val statusBarTop = systemBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = systemBars.asPaddingValues().calculateBottomPadding()
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color.Transparent),
+        contentAlignment = Alignment.BottomCenter
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
