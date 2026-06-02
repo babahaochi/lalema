@@ -8,10 +8,22 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import java.util.Calendar
 
 class LiveActivityService : Service() {
+
+    private var targetHour: Int = 8
+    private var targetMinute: Int = 0
+    private val handler = Handler(Looper.getMainLooper())
+    private val updateRunnable = object : Runnable {
+        override fun run() {
+            showLiveNotification(targetHour, targetMinute)
+            handler.postDelayed(this, 60_000L)
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -22,29 +34,31 @@ class LiveActivityService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_START -> {
-                val hour = intent.getIntExtra("hour", 8)
-                val minute = intent.getIntExtra("minute", 0)
-                showLiveNotification(hour, minute)
+            ACTION_START, ACTION_UPDATE -> {
+                targetHour = intent.getIntExtra("hour", targetHour)
+                targetMinute = intent.getIntExtra("minute", targetMinute)
+                showLiveNotification(targetHour, targetMinute)
+                handler.removeCallbacks(updateRunnable)
+                handler.postDelayed(updateRunnable, 60_000L)
             }
             ACTION_STOP -> {
+                handler.removeCallbacks(updateRunnable)
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
-            }
-            ACTION_UPDATE -> {
-                val hour = intent.getIntExtra("hour", 8)
-                val minute = intent.getIntExtra("minute", 0)
-                showLiveNotification(hour, minute)
             }
         }
         return START_STICKY
     }
 
+    override fun onDestroy() {
+        handler.removeCallbacks(updateRunnable)
+        super.onDestroy()
+    }
+
     private fun createNotificationChannel() {
-        val channelId = CHANNEL_ID
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                channelId,
+                NotificationChannels.LIVE,
                 "实况通知",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
@@ -67,31 +81,30 @@ class LiveActivityService : Service() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
 
+        val now = Calendar.getInstance()
+        val totalMinutesInDay = 24 * 60
+        val currentMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+        val targetMinutes = hour * 60 + minute
+        val progress = if (targetMinutes > 0) {
+            ((currentMinutes.toFloat() / targetMinutes.toFloat()) * 100).toInt().coerceIn(0, 100)
+        } else 0
+        val ended = currentMinutes >= targetMinutes
         val timeStr = String.format("%02d:%02d", hour, minute)
+        val statusText = if (ended) "提醒时间已过" else "等待 $timeStr..."
 
-        val builder = Notification.Builder(this, CHANNEL_ID)
+        val builder = Notification.Builder(this, NotificationChannels.LIVE)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("排便提醒 $timeStr")
-            .setContentText("等待提醒时间到达...")
+            .setContentText(statusText)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
             .setCategory(Notification.CATEGORY_STATUS)
+            .setShowWhen(false)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             try {
                 val progressStyleClass = Class.forName("android.app.Notification\$ProgressStyle")
-                val progressStyleConstructor = progressStyleClass.getDeclaredConstructor()
-                progressStyleConstructor.isAccessible = true
-                val progressStyle = progressStyleConstructor.newInstance()
-
-                val now = Calendar.getInstance()
-                val totalMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
-                val targetMinutes = hour * 60 + minute
-                val progress = if (targetMinutes > totalMinutes) {
-                    (totalMinutes * 100) / targetMinutes
-                } else {
-                    100
-                }
+                val progressStyle = progressStyleClass.getDeclaredConstructor().apply { isAccessible = true }.newInstance()
 
                 try {
                     val setProgressMethod = progressStyleClass.getDeclaredMethod(
@@ -106,7 +119,7 @@ class LiveActivityService : Service() {
                         "setProgressEnd", Boolean::class.javaPrimitiveType
                     )
                     setProgressEndMethod.isAccessible = true
-                    setProgressEndMethod.invoke(progressStyle, progress >= 100)
+                    setProgressEndMethod.invoke(progressStyle, ended)
                 } catch (_: Exception) {}
 
                 try {
@@ -119,15 +132,13 @@ class LiveActivityService : Service() {
             } catch (_: Exception) {}
         }
 
-        startForeground(NOTIFICATION_ID, builder.build())
+        startForeground(NotificationIds.LIVE, builder.build())
     }
 
     companion object {
         const val ACTION_START = "com.lalema.app.LIVE_START"
         const val ACTION_STOP = "com.lalema.app.LIVE_STOP"
         const val ACTION_UPDATE = "com.lalema.app.LIVE_UPDATE"
-        const val NOTIFICATION_ID = 2001
-        const val CHANNEL_ID = "lalema_live_channel"
 
         fun start(context: Context, hour: Int, minute: Int) {
             val intent = Intent(context, LiveActivityService::class.java).apply {

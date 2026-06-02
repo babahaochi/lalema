@@ -9,46 +9,71 @@ import android.content.SharedPreferences
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            restoreAlarm(context)
+            restoreAfterBoot(context)
         }
     }
 
-    private fun restoreAlarm(context: Context) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val isEnabled = prefs.getBoolean(KEY_ALARM_ENABLED, false)
-
-        if (isEnabled) {
-            val hour = prefs.getInt(KEY_ALARM_HOUR, 8)
-            val minute = prefs.getInt(KEY_ALARM_MINUTE, 0)
-
+    private fun restoreAfterBoot(context: Context) {
+        val alarmState = loadAlarmState(context)
+        if (alarmState.alarmEnabled) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val reminderManager = ReminderManager(context, alarmManager)
-            reminderManager.setDailyReminder(hour, minute)
+            reminderManager.setDailyReminder(alarmState.hour, alarmState.minute)
+        }
+        if (alarmState.notificationEnabled) {
+            LiveActivityService.start(context, alarmState.hour, alarmState.minute)
         }
     }
 
     companion object {
-        private const val PREFS_NAME = "lalema_reminder_prefs"
-        private const val KEY_ALARM_ENABLED = "alarm_enabled"
-        private const val KEY_ALARM_HOUR = "alarm_hour"
-        private const val KEY_ALARM_MINUTE = "alarm_minute"
+        const val PREFS_NAME = "lalema_reminder_prefs"
+        const val KEY_ALARM_ENABLED = "alarm_enabled"
+        const val KEY_NOTIFICATION_ENABLED = "notification_enabled"
+        const val KEY_CALENDAR_ENABLED = "calendar_enabled"
+        const val KEY_CALENDAR_EVENT_ID = "calendar_event_id"
+        const val KEY_REMINDER_HOUR = "reminder_hour"
+        const val KEY_REMINDER_MINUTE = "reminder_minute"
 
-        fun saveAlarmState(context: Context, enabled: Boolean, hour: Int, minute: Int) {
+        fun saveAlarmState(
+            context: Context,
+            alarmEnabled: Boolean,
+            notificationEnabled: Boolean,
+            calendarEnabled: Boolean,
+            calendarEventId: Long,
+            hour: Int,
+            minute: Int
+        ) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().apply {
-                putBoolean(KEY_ALARM_ENABLED, enabled)
-                putInt(KEY_ALARM_HOUR, hour)
-                putInt(KEY_ALARM_MINUTE, minute)
+                putBoolean(KEY_ALARM_ENABLED, alarmEnabled)
+                putBoolean(KEY_NOTIFICATION_ENABLED, notificationEnabled)
+                putBoolean(KEY_CALENDAR_ENABLED, calendarEnabled)
+                putLong(KEY_CALENDAR_EVENT_ID, calendarEventId)
+                putInt(KEY_REMINDER_HOUR, hour)
+                putInt(KEY_REMINDER_MINUTE, minute)
                 apply()
             }
         }
 
-        fun loadAlarmState(context: Context): Triple<Boolean, Int, Int> {
+        fun loadAlarmState(context: Context): AlarmState {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val enabled = prefs.getBoolean(KEY_ALARM_ENABLED, false)
-            val hour = prefs.getInt(KEY_ALARM_HOUR, 8)
-            val minute = prefs.getInt(KEY_ALARM_MINUTE, 0)
-            return Triple(enabled, hour, minute)
+            return AlarmState(
+                alarmEnabled = prefs.getBoolean(KEY_ALARM_ENABLED, false),
+                notificationEnabled = prefs.getBoolean(KEY_NOTIFICATION_ENABLED, false),
+                calendarEnabled = prefs.getBoolean(KEY_CALENDAR_ENABLED, false),
+                calendarEventId = prefs.getLong(KEY_CALENDAR_EVENT_ID, -1L),
+                hour = prefs.getInt(KEY_REMINDER_HOUR, 8),
+                minute = prefs.getInt(KEY_REMINDER_MINUTE, 0)
+            )
         }
     }
+
+    data class AlarmState(
+        val alarmEnabled: Boolean,
+        val notificationEnabled: Boolean,
+        val calendarEnabled: Boolean,
+        val calendarEventId: Long,
+        val hour: Int,
+        val minute: Int
+    )
 }

@@ -93,8 +93,15 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
     val pillShape = RoundedCornerShape(50)
     val primaryColor = MaterialTheme.colorScheme.primary
 
+    val systemBars = androidx.compose.foundation.layout.WindowInsets.systemBars
+    val statusBarTop = systemBars.asPaddingValues().calculateTopPadding()
+    val navBarBottom = systemBars.asPaddingValues().calculateBottomPadding()
+
     Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
-        Box(modifier = Modifier.fillMaxSize().padding(bottom = 80.dp)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(top = statusBarTop, bottom = 80.dp + navBarBottom)
+        ) {
             NavHost(
                     navController = navController,
                     startDestination = Screen.Home.route,

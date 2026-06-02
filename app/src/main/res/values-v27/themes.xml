@@ -6,8 +6,11 @@
         <item name="android:colorPrimaryDark">@color/md_brown_700</item>
         <item name="android:colorAccent">@color/warm_orange_500</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="29">false</item>
         <item name="android:enforceStatusBarContrast" tools:targetApi="29">false</item>
     </style>
 
