@@ -68,7 +68,7 @@ data class FriendUser(
     @SerializedName("nickname") val nickname: String,
     @SerializedName("isFriend") val isFriend: Boolean = false,
     @SerializedName("requestSent") val requestSent: Boolean = false,
-    @SerializedName("remark") val remark: String = ""
+    @SerializedName("remark") val remark: String? = null
 )
 
 data class FriendRequestData(

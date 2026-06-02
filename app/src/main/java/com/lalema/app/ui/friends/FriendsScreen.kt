@@ -446,7 +446,7 @@ private fun FriendItem(friend: FriendUser, onRemove: () -> Unit) {
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = friend.remark.ifBlank { friend.nickname },
+                    text = friend.remark?.ifBlank { null } ?: friend.nickname,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurface

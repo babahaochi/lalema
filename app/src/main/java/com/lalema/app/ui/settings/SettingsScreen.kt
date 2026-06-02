@@ -293,7 +293,8 @@ fun SettingsScreen(
             }
             
             SettingsSection(title = "账号") {
-                if (isLoggedIn && userInfo != null) {
+                val currentUser = userInfo
+                if (isLoggedIn && currentUser != null) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -308,7 +309,7 @@ fun SettingsScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = userInfo!!.nickname.take(1),
+                                text = currentUser.nickname.take(1),
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 28.sp
@@ -316,14 +317,14 @@ fun SettingsScreen(
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = userInfo!!.nickname,
+                            text = currentUser.nickname,
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "@${userInfo!!.username}",
+                            text = "@${currentUser.username}",
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

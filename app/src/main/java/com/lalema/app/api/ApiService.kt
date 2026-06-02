@@ -41,7 +41,7 @@ interface ApiService {
     suspend fun searchFriends(@Query("keyword") keyword: String): ApiResult<List<FriendUser>>
 
     @POST("friends/request")
-    suspend fun sendFriendRequest(@Body body: Map<String, Any>): ApiResult<Unit>
+    suspend fun sendFriendRequest(@Body body: Map<String, Long>): ApiResult<Unit>
 
     @POST("friends/accept/{requestId}")
     suspend fun acceptFriendRequest(@Path("requestId") requestId: Long): ApiResult<Unit>

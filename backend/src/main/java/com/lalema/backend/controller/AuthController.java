@@ -37,6 +37,9 @@ public class AuthController {
     public Result<Map<String, Object>> me(Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
         var user = userService.getUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
         return Result.success(Map.of(
             "userId", user.getId(),
             "username", user.getUsername(),

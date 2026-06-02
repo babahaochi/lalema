@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
     public Result<Void> handleRuntime(RuntimeException e) {
         log.error("RuntimeException: {}", e.getMessage(), e);
         String message = e.getMessage();
-        if (message != null && (message.contains("用户名已存在") || message.contains("用户名或密码错误"))) {
+        if (message != null && !message.isEmpty()) {
             return Result.error(message);
         }
         return Result.error("操作失败，请稍后重试");
