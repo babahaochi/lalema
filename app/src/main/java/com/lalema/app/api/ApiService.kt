@@ -69,6 +69,18 @@ interface ApiService {
 
     @POST("friends/remind/{friendId}")
     suspend fun remindFriend(@Path("friendId") friendId: Long): ApiResult<Unit>
+
+    @GET("notifications/list")
+    suspend fun getNotifications(@Query("sinceId") sinceId: Long = 0): ApiResult<List<NotificationData>>
+
+    @GET("notifications/unread-count")
+    suspend fun getUnreadCount(): ApiResult<Int>
+
+    @POST("notifications/read/{id}")
+    suspend fun markRead(@Path("id") id: Long): ApiResult<Unit>
+
+    @POST("notifications/read-all")
+    suspend fun markAllRead(): ApiResult<Unit>
 }
 
 data class PagedRecords(

@@ -80,6 +80,16 @@ data class FriendRequestData(
     @SerializedName("createdAt") val createdAt: String
 )
 
+data class NotificationData(
+    @SerializedName("id") val id: Long,
+    @SerializedName("type") val type: String,
+    @SerializedName("title") val title: String,
+    @SerializedName("content") val content: String?,
+    @SerializedName("relatedId") val relatedId: Long?,
+    @SerializedName("isRead") val isRead: Boolean = false,
+    @SerializedName("createdAt") val createdAt: String?
+)
+
 data class LeaderboardItem(
     @SerializedName("userId") val userId: Long,
     @SerializedName("nickname") val nickname: String,

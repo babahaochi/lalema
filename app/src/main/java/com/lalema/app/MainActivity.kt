@@ -11,9 +11,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.lalema.app.service.NotificationService
 import com.lalema.app.ui.navigation.MainScreen
 import com.lalema.app.ui.theme.GlassBackground
 import com.lalema.app.ui.theme.LaLeMaTheme
@@ -29,8 +31,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
+            val scope = rememberCoroutineScope()
             var themeSettings by remember { mutableStateOf(ThemePreferences.load(context)) }
             var themeKey by remember { mutableIntStateOf(0) }
+
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                NotificationService.startPolling(applicationContext, scope)
+            }
 
             CompositionLocalProvider(LocalThemeSettings provides themeSettings) {
                 androidx.compose.runtime.key(themeKey) {
@@ -49,5 +56,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        NotificationService.stopPolling()
     }
 }

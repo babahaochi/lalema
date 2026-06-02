@@ -10,6 +10,7 @@ import com.lalema.backend.entity.PoopRecord;
 import com.lalema.backend.entity.User;
 import com.lalema.backend.mapper.FriendRequestMapper;
 import com.lalema.backend.mapper.FriendshipMapper;
+import com.lalema.backend.mapper.NotificationMapper;
 import com.lalema.backend.mapper.PoopRecordMapper;
 import com.lalema.backend.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class FriendService {
     private final FriendshipMapper friendshipMapper;
     private final UserMapper userMapper;
     private final PoopRecordMapper recordMapper;
+    private final NotificationMapper notificationMapper;
 
     public List<FriendUserDTO> searchUsers(Long userId, String keyword) {
         List<User> users = userMapper.selectList(
@@ -210,6 +212,18 @@ public class FriendService {
     public void remindFriend(Long userId, Long friendId) {
         if (userId.equals(friendId)) throw new RuntimeException("不能提醒自己");
         if (!isFriend(userId, friendId)) throw new RuntimeException("对方不是你的好友");
+
+        com.lalema.backend.entity.User sender = userMapper.selectById(userId);
+        if (sender == null) throw new RuntimeException("用户不存在");
+
+        com.lalema.backend.entity.Notification notification = new com.lalema.backend.entity.Notification();
+        notification.setUserId(friendId);
+        notification.setType("REMIND");
+        notification.setTitle("好友提醒");
+        notification.setContent(sender.getNickname() != null ? sender.getNickname() : sender.getUsername() + " 提醒你记得打卡哦~");
+        notification.setRelatedId(userId);
+        notification.setIsRead(false);
+        notificationMapper.insert(notification);
     }
 
     private void addFriendship(Long userId, Long friendId) {
