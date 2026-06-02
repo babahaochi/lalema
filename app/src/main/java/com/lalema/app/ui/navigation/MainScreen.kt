@@ -1,18 +1,16 @@
 package com.lalema.app.ui.navigation
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import com.lalema.app.ui.theme.LocalIsDarkTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -20,25 +18,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -49,10 +45,10 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -66,215 +62,243 @@ import com.lalema.app.ui.calendar.CalendarScreen
 import com.lalema.app.ui.friends.FriendsScreen
 import com.lalema.app.ui.home.HomeScreen
 import com.lalema.app.ui.settings.SettingsScreen
+import com.lalema.app.ui.theme.LocalIsDarkTheme
 
 @Composable
 fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -> Unit) {
     val navController = rememberNavController()
-    var currentRoute by remember { mutableStateOf(Screen.Home.route) }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    var previousIndex by remember { mutableIntStateOf(0) }
 
-    val screens = listOf(Screen.Home, Screen.Calendar, Screen.Friends, Screen.Ai, Screen.Settings)
-
-    DisposableEffect(navBackStackEntry) {
-        val currentEntry = navBackStackEntry
-        if (currentEntry != null) {
-            currentRoute = currentEntry.destination.route ?: Screen.Home.route
+    val currentRoute by remember {
+        derivedStateOf {
+            navBackStackEntry?.destination?.route ?: Screen.Home.route
         }
-        onDispose {}
     }
 
-    val currentScreen = screens.find { it.route == currentRoute }
-    val currentIndex = screens.indexOf(currentScreen).takeIf { it >= 0 } ?: 0
-    val direction = if (currentIndex >= previousIndex) 1 else -1
-    previousIndex = currentIndex
+    val screens = remember { listOf(Screen.Home, Screen.Calendar, Screen.Friends, Screen.Ai, Screen.Settings) }
+    val currentIndex = screens.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
 
     val isDark = LocalIsDarkTheme.current
-    val pillShape = RoundedCornerShape(50)
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    val systemBars = androidx.compose.foundation.layout.WindowInsets.systemBars
+    val systemBars = WindowInsets.systemBars
     val statusBarTop = systemBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = systemBars.asPaddingValues().calculateBottomPadding()
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(top = statusBarTop, bottom = 80.dp + navBarBottom)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = statusBarTop, bottom = 80.dp + navBarBottom)
         ) {
             NavHost(
-                    navController = navController,
-                    startDestination = Screen.Home.route,
-                    enterTransition = {
-                        slideInHorizontally(
-                            initialOffsetX = { fullWidth -> if (direction > 0) fullWidth else -fullWidth },
-                            animationSpec = tween(350, easing = FastOutSlowInEasing)
-                        ) + fadeIn(animationSpec = tween(250))
-                    },
-                    exitTransition = {
-                        slideOutHorizontally(
-                            targetOffsetX = { fullWidth -> if (direction > 0) -fullWidth else fullWidth },
-                            animationSpec = tween(350, easing = FastOutSlowInEasing)
-                        ) + fadeOut(animationSpec = tween(200))
-                    },
-                    popEnterTransition = {
-                        slideInHorizontally(
-                            initialOffsetX = { fullWidth -> if (direction > 0) -fullWidth else fullWidth },
-                            animationSpec = tween(350, easing = FastOutSlowInEasing)
-                        ) + fadeIn(animationSpec = tween(250))
-                    },
-                    popExitTransition = {
-                        slideOutHorizontally(
-                            targetOffsetX = { fullWidth -> if (direction > 0) fullWidth else -fullWidth },
-                            animationSpec = tween(350, easing = FastOutSlowInEasing)
-                        ) + fadeOut(animationSpec = tween(200))
-                    }
-                ) {
-                    composable(Screen.Home.route) { HomeScreen(navController) }
-                    composable(Screen.Calendar.route) { CalendarScreen(navController) }
-                    composable(Screen.Friends.route) { FriendsScreen(navController) }
-                    composable(Screen.Ai.route) { AiScreen(navController) }
-                    composable(Screen.Settings.route) {
+                navController = navController,
+                startDestination = Screen.Home.route,
+                enterTransition = {
+                    fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
+                        scaleIn(initialScale = 0.96f, animationSpec = tween(220, easing = FastOutSlowInEasing))
+                },
+                exitTransition = {
+                    fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
+                        scaleOut(targetScale = 0.96f, animationSpec = tween(160, easing = FastOutSlowInEasing))
+                },
+                popEnterTransition = {
+                    fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
+                        scaleIn(initialScale = 0.96f, animationSpec = tween(220, easing = FastOutSlowInEasing))
+                },
+                popExitTransition = {
+                    fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
+                        scaleOut(targetScale = 0.96f, animationSpec = tween(160, easing = FastOutSlowInEasing))
+                }
+            ) {
+                composable(Screen.Home.route) {
+                    TabTransition(currentRoute) { HomeScreen(navController) }
+                }
+                composable(Screen.Calendar.route) {
+                    TabTransition(currentRoute) { CalendarScreen(navController) }
+                }
+                composable(Screen.Friends.route) {
+                    TabTransition(currentRoute) { FriendsScreen(navController) }
+                }
+                composable(Screen.Ai.route) {
+                    TabTransition(currentRoute) { AiScreen(navController) }
+                }
+                composable(Screen.Settings.route) {
+                    TabTransition(currentRoute) {
                         SettingsScreen(
                             navController = navController,
                             onThemeSettingsChanged = onThemeSettingsChanged
                         )
                     }
-                    composable("ai_config") { AiConfigScreen(navController) }
-                    composable("ai_chat") { AiChatScreen(navController) }
-                    composable("auth") { AuthScreen(navController) }
+                }
+                composable("ai_config") {
+                    StackTransition { AiConfigScreen(navController) }
+                }
+                composable("ai_chat") {
+                    StackTransition { AiChatScreen(navController) }
+                }
+                composable("auth") {
+                    StackTransition { AuthScreen(navController) }
                 }
             }
+        }
 
-        // Glassmorphism Bottom Navigation Bar - centered
+        BottomNavBar(
+            currentRoute = currentRoute,
+            screens = screens,
+            isDark = isDark,
+            primaryColor = primaryColor,
+            onNavClick = { route -> navigateTab(navController, route) }
+        )
+    }
+}
+
+@Composable
+private fun TabTransition(currentRoute: String, content: @Composable () -> Unit) {
+    androidx.compose.runtime.key(currentRoute) {
+        content()
+    }
+}
+
+@Composable
+private fun StackTransition(content: @Composable () -> Unit) {
+    content()
+}
+
+private fun navigateTab(navController: NavController, route: String) {
+    if (navController.currentDestination?.route == route) return
+    navController.navigate(route) {
+        popUpTo(navController.graph.findStartDestination().id) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
+@Composable
+private fun BottomNavBar(
+    currentRoute: String,
+    screens: List<Screen>,
+    isDark: Boolean,
+    primaryColor: Color,
+    onNavClick: (String) -> Unit
+) {
+    val pillShape = RoundedCornerShape(50)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
         Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .matchParentSize()
+                .shadow(
+                    elevation = 24.dp,
+                    shape = pillShape,
+                    ambientColor = Color.Black.copy(alpha = 0.50f),
+                    spotColor = Color.Black.copy(alpha = 0.35f)
+                )
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .shadow(
+                    elevation = 8.dp,
+                    shape = pillShape,
+                    ambientColor = primaryColor.copy(alpha = if (isDark) 0.12f else 0.08f),
+                    spotColor = primaryColor.copy(alpha = if (isDark) 0.15f else 0.10f)
+                )
+        )
+        Box(
+            modifier = Modifier
+                .clip(pillShape)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = if (isDark) {
+                            listOf(
+                                Color.White.copy(alpha = 0.12f),
+                                Color.White.copy(alpha = 0.06f),
+                                Color.White.copy(alpha = 0.03f)
+                            )
+                        } else {
+                            listOf(
+                                Color.White.copy(alpha = 0.72f),
+                                Color.White.copy(alpha = 0.55f),
+                                Color.White.copy(alpha = 0.40f)
+                            )
+                        }
+                    )
+                )
+                .border(
+                    width = 0.5.dp,
+                    brush = Brush.verticalGradient(
+                        colors = if (isDark) {
+                            listOf(
+                                Color.White.copy(alpha = 0.20f),
+                                Color.White.copy(alpha = 0.06f)
+                            )
+                        } else {
+                            listOf(
+                                Color.White.copy(alpha = 0.80f),
+                                Color.White.copy(alpha = 0.30f)
+                            )
+                        }
+                    ),
+                    shape = pillShape
+                )
+                .drawBehind {
+                    val w = size.width
+                    val h = size.height
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = if (isDark) 0.15f else 0.50f),
+                                Color.Transparent
+                            ),
+                            startY = 0f,
+                            endY = h * 0.25f
+                        )
+                    )
+                    drawRect(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = if (isDark) 0.08f else 0.25f),
+                                Color.Transparent
+                            ),
+                            startX = 0f,
+                            endX = w * 0.12f
+                        )
+                    )
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                primaryColor.copy(alpha = if (isDark) 0.06f else 0.03f),
+                                Color.Transparent
+                            ),
+                            center = Offset(w * 0.5f, h * 0.3f),
+                            radius = w * 0.55f
+                        )
+                    )
+                }
         ) {
-            // Deep ambient shadow layer
-            Box(
+            Row(
                 modifier = Modifier
-                    .matchParentSize()
-                    .shadow(
-                        elevation = 24.dp,
-                        shape = pillShape,
-                        ambientColor = Color.Black.copy(alpha = 0.50f),
-                        spotColor = Color.Black.copy(alpha = 0.35f)
-                    )
-            )
-            // Colored subtle glow shadow
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = pillShape,
-                        ambientColor = primaryColor.copy(alpha = if (isDark) 0.12f else 0.08f),
-                        spotColor = primaryColor.copy(alpha = if (isDark) 0.15f else 0.10f)
-                    )
-            )
-            // Main glass container
-            Box(
-                modifier = Modifier
-                    .clip(pillShape)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = if (isDark) {
-                                listOf(
-                                    Color.White.copy(alpha = 0.12f),
-                                    Color.White.copy(alpha = 0.06f),
-                                    Color.White.copy(alpha = 0.03f)
-                                )
-                            } else {
-                                listOf(
-                                    Color.White.copy(alpha = 0.72f),
-                                    Color.White.copy(alpha = 0.55f),
-                                    Color.White.copy(alpha = 0.40f)
-                                )
-                            }
-                        )
-                    )
-                    .border(
-                        width = 0.5.dp,
-                        brush = Brush.verticalGradient(
-                            colors = if (isDark) {
-                                listOf(
-                                    Color.White.copy(alpha = 0.20f),
-                                    Color.White.copy(alpha = 0.06f)
-                                )
-                            } else {
-                                listOf(
-                                    Color.White.copy(alpha = 0.80f),
-                                    Color.White.copy(alpha = 0.30f)
-                                )
-                            }
-                        ),
-                        shape = pillShape
-                    )
-                    .drawBehind {
-                        val w = size.width
-                        val h = size.height
-                        // Top highlight strip - glass edge reflection
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = if (isDark) 0.15f else 0.50f),
-                                    Color.Transparent
-                                ),
-                                startY = 0f,
-                                endY = h * 0.25f
-                            )
-                        )
-                        // Left subtle glow
-                        drawRect(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = if (isDark) 0.08f else 0.25f),
-                                    Color.Transparent
-                                ),
-                                startX = 0f,
-                                endX = w * 0.12f
-                            )
-                        )
-                        // Inner glow from primary color
-                        drawRect(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    primaryColor.copy(alpha = if (isDark) 0.06f else 0.03f),
-                                    Color.Transparent
-                                ),
-                                center = Offset(w * 0.5f, h * 0.3f),
-                                radius = w * 0.55f
-                            )
-                        )
-                    }
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    screens.forEach { screen ->
-                        val selected = currentRoute == screen.route
-                        GlassNavItem(
-                            screen = screen,
-                            selected = selected,
-                            primaryColor = primaryColor,
-                            isDark = isDark,
-                            onClick = {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
-                    }
+                screens.forEach { screen ->
+                    val selected = currentRoute == screen.route
+                    GlassNavItem(
+                        screen = screen,
+                        selected = selected,
+                        primaryColor = primaryColor,
+                        isDark = isDark,
+                        onClick = { onNavClick(screen.route) }
+                    )
                 }
             }
         }
@@ -291,12 +315,12 @@ private fun GlassNavItem(
 ) {
     val iconColor by animateColorAsState(
         targetValue = if (selected) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-        animationSpec = tween(300, easing = FastOutSlowInEasing),
+        animationSpec = tween(220, easing = FastOutSlowInEasing),
         label = "navIconColor"
     )
     val textColor by animateColorAsState(
         targetValue = if (selected) primaryColor else Color.Transparent,
-        animationSpec = tween(300, easing = FastOutSlowInEasing),
+        animationSpec = tween(220, easing = FastOutSlowInEasing),
         label = "navTextColor"
     )
     val iconScale by animateFloatAsState(
@@ -306,12 +330,12 @@ private fun GlassNavItem(
     )
     val indicatorAlpha by animateFloatAsState(
         targetValue = if (selected) 1f else 0f,
-        animationSpec = tween(300, easing = FastOutSlowInEasing),
+        animationSpec = tween(220, easing = FastOutSlowInEasing),
         label = "indicatorAlpha"
     )
     val glowAlpha by animateFloatAsState(
         targetValue = if (selected) 0.15f else 0f,
-        animationSpec = tween(350, easing = FastOutSlowInEasing),
+        animationSpec = tween(260, easing = FastOutSlowInEasing),
         label = "glowAlpha"
     )
 
@@ -326,7 +350,6 @@ private fun GlassNavItem(
             )
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // Active indicator background glow
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -347,11 +370,6 @@ private fun GlassNavItem(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                val iconOffset by animateDpAsState(
-                    targetValue = (-1).dp,
-                    animationSpec = tween(300, easing = FastOutSlowInEasing),
-                    label = "iconOffset"
-                )
                 Icon(
                     imageVector = screen.icon,
                     contentDescription = screen.title,
@@ -359,7 +377,6 @@ private fun GlassNavItem(
                     modifier = Modifier
                         .size(24.dp)
                         .scale(iconScale)
-                        .offset(y = iconOffset)
                 )
                 Spacer(modifier = Modifier.height(1.dp))
                 Text(
