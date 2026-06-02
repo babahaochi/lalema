@@ -117,4 +117,16 @@ public class FriendController {
     public Result<Map<String, Object>> getStats(Authentication auth, @PathVariable Long friendId) {
         return Result.success(service.getFriendStats(friendId));
     }
+
+    @PostMapping("/remind/{friendId}")
+    @Operation(summary = "提醒好友打卡")
+    public Result<Void> remind(Authentication auth, @PathVariable Long friendId) {
+        try {
+            Long userId = (Long) auth.getPrincipal();
+            service.remindFriend(userId, friendId);
+            return Result.success();
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
 }

@@ -1,10 +1,14 @@
 package com.lalema.app.ui.home
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lalema.app.api.ApiClient
 import com.lalema.app.data.PoopRecord
+import com.lalema.app.data.SyncManager
 import com.lalema.app.domain.PoopRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +29,8 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val repository: PoopRepository
+    private val repository: PoopRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -82,6 +87,9 @@ class HomeViewModel @Inject constructor(
                 notes = notes
             )
             loadTodayStatus()
+            if (ApiClient.isLoggedIn(context)) {
+                SyncManager.syncToServer(context, repository)
+            }
         }
     }
 

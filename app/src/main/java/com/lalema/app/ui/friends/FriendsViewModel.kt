@@ -22,7 +22,8 @@ data class FriendsUiState(
     val searchResults: List<FriendUser> = emptyList(),
     val pendingCount: Int = 0,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val message: String? = null
 )
 
 @HiltViewModel
@@ -83,7 +84,7 @@ class FriendsViewModel @Inject constructor(
                         searchResults = _uiState.value.searchResults.map {
                             if (it.userId == receiverId) it.copy(requestSent = true) else it
                         },
-                        error = "好友请求已发送"
+                        message = "好友请求已发送"
                     )
                 } else {
                     _uiState.value = _uiState.value.copy(error = result.message ?: "发送失败")
@@ -136,5 +137,26 @@ class FriendsViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun clearMessage() {
+        _uiState.value = _uiState.value.copy(message = null)
+    }
+
+    fun remindFriend(friendId: Long) {
+        viewModelScope.launch {
+            try {
+                val api = ApiClient.getService(context)
+                val result = api.remindFriend(friendId)
+                if (result.code == 200) {
+                    _uiState.value = _uiState.value.copy(message = "已发送提醒")
+                } else {
+                    _uiState.value = _uiState.value.copy(error = result.message ?: "提醒失败")
+                }
+            } catch (e: Exception) {
+                Log.e("FriendsViewModel", "remindFriend failed", e)
+                _uiState.value = _uiState.value.copy(error = e.message ?: "网络错误")
+            }
+        }
     }
 }

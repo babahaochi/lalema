@@ -207,6 +207,11 @@ public class FriendService {
         return map;
     }
 
+    public void remindFriend(Long userId, Long friendId) {
+        if (userId.equals(friendId)) throw new RuntimeException("不能提醒自己");
+        if (!isFriend(userId, friendId)) throw new RuntimeException("对方不是你的好友");
+    }
+
     private void addFriendship(Long userId, Long friendId) {
         Friendship f1 = new Friendship();
         f1.setUserId(userId);

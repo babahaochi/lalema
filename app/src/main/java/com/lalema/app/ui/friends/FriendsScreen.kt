@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.lalema.app.api.ApiClient
 import com.lalema.app.api.FriendRequestData
 import com.lalema.app.api.FriendUser
 import com.lalema.app.api.LeaderboardItem
@@ -86,6 +87,13 @@ fun FriendsScreen(
     var searchQuery by remember { mutableStateOf("") }
     val searchQueryFlow = remember { MutableStateFlow("") }
     val context = androidx.compose.ui.platform.LocalContext.current
+    val isLoggedIn = remember { ApiClient.isLoggedIn(context) }
+
+    LaunchedEffect(isLoggedIn) {
+        if (!isLoggedIn) {
+            android.widget.Toast.makeText(context, "请先登录", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadData()
@@ -104,6 +112,13 @@ fun FriendsScreen(
         uiState.error?.let { message ->
             android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
             viewModel.clearError()
+        }
+    }
+
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let { message ->
+            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearMessage()
         }
     }
 
@@ -191,6 +206,7 @@ fun FriendsScreen(
                     friends = uiState.friends,
                     isLoading = uiState.isLoading,
                     onRemove = { viewModel.removeFriend(it) },
+                    onRemind = { viewModel.remindFriend(it) },
                     onSearch = { query ->
                         searchQueryFlow.value = query
                     },
@@ -219,6 +235,7 @@ private fun FriendsListTab(
     friends: List<FriendUser>,
     isLoading: Boolean,
     onRemove: (Long) -> Unit,
+    onRemind: (Long) -> Unit,
     onSearch: (String) -> Unit,
     searchResults: List<FriendUser>,
     onSendRequest: (Long) -> Unit,
@@ -412,7 +429,7 @@ private fun FriendsListTab(
                             initialOffsetY = { 20 }
                         )
                     ) {
-                        FriendItem(friend = friend, onRemove = { onRemove(friend.userId) })
+                        FriendItem(friend = friend, onRemove = { onRemove(friend.userId) }, onRemind = { onRemind(friend.userId) })
                     }
                 }
             }
@@ -421,7 +438,7 @@ private fun FriendsListTab(
 }
 
 @Composable
-private fun FriendItem(friend: FriendUser, onRemove: () -> Unit) {
+private fun FriendItem(friend: FriendUser, onRemove: () -> Unit, onRemind: () -> Unit) {
     LiquidGlassCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -457,6 +474,21 @@ private fun FriendItem(friend: FriendUser, onRemove: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
+                    .clickable { onRemind() }
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = "提醒",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             IconButton(onClick = onRemove) {
                 Icon(
                     imageVector = Icons.Default.Close,

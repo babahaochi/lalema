@@ -66,6 +66,9 @@ interface ApiService {
 
     @GET("friends/stats/{friendId}")
     suspend fun getFriendStats(@Path("friendId") friendId: Long): ApiResult<FriendStats>
+
+    @POST("friends/remind/{friendId}")
+    suspend fun remindFriend(@Path("friendId") friendId: Long): ApiResult<Unit>
 }
 
 data class PagedRecords(

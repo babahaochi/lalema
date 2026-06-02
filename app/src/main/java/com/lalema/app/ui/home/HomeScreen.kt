@@ -115,15 +115,21 @@ fun HomeScreen(
     )
     var showContent by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
-    var lastRecordCount by remember { mutableIntStateOf(-1) }
     val isDark = LocalIsDarkTheme.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("check_in_prefs", android.content.Context.MODE_PRIVATE) }
+    val lastShownRecordId = remember { mutableStateOf(prefs.getLong("last_shown_record_id", -1L)) }
 
     LaunchedEffect(uiState.todayRecords.size) {
-        val currentCount = uiState.todayRecords.size
-        if (lastRecordCount >= 0 && currentCount > lastRecordCount) {
-            showSuccessDialog = true
+        if (uiState.todayRecords.isNotEmpty()) {
+            val latestRecord = uiState.todayRecords.maxByOrNull { it.id }
+            val currentId = latestRecord?.id ?: -1L
+            if (currentId > lastShownRecordId.value) {
+                showSuccessDialog = true
+                prefs.edit().putLong("last_shown_record_id", currentId).apply()
+                lastShownRecordId.value = currentId
+            }
         }
-        lastRecordCount = currentCount
     }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()

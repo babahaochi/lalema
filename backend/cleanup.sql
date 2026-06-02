@@ -1,0 +1,1 @@
+USE lalema; DELETE FROM friend_requests WHERE sender_id > 2 OR receiver_id > 2; DELETE FROM friendships WHERE user_id > 2 OR friend_id > 2; DELETE FROM poop_records WHERE user_id > 2; DELETE FROM users WHERE id > 2; SELECT id, username, nickname FROM users;
