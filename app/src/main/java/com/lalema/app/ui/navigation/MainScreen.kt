@@ -76,7 +76,6 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
     }
 
     val screens = remember { listOf(Screen.Home, Screen.Calendar, Screen.Friends, Screen.Ai, Screen.Settings) }
-    val currentIndex = screens.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
 
     val isDark = LocalIsDarkTheme.current
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -89,7 +88,7 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = statusBarTop, bottom = 80.dp + navBarBottom)
+                .padding(top = statusBarTop, bottom = 96.dp + navBarBottom)
         ) {
             NavHost(
                 navController = navController,
@@ -185,48 +184,45 @@ private fun BottomNavBar(
     onNavClick: (String) -> Unit
 ) {
     val pillShape = RoundedCornerShape(50)
+    val systemBars = WindowInsets.systemBars
+    val navBarBottom = systemBars.asPaddingValues().calculateBottomPadding()
+
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        contentAlignment = Alignment.BottomCenter
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 20.dp, bottom = 12.dp + navBarBottom)
     ) {
         Box(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxWidth()
                 .shadow(
                     elevation = 24.dp,
                     shape = pillShape,
-                    ambientColor = Color.Black.copy(alpha = 0.50f),
-                    spotColor = Color.Black.copy(alpha = 0.35f)
+                    ambientColor = Color.Black.copy(alpha = 0.45f),
+                    spotColor = Color.Black.copy(alpha = 0.30f),
+                    clip = false
                 )
-        )
-        Box(
-            modifier = Modifier
-                .matchParentSize()
                 .shadow(
                     elevation = 8.dp,
                     shape = pillShape,
-                    ambientColor = primaryColor.copy(alpha = if (isDark) 0.12f else 0.08f),
-                    spotColor = primaryColor.copy(alpha = if (isDark) 0.15f else 0.10f)
+                    ambientColor = primaryColor.copy(alpha = if (isDark) 0.18f else 0.10f),
+                    spotColor = primaryColor.copy(alpha = if (isDark) 0.20f else 0.12f),
+                    clip = false
                 )
-        )
-        Box(
-            modifier = Modifier
                 .clip(pillShape)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = if (isDark) {
                             listOf(
-                                Color.White.copy(alpha = 0.12f),
-                                Color.White.copy(alpha = 0.06f),
-                                Color.White.copy(alpha = 0.03f)
+                                Color.White.copy(alpha = 0.14f),
+                                Color.White.copy(alpha = 0.07f),
+                                Color.White.copy(alpha = 0.04f)
                             )
                         } else {
                             listOf(
-                                Color.White.copy(alpha = 0.72f),
-                                Color.White.copy(alpha = 0.55f),
-                                Color.White.copy(alpha = 0.40f)
+                                Color.White.copy(alpha = 0.80f),
+                                Color.White.copy(alpha = 0.60f),
+                                Color.White.copy(alpha = 0.45f)
                             )
                         }
                     )
@@ -236,12 +232,12 @@ private fun BottomNavBar(
                     brush = Brush.verticalGradient(
                         colors = if (isDark) {
                             listOf(
-                                Color.White.copy(alpha = 0.20f),
+                                Color.White.copy(alpha = 0.25f),
                                 Color.White.copy(alpha = 0.06f)
                             )
                         } else {
                             listOf(
-                                Color.White.copy(alpha = 0.80f),
+                                Color.White.copy(alpha = 0.90f),
                                 Color.White.copy(alpha = 0.30f)
                             )
                         }
@@ -254,7 +250,7 @@ private fun BottomNavBar(
                     drawRect(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color.White.copy(alpha = if (isDark) 0.15f else 0.50f),
+                                Color.White.copy(alpha = if (isDark) 0.18f else 0.55f),
                                 Color.Transparent
                             ),
                             startY = 0f,
@@ -264,7 +260,7 @@ private fun BottomNavBar(
                     drawRect(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color.White.copy(alpha = if (isDark) 0.08f else 0.25f),
+                                Color.White.copy(alpha = if (isDark) 0.10f else 0.28f),
                                 Color.Transparent
                             ),
                             startX = 0f,
@@ -274,7 +270,7 @@ private fun BottomNavBar(
                     drawRect(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                primaryColor.copy(alpha = if (isDark) 0.06f else 0.03f),
+                                primaryColor.copy(alpha = if (isDark) 0.08f else 0.04f),
                                 Color.Transparent
                             ),
                             center = Offset(w * 0.5f, h * 0.3f),
