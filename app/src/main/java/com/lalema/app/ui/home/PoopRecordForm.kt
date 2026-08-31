@@ -34,8 +34,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -53,7 +51,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -68,6 +65,10 @@ import com.lalema.app.data.PoopConsistency
 import com.lalema.app.data.PoopSmell
 import com.lalema.app.data.PainLevel
 import com.lalema.app.ui.theme.GlassInlineTimePicker
+import com.lalema.app.ui.theme.LiquidGlassButton
+import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassSurface
+import com.lalema.app.ui.theme.glassContentColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -273,29 +274,20 @@ fun PoopRecordForm(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val checkboxShape = RoundedCornerShape(6.dp)
-                Box(
+                LiquidGlassSurface(
                     modifier = Modifier
                         .size(28.dp)
-                        .clip(checkboxShape)
-                        .background(
-                            if (hasBlood) MaterialTheme.colorScheme.error.copy(alpha = 0.25f)
-                            else if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.35f)
-                        )
-                        .border(
-                            1.dp,
-                            if (hasBlood) MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
-                            else if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.45f),
-                            checkboxShape
-                        )
                         .clickable { hasBlood = !hasBlood },
+                    cornerRadius = 6.dp,
+                    tint = if (hasBlood) MaterialTheme.colorScheme.error else null,
+                    contentPadding = 0.dp,
                     contentAlignment = Alignment.Center
                 ) {
                     if (hasBlood) {
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
+                            tint = glassContentColor(MaterialTheme.colorScheme.error),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -303,28 +295,20 @@ fun PoopRecordForm(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = "有血", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.width(24.dp))
-                Box(
+                LiquidGlassSurface(
                     modifier = Modifier
                         .size(28.dp)
-                        .clip(checkboxShape)
-                        .background(
-                            if (hasMucus) MaterialTheme.colorScheme.error.copy(alpha = 0.25f)
-                            else if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.35f)
-                        )
-                        .border(
-                            1.dp,
-                            if (hasMucus) MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
-                            else if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.45f),
-                            checkboxShape
-                        )
                         .clickable { hasMucus = !hasMucus },
+                    cornerRadius = 6.dp,
+                    tint = if (hasMucus) MaterialTheme.colorScheme.error else null,
+                    contentPadding = 0.dp,
                     contentAlignment = Alignment.Center
                 ) {
                     if (hasMucus) {
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
+                            tint = glassContentColor(MaterialTheme.colorScheme.error),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -351,16 +335,8 @@ fun PoopRecordForm(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            val primaryColor = MaterialTheme.colorScheme.primary
-            val submitInteractionSource = remember { MutableInteractionSource() }
-            val isSubmitPressed by submitInteractionSource.collectIsPressedAsState()
-            val submitScale by animateFloatAsState(
-                targetValue = if (isSubmitPressed) 0.96f else 1f,
-                animationSpec = spring(dampingRatio = 0.6f, stiffness = 600f),
-                label = "submitScale"
-            )
-
-            Button(
+            LiquidGlassButton(
+                text = "确认记录",
                 onClick = {
                     onSubmit(
                         timeHour,
@@ -376,19 +352,8 @@ fun PoopRecordForm(
                     )
                     onDismiss()
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .scale(submitScale),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryColor.copy(alpha = if (isDark) 0.80f else 0.90f)
-                ),
-                interactionSource = submitInteractionSource
-            ) {
-                Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "确认记录", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-            }
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -401,48 +366,9 @@ private fun GlassTimeCard(
     timeMinute: Int,
     onClick: () -> Unit
 ) {
-    val isDark = LocalIsDarkTheme.current
-    val shape = RoundedCornerShape(16.dp)
-
-    val glassBg = if (isDark) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.10f),
-                Color.White.copy(alpha = 0.04f)
-            )
-        )
-    } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.60f),
-                Color.White.copy(alpha = 0.35f)
-            )
-        )
-    }
-
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.50f)
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(brush = glassBg)
-            .border(width = 1.dp, color = borderColor, shape = shape)
-            .drawBehind {
-                val h = size.height
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = if (isDark) 0.05f else 0.30f),
-                            Color.Transparent
-                        ),
-                        startY = 0f,
-                        endY = h * 0.35f
-                    )
-                )
-            }
-            .clickable(onClick = onClick)
-            .padding(16.dp)
+    LiquidGlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -470,32 +396,9 @@ fun ChoiceChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isDark = LocalIsDarkTheme.current
-    val shape = RoundedCornerShape(10.dp)
-
-    val bgColor by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.30f else 0.20f)
-        } else {
-            if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f)
-        },
-        animationSpec = tween(250),
-        label = "chipBg"
-    )
-
-    val borderColor by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-        } else {
-            if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)
-        },
-        animationSpec = tween(250),
-        label = "chipBorder"
-    )
-
     val textColor by animateColorAsState(
         targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary
+            glassContentColor(MaterialTheme.colorScheme.primary)
         } else {
             MaterialTheme.colorScheme.onSurface
         },
@@ -503,14 +406,11 @@ fun ChoiceChip(
         label = "chipText"
     )
 
-    Box(
-        modifier = modifier
-            .padding(2.dp)
-            .clip(shape)
-            .background(bgColor)
-            .border(width = 1.dp, color = borderColor, shape = shape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+    LiquidGlassSurface(
+        modifier = modifier.padding(2.dp),
+        cornerRadius = 10.dp,
+        tint = if (selected) MaterialTheme.colorScheme.primary else null,
+        contentPadding = 0.dp,
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -518,7 +418,8 @@ fun ChoiceChip(
             fontSize = 12.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             color = textColor,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
         )
     }
 }
@@ -538,34 +439,40 @@ fun ColorChip(
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (selected) glassContentColor(MaterialTheme.colorScheme.primary) else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = tween(250),
         label = "colorChipText"
     )
 
-    Column(
-        modifier = modifier
-            .padding(2.dp)
-            .clickable { onClick() },
-        horizontalAlignment = Alignment.CenterHorizontally
+    LiquidGlassSurface(
+        modifier = modifier,
+        cornerRadius = 12.dp,
+        tint = if (selected) MaterialTheme.colorScheme.primary else null,
+        contentPadding = 2.dp,
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(android.graphics.Color.parseColor(colorHex).let { Color(it) })
-                .border(
-                    width = if (selected) 2.5.dp else 1.dp,
-                    color = borderColor,
-                    shape = CircleShape
-                )
-        )
-        Text(
-            text = displayName,
-            fontSize = 10.sp,
-            color = textColor,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            modifier = Modifier.padding(top = 2.dp)
-        )
+        Column(
+            modifier = Modifier.clickable { onClick() },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(android.graphics.Color.parseColor(colorHex).let { Color(it) })
+                    .border(
+                        width = if (selected) 2.5.dp else 1.dp,
+                        color = borderColor,
+                        shape = CircleShape
+                    )
+            )
+            Text(
+                text = displayName,
+                fontSize = 10.sp,
+                color = textColor,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+        }
     }
 }

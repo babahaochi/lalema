@@ -42,3 +42,9 @@ android-sdk/
 # Release scripts
 release.bat
 .opencode
+
+# Runtime logs / helper scripts
+app_logs.txt
+network_logs.txt
+network_logs2.txt
+get_logs.bat

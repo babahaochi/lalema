@@ -10,7 +10,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -37,15 +36,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -54,6 +50,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
+import com.kyant.backdrop.shadow.Shadow
 import com.lalema.app.ui.ai.AiChatScreen
 import com.lalema.app.ui.ai.AiConfigScreen
 import com.lalema.app.ui.ai.AiScreen
@@ -62,6 +64,7 @@ import com.lalema.app.ui.calendar.CalendarScreen
 import com.lalema.app.ui.friends.FriendsScreen
 import com.lalema.app.ui.home.HomeScreen
 import com.lalema.app.ui.settings.SettingsScreen
+import com.lalema.app.ui.theme.LocalGlassBackdrop
 import com.lalema.app.ui.theme.LocalIsDarkTheme
 
 @Composable
@@ -189,6 +192,17 @@ private fun BottomNavBar(
     val pillShape = RoundedCornerShape(50)
     val systemBars = WindowInsets.systemBars
     val navBarBottom = systemBars.asPaddingValues().calculateBottomPadding()
+    val backdrop = LocalGlassBackdrop.current
+
+    val surfaceColor by animateColorAsState(
+        targetValue = if (isDark) {
+            Color.White.copy(alpha = 0.10f)
+        } else {
+            Color.White.copy(alpha = 0.42f)
+        },
+        animationSpec = tween(400, easing = FastOutSlowInEasing),
+        label = "navSurface"
+    )
 
     Box(
         modifier = Modifier
@@ -198,89 +212,41 @@ private fun BottomNavBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(
-                    elevation = 24.dp,
-                    shape = pillShape,
-                    ambientColor = Color.Black.copy(alpha = 0.45f),
-                    spotColor = Color.Black.copy(alpha = 0.30f),
-                    clip = false
-                )
-                .shadow(
-                    elevation = 8.dp,
-                    shape = pillShape,
-                    ambientColor = primaryColor.copy(alpha = if (isDark) 0.18f else 0.10f),
-                    spotColor = primaryColor.copy(alpha = if (isDark) 0.20f else 0.12f),
-                    clip = false
-                )
-                .clip(pillShape)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = if (isDark) {
-                            listOf(
-                                Color.White.copy(alpha = 0.14f),
-                                Color.White.copy(alpha = 0.07f),
-                                Color.White.copy(alpha = 0.04f)
-                            )
-                        } else {
-                            listOf(
-                                Color.White.copy(alpha = 0.80f),
-                                Color.White.copy(alpha = 0.60f),
-                                Color.White.copy(alpha = 0.45f)
-                            )
-                        }
-                    )
-                )
-                .border(
-                    width = 0.5.dp,
-                    brush = Brush.verticalGradient(
-                        colors = if (isDark) {
-                            listOf(
-                                Color.White.copy(alpha = 0.25f),
-                                Color.White.copy(alpha = 0.06f)
-                            )
-                        } else {
-                            listOf(
-                                Color.White.copy(alpha = 0.90f),
-                                Color.White.copy(alpha = 0.30f)
-                            )
-                        }
-                    ),
-                    shape = pillShape
-                )
-                .drawBehind {
-                    val w = size.width
-                    val h = size.height
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = if (isDark) 0.18f else 0.55f),
-                                Color.Transparent
-                            ),
-                            startY = 0f,
-                            endY = h * 0.25f
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { pillShape },
+                    effects = {
+                        blur(28f.dp.toPx())
+                        lens(20f.dp.toPx(), 24f.dp.toPx())
+                    },
+                    highlight = { Highlight.Default },
+                    shadow = {
+                        Shadow(
+                            radius = 26.dp,
+                            offset = DpOffset(0.dp, 10.dp),
+                            color = Color.Black.copy(alpha = if (isDark) 0.45f else 0.16f)
                         )
-                    )
-                    drawRect(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = if (isDark) 0.10f else 0.28f),
-                                Color.Transparent
-                            ),
-                            startX = 0f,
-                            endX = w * 0.12f
+                    },
+                    innerShadow = {
+                        InnerShadow(
+                            radius = 24.dp,
+                            color = Color.White.copy(alpha = if (isDark) 0.10f else 0.45f)
                         )
-                    )
-                    drawRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                primaryColor.copy(alpha = if (isDark) 0.08f else 0.04f),
-                                Color.Transparent
-                            ),
-                            center = Offset(w * 0.5f, h * 0.3f),
-                            radius = w * 0.55f
+                    },
+                    onDrawSurface = {
+                        drawRect(surfaceColor)
+                        drawRect(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = if (isDark) 0.18f else 0.50f),
+                                    Color.Transparent
+                                ),
+                                startY = 0f,
+                                endY = size.height * 0.30f
+                            )
                         )
-                    )
-                }
+                    }
+                )
         ) {
             Row(
                 modifier = Modifier
@@ -327,20 +293,44 @@ private fun GlassNavItem(
         animationSpec = spring(dampingRatio = 0.60f, stiffness = 350f),
         label = "iconScale"
     )
-    val indicatorAlpha by animateFloatAsState(
-        targetValue = if (selected) 1f else 0f,
-        animationSpec = tween(220, easing = FastOutSlowInEasing),
-        label = "indicatorAlpha"
-    )
-    val glowAlpha by animateFloatAsState(
-        targetValue = if (selected) 0.15f else 0f,
+
+    val backdrop = LocalGlassBackdrop.current
+
+    val chipSurface by animateColorAsState(
+        targetValue = if (selected) {
+            primaryColor.copy(alpha = if (isDark) 0.22f else 0.16f)
+        } else {
+            Color.Transparent
+        },
         animationSpec = tween(260, easing = FastOutSlowInEasing),
-        label = "glowAlpha"
+        label = "chipSurface"
     )
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
+            .then(
+                if (selected) {
+                    Modifier.drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedCornerShape(20.dp) },
+                        effects = {
+                            blur(16f.dp.toPx())
+                            lens(10f.dp.toPx(), 14f.dp.toPx())
+                        },
+                        highlight = { Highlight.Default },
+                        innerShadow = {
+                            InnerShadow(
+                                radius = 12.dp,
+                                color = Color.White.copy(alpha = if (isDark) 0.12f else 0.40f)
+                            )
+                        },
+                        onDrawSurface = { drawRect(chipSurface) }
+                    )
+                } else {
+                    Modifier
+                }
+            )
             .clip(RoundedCornerShape(20.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -349,21 +339,6 @@ private fun GlassNavItem(
             )
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(glowAlpha)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            primaryColor.copy(alpha = 0.4f),
-                            Color.Transparent
-                        )
-                    ),
-                    shape = RoundedCornerShape(20.dp)
-                )
-        )
-
         if (selected) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -389,7 +364,6 @@ private fun GlassNavItem(
                 Box(
                     modifier = Modifier
                         .size(3.dp)
-                        .alpha(indicatorAlpha)
                         .clip(CircleShape)
                         .background(primaryColor)
                 )

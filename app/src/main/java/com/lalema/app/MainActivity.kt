@@ -26,8 +26,11 @@ import com.lalema.app.ui.navigation.MainScreen
 import com.lalema.app.ui.theme.GlassBackground
 import com.lalema.app.ui.theme.LaLeMaTheme
 import com.lalema.app.ui.theme.LocalThemeSettings
+import com.lalema.app.ui.theme.ProvideGlassBackdrop
 import com.lalema.app.ui.theme.ThemeMode
 import com.lalema.app.ui.theme.ThemePreferences
+import com.lalema.app.ui.theme.rememberGlassBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -63,17 +66,20 @@ class MainActivity : ComponentActivity() {
             }
 
             CompositionLocalProvider(LocalThemeSettings provides themeSettings) {
+                val backdrop = rememberGlassBackdrop()
                 key(themeKey) {
                     LaLeMaTheme(themeSettings = themeSettings) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            GlassBackground()
-                            MainScreen(
-                                onThemeSettingsChanged = { newSettings ->
-                                    themeSettings = newSettings
-                                    themeKey++
-                                    ThemePreferences.save(context, newSettings)
-                                }
-                            )
+                        ProvideGlassBackdrop(backdrop) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                GlassBackground(Modifier.layerBackdrop(backdrop))
+                                MainScreen(
+                                    onThemeSettingsChanged = { newSettings ->
+                                        themeSettings = newSettings
+                                        themeKey++
+                                        ThemePreferences.save(context, newSettings)
+                                    }
+                                )
+                            }
                         }
                     }
                 }

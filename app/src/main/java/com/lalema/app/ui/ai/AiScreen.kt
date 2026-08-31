@@ -49,7 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -63,6 +62,7 @@ import com.lalema.app.ai.HealthAnalysisResult
 import com.lalema.app.ai.TrendDirection
 import com.lalema.app.ui.navigation.Screen
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LocalIsDarkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -341,20 +341,10 @@ private fun HealthScoreCard(
 
             if (!isLoading) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                        .clickable { onAnalyze() }
-                        .padding(horizontal = 20.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = if (result == null) "开始分析" else "重新分析",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp
-                    )
-                }
+                LiquidGlassButton(
+                    text = if (result == null) "开始分析" else "重新分析",
+                    onClick = onAnalyze
+                )
             }
         }
     }

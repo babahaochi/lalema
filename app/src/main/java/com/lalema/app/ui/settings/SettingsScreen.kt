@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,8 +59,6 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -99,7 +98,11 @@ import com.lalema.app.BuildConfig
 import com.lalema.app.api.ApiClient
 import com.lalema.app.api.UserData
 import com.lalema.app.ui.theme.GlassInlineTimePicker
+import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassDivider
+import com.lalema.app.ui.theme.LiquidGlassSurface
+import com.lalema.app.ui.theme.glassContentColor
 import com.lalema.app.ui.theme.LocalThemeSettings
 import com.lalema.app.ui.theme.ThemeMode
 import com.lalema.app.ui.theme.ThemePreferences
@@ -183,19 +186,14 @@ fun SettingsScreen(
                 }
             },
             confirmButton = {
-                Button(
+                LiquidGlassButton(
+                    text = "前往下载",
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.htmlUrl))
                         context.startActivity(intent)
                         updateDialogInfo = null
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                    )
-                ) {
-                    Text("前往下载", color = Color.White)
-                }
+                    }
+                )
             },
             dismissButton = {
                 TextButton(onClick = { updateDialogInfo = null }) {
@@ -478,7 +476,7 @@ fun SettingsScreen(
                     }
                 }
 
-                LiquidGlassDividerThin()
+                LiquidGlassDivider()
 
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                     Text(
@@ -590,49 +588,11 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun LiquidGlassDividerThin() {
-    val isDark = LocalIsDarkTheme.current
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.30f),
-                        Color.Transparent
-                    )
-                )
-            )
-            .height(1.dp)
-    )
-}
-
-@Composable
 private fun SwitchButton(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val isDark = LocalIsDarkTheme.current
-
-    val bgColor by animateColorAsState(
-        targetValue = if (checked) {
-            if (isDark) primaryColor.copy(alpha = 0.35f) else primaryColor.copy(alpha = 0.25f)
-        } else {
-            if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.40f)
-        },
-        animationSpec = tween(300),
-        label = "switchBg"
-    )
-
-    val borderColor by animateColorAsState(
-        targetValue = if (checked) primaryColor.copy(alpha = 0.4f) else
-            if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.50f),
-        animationSpec = tween(300),
-        label = "switchBorder"
-    )
 
     val thumbColor by animateColorAsState(
         targetValue = if (checked) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -646,19 +606,14 @@ private fun SwitchButton(
         label = "switchThumbOffset"
     )
 
-    Box(
+    LiquidGlassSurface(
         modifier = Modifier
             .width(52.dp)
             .height(28.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(bgColor)
-            .border(
-                width = 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(14.dp)
-            )
-            .clickable { onCheckedChange(!checked) }
-            .padding(3.dp),
+            .clickable { onCheckedChange(!checked) },
+        cornerRadius = 14.dp,
+        tint = if (checked) primaryColor else null,
+        contentPadding = 3.dp,
         contentAlignment = Alignment.CenterStart
     ) {
         Box(
@@ -704,43 +659,35 @@ private fun ThemeModeOption(
         ThemeMode.DARK -> "深色"
     }
 
-    val textColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(250),
-        label = "themeModeText"
-    )
-
-    val bgAlpha by animateFloatAsState(
-        targetValue = if (selected) 0.12f else 0f,
-        animationSpec = tween(250),
-        label = "themeModeBg"
-    )
-
-    val isDark = LocalIsDarkTheme.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(primaryColor.copy(alpha = bgAlpha))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+    LiquidGlassSurface(
+        cornerRadius = 12.dp,
+        tint = if (selected) primaryColor else null,
+        contentPadding = 0.dp,
+        contentAlignment = Alignment.Center
     ) {
-        RadioButton(
-            selected = selected,
-            onClick = onClick,
-            colors = RadioButtonDefaults.colors(
-                selectedColor = MaterialTheme.colorScheme.primary,
-                unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .clickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            RadioButton(
+                selected = selected,
+                onClick = onClick,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = MaterialTheme.colorScheme.primary,
+                    unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             )
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = textColor,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-        )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (selected) glassContentColor(primaryColor) else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+            )
+        }
     }
 }
 
@@ -750,12 +697,6 @@ private fun ColorPresetOption(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val textColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(250),
-        label = "colorPresetText"
-    )
-
     val borderWidth by animateDpAsState(
         targetValue = if (selected) 2.5.dp else 0.dp,
         animationSpec = tween(250),
@@ -768,28 +709,34 @@ private fun ColorPresetOption(
         label = "colorPresetScale"
     )
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+    LiquidGlassSurface(
+        cornerRadius = 12.dp,
+        tint = if (selected) preset.primaryLight else null,
+        contentPadding = 0.dp,
+        contentAlignment = Alignment.Center
     ) {
-        Box(
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .size(36.dp)
-                .scale(scale)
-                .clip(CircleShape)
-                .background(preset.primaryLight)
-                .border(borderWidth, MaterialTheme.colorScheme.onBackground, CircleShape)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = preset.name,
-            style = MaterialTheme.typography.bodySmall,
-            color = textColor,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-        )
+                .clickable(onClick = onClick)
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .scale(scale)
+                    .clip(CircleShape)
+                    .background(preset.primaryLight)
+                    .border(borderWidth, MaterialTheme.colorScheme.onBackground, CircleShape)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = preset.name,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (selected) glassContentColor(preset.primaryLight) else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+            )
+        }
     }
 }
 
@@ -825,27 +772,7 @@ private fun SettingItem(
     icon: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null
 ) {
-    val isDark = LocalIsDarkTheme.current
-    val modifier = if (onClick != null) {
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .background(
-                if (isDark) Color.White.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.25f),
-                RoundedCornerShape(12.dp)
-            )
-            .padding(horizontal = 10.dp, vertical = 10.dp)
-    } else {
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 10.dp)
-    }
-
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    val rowContent: @Composable RowScope.() -> Unit = {
         if (icon != null) {
             icon()
             Spacer(modifier = Modifier.width(12.dp))
@@ -866,6 +793,29 @@ private fun SettingItem(
         if (trailing != null) {
             trailing()
         }
+    }
+
+    if (onClick != null) {
+        LiquidGlassCard(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onClick,
+            cornerRadius = 12.dp,
+            contentPadding = 10.dp
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                content = rowContent
+            )
+        }
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            content = rowContent
+        )
     }
 }
 
@@ -1005,34 +955,20 @@ private fun ExportDataDialog(
                 ) {
                     rangeOptions.forEach { (key, label) ->
                         val selected = selectedRange == key
-                        val bgColor by animateColorAsState(
-                            targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f) else if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f),
-                            animationSpec = tween(200),
-                            label = "rangeBg"
-                        )
-                        val borderColor by animateColorAsState(
-                            targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f),
-                            animationSpec = tween(200),
-                            label = "rangeBorder"
-                        )
-                        val textColor by animateColorAsState(
-                            targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                            animationSpec = tween(200),
-                            label = "rangeText"
-                        )
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(bgColor)
-                                .border(1.dp, borderColor, RoundedCornerShape(10.dp))
-                                .clickable { selectedRange = key }
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        val primaryColor = MaterialTheme.colorScheme.primary
+                        LiquidGlassSurface(
+                            modifier = Modifier.clickable { selectedRange = key },
+                            cornerRadius = 10.dp,
+                            tint = if (selected) primaryColor else null,
+                            contentPadding = 0.dp,
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = label,
                                 fontSize = 13.sp,
                                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                                color = textColor
+                                color = if (selected) glassContentColor(primaryColor) else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
                         }
                     }
@@ -1043,28 +979,18 @@ private fun ExportDataDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Button(
+                    LiquidGlassButton(
+                        text = "CSV",
                         onClick = { onExport("csv", filteredRecords) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp),
                         enabled = !isExporting && filteredRecords.isNotEmpty(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                        )
-                    ) {
-                        Text("CSV", color = Color.White)
-                    }
-                    Button(
+                        modifier = Modifier.weight(1f)
+                    )
+                    LiquidGlassButton(
+                        text = "JSON",
                         onClick = { onExport("json", filteredRecords) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp),
                         enabled = !isExporting && filteredRecords.isNotEmpty(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                        )
-                    ) {
-                        Text("JSON", color = Color.White)
-                    }
+                        modifier = Modifier.weight(1f)
+                    )
                 }
                 if (isExporting) {
                     Spacer(modifier = Modifier.height(12.dp))
@@ -1182,7 +1108,8 @@ private fun PosterDialog(
             }
         },
         confirmButton = {
-            Button(
+            LiquidGlassButton(
+                text = "保存海报",
                 onClick = {
                     isGenerating = true
                     scope.launch {
@@ -1207,18 +1134,8 @@ private fun PosterDialog(
                         onDismiss()
                     }
                 },
-                shape = RoundedCornerShape(14.dp),
-                enabled = !isGenerating && records.isNotEmpty(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                )
-            ) {
-                if (isGenerating) {
-                    SimpleLoadingDot(color = Color.White)
-                } else {
-                    Text("保存海报", color = Color.White)
-                }
-            }
+                enabled = !isGenerating && records.isNotEmpty()
+            )
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {

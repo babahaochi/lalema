@@ -61,6 +61,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.lalema.app.ai.ChatMessage
 import com.lalema.app.ui.theme.LocalIsDarkTheme
+import com.lalema.app.ui.theme.LocalGlassBackdrop
+import com.lalema.app.ui.theme.LiquidGlassSurface
+import com.lalema.app.ui.theme.glassContentColor
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.Shadow
+import com.kyant.backdrop.shadow.InnerShadow
+import androidx.compose.ui.unit.DpOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -189,14 +200,12 @@ fun AiChatScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.50f))
-                                    .padding(12.dp)
-                            ) {
-                                SimpleLoadingDot()
-                            }
+                LiquidGlassSurface(
+                    modifier = Modifier,
+                    cornerRadius = 16.dp
+                ) {
+                    SimpleLoadingDot()
+                }
                         }
                     }
                 }
@@ -227,10 +236,34 @@ fun AiChatScreen(
                 Box(
                     modifier = Modifier
                         .size(44.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (inputText.isBlank()) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                            else MaterialTheme.colorScheme.primary
+                        .drawBackdrop(
+                            backdrop = LocalGlassBackdrop.current,
+                            shape = { CircleShape },
+                            effects = {
+                                vibrancy()
+                                blur(14f.dp.toPx())
+                                lens(8f.dp.toPx(), 12f.dp.toPx())
+                            },
+                            highlight = { Highlight.Default },
+                            shadow = {
+                                Shadow(
+                                    radius = 10.dp,
+                                    offset = DpOffset(0.dp, 3.dp),
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
+                                )
+                            },
+                            innerShadow = {
+                                InnerShadow(
+                                    radius = 10.dp,
+                                    color = Color.White.copy(alpha = if (isDark) 0.10f else 0.40f)
+                                )
+                            },
+                            onDrawSurface = {
+                                drawRect(
+                                    if (inputText.isBlank()) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                                )
+                            }
                         )
                         .clickable(enabled = inputText.isNotBlank() && !isLoading) {
                             viewModel.sendMessage(inputText)
@@ -273,36 +306,40 @@ private fun SimpleLoadingDot() {
 
 @Composable
 private fun ChatBubble(message: ChatMessage) {
-    val isDark = LocalIsDarkTheme.current
     val isUser = message.role == "user"
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
-        Box(
-            modifier = Modifier
-                .clip(
-                    RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 16.dp,
-                        bottomStart = if (isUser) 16.dp else 4.dp,
-                        bottomEnd = if (isUser) 4.dp else 16.dp
+        if (isUser) {
+            LiquidGlassSurface(
+                cornerRadius = 16.dp,
+                tint = MaterialTheme.colorScheme.primary,
+                contentPadding = 0.dp
+            ) {
+                Text(
+                    text = message.content,
+                    color = glassContentColor(MaterialTheme.colorScheme.primary),
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    modifier = Modifier.padding(
+                        top = 10.dp,
+                        bottom = 10.dp,
+                        start = 14.dp,
+                        end = 14.dp
                     )
                 )
-                .background(
-                    if (isUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                    else if (isDark) Color.White.copy(alpha = 0.08f)
-                    else Color.White.copy(alpha = 0.60f)
+            }
+        } else {
+            LiquidGlassSurface(cornerRadius = 16.dp) {
+                Text(
+                    text = message.content,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp
                 )
-                .padding(horizontal = 14.dp, vertical = 10.dp)
-        ) {
-            Text(
-                text = message.content,
-                color = if (isUser) Color.White else MaterialTheme.colorScheme.onSurface,
-                fontSize = 14.sp,
-                lineHeight = 20.sp
-            )
+            }
         }
     }
 }

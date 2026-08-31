@@ -67,6 +67,7 @@ import com.lalema.app.api.ApiClient
 import com.lalema.app.api.LoginRequest
 import com.lalema.app.api.RegisterRequest
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LocalIsDarkTheme
 import kotlinx.coroutines.launch
 
@@ -175,62 +176,48 @@ fun AuthScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(MaterialTheme.colorScheme.primary)
-                            .clickable(enabled = !isLoading) {
-                                if (username.isBlank() || password.isBlank()) {
-                                    errorMsg = "请填写用户名和密码"
-                                    return@clickable
-                                }
-                                isLoading = true
-                                errorMsg = null
-                                android.util.Log.e("AuthScreen", "=== Button clicked, isLogin=$isLogin ===")
-                                scope.launch {
-                                    try {
-                                        android.util.Log.e("AuthScreen", "Getting API service...")
-                                        val api = ApiClient.getService(context)
-                                        android.util.Log.e("AuthScreen", "API service obtained")
-                                        val response = if (isLogin) {
-                                            android.util.Log.e("AuthScreen", "Calling login API...")
-                                            api.login(LoginRequest(username, password))
-                                        } else {
-                                            android.util.Log.e("AuthScreen", "Calling register API...")
-                                            api.register(RegisterRequest(username, password, nickname.ifBlank { null }))
-                                        }
-                                        android.util.Log.e("AuthScreen", "API response: code=${response.code}, message=${response.message}")
-                                        if (response.code == 200 && response.data != null) {
-                                            ApiClient.setToken(context, response.data.token)
-                                            navController.popBackStack()
-                                        } else {
-                                            errorMsg = response.message
-                                        }
-                                    } catch (e: Exception) {
-                                        android.util.Log.e("AuthScreen", "=== API call FAILED ===", e)
-                                        android.util.Log.e("AuthScreen", "Exception type: ${e.javaClass.name}")
-                                        android.util.Log.e("AuthScreen", "Exception message: ${e.message}")
-                                        errorMsg = "网络错误：${e.message}"
-                                    } finally {
-                                        isLoading = false
+                    LiquidGlassButton(
+                        text = if (isLogin) "登录" else "注册",
+                        onClick = {
+                            if (username.isBlank() || password.isBlank()) {
+                                errorMsg = "请填写用户名和密码"
+                                return@LiquidGlassButton
+                            }
+                            isLoading = true
+                            errorMsg = null
+                            android.util.Log.e("AuthScreen", "=== Button clicked, isLogin=$isLogin ===")
+                            scope.launch {
+                                try {
+                                    android.util.Log.e("AuthScreen", "Getting API service...")
+                                    val api = ApiClient.getService(context)
+                                    android.util.Log.e("AuthScreen", "API service obtained")
+                                    val response = if (isLogin) {
+                                        android.util.Log.e("AuthScreen", "Calling login API...")
+                                        api.login(LoginRequest(username, password))
+                                    } else {
+                                        android.util.Log.e("AuthScreen", "Calling register API...")
+                                        api.register(RegisterRequest(username, password, nickname.ifBlank { null }))
                                     }
+                                    android.util.Log.e("AuthScreen", "API response: code=${response.code}, message=${response.message}")
+                                    if (response.code == 200 && response.data != null) {
+                                        ApiClient.setToken(context, response.data.token)
+                                        navController.popBackStack()
+                                    } else {
+                                        errorMsg = response.message
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.e("AuthScreen", "=== API call FAILED ===", e)
+                                    android.util.Log.e("AuthScreen", "Exception type: ${e.javaClass.name}")
+                                    android.util.Log.e("AuthScreen", "Exception message: ${e.message}")
+                                    errorMsg = "网络错误：${e.message}"
+                                } finally {
+                                    isLoading = false
                                 }
                             }
-                            .padding(vertical = 14.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (isLoading) {
-                            SimpleLoadingDot(color = Color.White)
-                        } else {
-                            Text(
-                                text = if (isLogin) "登录" else "注册",
-                                color = Color.White,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
-                            )
-                        }
-                    }
+                        },
+                        enabled = !isLoading,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 

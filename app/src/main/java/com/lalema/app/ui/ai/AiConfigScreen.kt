@@ -56,7 +56,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.lalema.app.ai.AiProvider
+import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassSurface
 import com.lalema.app.ui.theme.LocalIsDarkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,17 +120,17 @@ fun AiConfigScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Box(
+                    LiquidGlassSurface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f))
-                            .border(1.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
-                            .clickable { expandedProvider = !expandedProvider }
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .clickable { expandedProvider = !expandedProvider },
+                        cornerRadius = 12.dp,
+                        contentPadding = 0.dp
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -286,30 +288,19 @@ fun AiConfigScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.primary)
-                    .clickable {
-                        viewModel.saveConfig(
-                            apiKey = apiKey,
-                            model = model,
-                            customUrl = customUrl,
-                            useLocalOnly = useLocalOnly
-                        )
-                        navController.popBackStack()
-                    }
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "保存配置",
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp
-                )
-            }
+            LiquidGlassButton(
+                text = "保存配置",
+                onClick = {
+                    viewModel.saveConfig(
+                        apiKey = apiKey,
+                        model = model,
+                        customUrl = customUrl,
+                        useLocalOnly = useLocalOnly
+                    )
+                    navController.popBackStack()
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

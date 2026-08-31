@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "LaLeMa"
 include(":app")
+include(":backdrop")

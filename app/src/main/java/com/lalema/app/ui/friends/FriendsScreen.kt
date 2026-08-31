@@ -73,6 +73,8 @@ import com.lalema.app.api.FriendRequestData
 import com.lalema.app.api.FriendUser
 import com.lalema.app.api.LeaderboardItem
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassSurface
+import com.lalema.app.ui.theme.glassContentColor
 import com.lalema.app.ui.theme.LocalIsDarkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,7 +84,6 @@ fun FriendsScreen(
     viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val isDark = LocalIsDarkTheme.current
     var selectedTab by remember { mutableStateOf(0) }
     var searchQuery by remember { mutableStateOf("") }
     val searchQueryFlow = remember { MutableStateFlow("") }
@@ -171,31 +172,23 @@ fun FriendsScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 listOf("好友", "请求", "排行").forEachIndexed { index, label ->
-                    Box(
+                    val selected = selectedTab == index
+                    val primaryColor = MaterialTheme.colorScheme.primary
+                    LiquidGlassSurface(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (selectedTab == index) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                else if (isDark) Color.White.copy(alpha = 0.06f)
-                                else Color.White.copy(alpha = 0.35f)
-                            )
-                            .border(
-                                1.dp,
-                                if (selectedTab == index) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                                else Color.Transparent,
-                                RoundedCornerShape(12.dp)
-                            )
-                            .clickable { selectedTab = index }
-                            .padding(vertical = 10.dp),
+                            .clickable { selectedTab = index },
+                        cornerRadius = 12.dp,
+                        tint = if (selected) primaryColor else null,
+                        contentPadding = 0.dp,
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = label,
                             fontSize = 14.sp,
-                            fontWeight = if (selectedTab == index) FontWeight.SemiBold else FontWeight.Medium,
-                            color = if (selectedTab == index) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                            color = if (selected) glassContentColor(primaryColor) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 10.dp)
                         )
                     }
                 }
@@ -691,12 +684,6 @@ private fun LeaderboardItemRow(rank: Int, item: LeaderboardItem) {
         3 -> Color(0xFFCD7F32)
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
-    val rankBg = when (rank) {
-        1 -> Color(0xFFFFD700).copy(alpha = 0.12f)
-        2 -> Color(0xFFC0C0C0).copy(alpha = 0.12f)
-        3 -> Color(0xFFCD7F32).copy(alpha = 0.12f)
-        else -> Color.Transparent
-    }
 
     LiquidGlassCard(
         modifier = Modifier.fillMaxWidth(),
@@ -708,18 +695,18 @@ private fun LeaderboardItemRow(rank: Int, item: LeaderboardItem) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(rankBg),
+            LiquidGlassSurface(
+                modifier = Modifier.size(32.dp),
+                cornerRadius = 16.dp,
+                tint = if (rank <= 3) rankColor else null,
+                contentPadding = 0.dp,
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "$rank",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = rankColor
+                    color = if (rank <= 3) glassContentColor(rankColor) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
@@ -731,17 +718,18 @@ private fun LeaderboardItemRow(rank: Int, item: LeaderboardItem) {
                 modifier = Modifier.weight(1f)
             )
             if (item.isMe) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                LiquidGlassSurface(
+                    cornerRadius = 6.dp,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentPadding = 0.dp,
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "我",
                         fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium
+                        color = glassContentColor(MaterialTheme.colorScheme.primary),
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))

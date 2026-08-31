@@ -43,8 +43,6 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.TagFaces
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -63,10 +61,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -84,11 +79,21 @@ import com.lalema.app.data.PoopConsistency
 import com.lalema.app.data.PoopRecord
 import com.lalema.app.ui.navigation.Screen
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassStatCard
 import com.lalema.app.ui.theme.PrimaryLight
 import com.lalema.app.ui.theme.TertiaryLight
 import com.lalema.app.ui.theme.SuccessLight
+import com.lalema.app.ui.theme.LocalGlassBackdrop
 import kotlinx.coroutines.delay
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.Shadow
+import com.kyant.backdrop.shadow.InnerShadow
+import androidx.compose.ui.unit.DpOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -172,18 +177,13 @@ fun HomeScreen(
                 )
             },
             confirmButton = {
-                Button(
+                LiquidGlassButton(
+                    text = "去生成海报",
                     onClick = {
                         showSuccessDialog = false
                         navController.navigate(Screen.Settings.route)
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                    )
-                ) {
-                    Text("去生成海报", color = Color.White)
-                }
+                    }
+                )
             },
             dismissButton = {
                 TextButton(onClick = { showSuccessDialog = false }) {
@@ -248,66 +248,34 @@ fun HomeScreen(
                 val primaryColor = MaterialTheme.colorScheme.primary
                 val buttonShape = CircleShape
 
-                val glassBg = if (isDark) {
-                    Brush.radialGradient(
-                        colors = listOf(
-                            primaryColor.copy(alpha = 0.25f),
-                            primaryColor.copy(alpha = 0.10f),
-                            Color.White.copy(alpha = 0.05f)
-                        )
-                    )
-                } else {
-                    Brush.radialGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.70f),
-                            primaryColor.copy(alpha = 0.12f),
-                            Color.White.copy(alpha = 0.50f)
-                        )
-                    )
-                }
-
-                val borderColor = if (isDark) {
-                    primaryColor.copy(alpha = 0.35f)
-                } else {
-                    Color.White.copy(alpha = 0.80f)
-                }
-
                 Box(
                     modifier = Modifier
                         .size(160.dp)
                         .scale(scale * pulseScale)
-                        .shadow(
-                            elevation = 16.dp,
-                            shape = buttonShape,
-                            spotColor = primaryColor.copy(alpha = 0.2f)
+                        .drawBackdrop(
+                            backdrop = LocalGlassBackdrop.current,
+                            shape = { buttonShape },
+                            effects = {
+                                vibrancy()
+                                blur(28f.dp.toPx())
+                                lens(18f.dp.toPx(), 24f.dp.toPx())
+                            },
+                            highlight = { Highlight.Default },
+                            shadow = {
+                                Shadow(
+                                    radius = 20.dp,
+                                    offset = DpOffset(0.dp, 8.dp),
+                                    color = primaryColor.copy(alpha = 0.28f)
+                                )
+                            },
+                            innerShadow = {
+                                InnerShadow(
+                                    radius = 16.dp,
+                                    color = Color.White.copy(alpha = if (isDark) 0.10f else 0.42f)
+                                )
+                            },
+                            onDrawSurface = { drawRect(primaryColor.copy(alpha = if (isDark) 0.16f else 0.10f)) }
                         )
-                        .clip(buttonShape)
-                        .background(brush = glassBg)
-                        .border(width = 1.5.dp, color = borderColor, shape = buttonShape)
-                        .drawBehind {
-                            val h = size.height
-                            val w = size.width
-                            drawRect(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = if (isDark) 0.08f else 0.40f),
-                                        Color.Transparent
-                                    ),
-                                    startY = 0f,
-                                    endY = h * 0.35f
-                                )
-                            )
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = if (isDark) 0.04f else 0.20f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(w * 0.35f, h * 0.2f),
-                                    radius = w * 0.5f
-                                )
-                            )
-                        }
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null

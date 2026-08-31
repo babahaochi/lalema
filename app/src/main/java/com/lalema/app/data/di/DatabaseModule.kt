@@ -19,13 +19,35 @@ import javax.inject.Singleton
 object DatabaseModule {
 
     private val MIGRATION_1_2 = object : Migration(1, 2) {
+
+        private val requiredColumns = listOf(
+            "time_hour" to "INTEGER NOT NULL DEFAULT 0",
+            "time_minute" to "INTEGER NOT NULL DEFAULT 0",
+            "amount" to "TEXT NOT NULL DEFAULT 'NORMAL'",
+            "consistency" to "TEXT NOT NULL DEFAULT 'NORMAL'",
+            "color" to "TEXT NOT NULL DEFAULT 'BROWN'",
+            "smell" to "TEXT NOT NULL DEFAULT 'NORMAL'",
+            "pain_level" to "INTEGER NOT NULL DEFAULT 0",
+            "blood" to "INTEGER NOT NULL DEFAULT 0",
+            "mucus" to "INTEGER NOT NULL DEFAULT 0",
+            "notes" to "TEXT NOT NULL DEFAULT ''"
+        )
+
         override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL("ALTER TABLE poop_records ADD COLUMN count INTEGER NOT NULL DEFAULT 1")
-            database.execSQL("ALTER TABLE poop_records ADD COLUMN amount TEXT NOT NULL DEFAULT 'NORMAL'")
-            database.execSQL("ALTER TABLE poop_records ADD COLUMN consistency TEXT NOT NULL DEFAULT 'NORMAL'")
-            database.execSQL("ALTER TABLE poop_records ADD COLUMN color TEXT NOT NULL DEFAULT 'BROWN'")
-            database.execSQL("ALTER TABLE poop_records ADD COLUMN timeOfDay TEXT NOT NULL DEFAULT 'MORNING'")
-            database.execSQL("ALTER TABLE poop_records ADD COLUMN notes TEXT NOT NULL DEFAULT ''")
+            val existingColumns = mutableSetOf<String>()
+            database.query("PRAGMA table_info(poop_records)").use { cursor ->
+                val nameIndex = cursor.getColumnIndex("name")
+                while (cursor.moveToNext()) {
+                    if (nameIndex >= 0) {
+                        existingColumns.add(cursor.getString(nameIndex))
+                    }
+                }
+            }
+            requiredColumns.forEach { (column, definition) ->
+                if (column !in existingColumns) {
+                    database.execSQL("ALTER TABLE poop_records ADD COLUMN $column $definition")
+                }
+            }
         }
     }
 

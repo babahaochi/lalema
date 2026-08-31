@@ -1,6 +1,5 @@
 package com.lalema.app.ui.theme
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -10,7 +9,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -28,14 +26,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -45,7 +42,69 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.backdrops.emptyBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
+import com.kyant.backdrop.shadow.Shadow
 
+/**
+ * 玻璃组件背后的内容源。
+ *
+ * backdrop 库的工作方式是「把背景内容录制成图层 → 施加模糊与折射 → 回绘」，
+ * 因此每个玻璃组件都需要一个 Backdrop 来告诉它「要模糊什么」。
+ * 由 [rememberGlassBackdrop] 创建、通过 [LocalGlassBackdrop] 向下传递。
+ *
+ * 缺省值为 [emptyBackdrop]，此时组件退化为纯色表面，不会崩溃。
+ */
+val LocalGlassBackdrop = staticCompositionLocalOf<Backdrop> { emptyBackdrop() }
+
+/**
+ * 创建全屏背景的内容源。
+ *
+ * 用法：在背景层加 `.layerBackdrop(backdrop)` 把它绘制的内容录进图层，
+ * 再用 [LocalGlassBackdrop] 提供给内容层的玻璃组件。
+ *
+ * ```kotlin
+ * val backdrop = rememberGlassBackdrop()
+ * CompositionLocalProvider(LocalGlassBackdrop provides backdrop) {
+ *     Box(Modifier.fillMaxSize()) {
+ *         GlassBackground(Modifier.layerBackdrop(backdrop))
+ *         MainScreen()
+ *     }
+ * }
+ * ```
+ */
+@Composable
+fun rememberGlassBackdrop(): LayerBackdrop = rememberLayerBackdrop()
+
+/**
+ * 把当前组件绘制的内容录制为玻璃组件的背景源。
+ */
+fun Modifier.glassBackdrop(backdrop: LayerBackdrop): Modifier = this.layerBackdrop(backdrop)
+
+/**
+ * 提供玻璃背景源给子树。
+ */
+@Composable
+fun ProvideGlassBackdrop(
+    backdrop: Backdrop,
+    content: @Composable () -> Unit
+) {
+    CompositionLocalProvider(LocalGlassBackdrop provides backdrop, content = content)
+}
+
+/**
+ * 全屏背景。玻璃组件模糊的正是这一层绘制的内容，
+ * 因此这里保留丰富的色彩层次，玻璃才能透出有层次的颜色。
+ */
 @Composable
 fun GlassBackground(modifier: Modifier = Modifier) {
     val isDark = LocalIsDarkTheme.current
@@ -145,39 +204,50 @@ fun GlassBackground(modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * 根据着色色相返回对比文字色：亮色（金/银等高明度）用深色字，其余用白色。
+ * 用于玻璃组件带上品牌色着色时保证可读性。
+ */
+fun glassContentColor(tint: Color): Color {
+    val luminance = 0.2126f * tint.red + 0.7152f * tint.green + 0.0722f * tint.blue
+    return if (luminance > 0.6f) Color(0xFF1A1A1A) else Color.White
+}
+
+/**
+ * 液态玻璃卡片。
+ *
+ * 真实玻璃质感由四部分组成：背景模糊 + 边缘折射（lens）+ 表面高光描边 +
+ * 内阴影，再叠一层极淡的表面色控制明暗。
+ *
+ * @param tint 可选着色色相。传入后表面以该色着色（提高 alpha 以保颜色辨识度），
+ *             文字色由调用方用 [glassContentColor] 取对比色。默认 null = 白玻璃。
+ */
 @Composable
 fun LiquidGlassCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     cornerRadius: Dp = 24.dp,
+    tint: Color? = null,
+    contentPadding: Dp = 20.dp,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val backdrop = LocalGlassBackdrop.current
     val isDark = LocalIsDarkTheme.current
-    val shape = RoundedCornerShape(cornerRadius)
+    val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
+
+    val pressScale by animateFloatAsState(
         targetValue = if (isPressed && onClick != null) 0.97f else 1f,
         animationSpec = spring(dampingRatio = 0.7f, stiffness = 600f),
         label = "cardScale"
     )
 
-    val glassBg by animateColorAsState(
-        targetValue = if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.55f),
-        animationSpec = tween(500),
-        label = "cardBg"
-    )
-
-    val glassBorder by animateColorAsState(
-        targetValue = if (isDark) Color.White.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.70f),
-        animationSpec = tween(500),
-        label = "cardBorder"
-    )
-
-    val shadowColor by animateColorAsState(
-        targetValue = if (isDark) Color.Black.copy(alpha = 0.4f) else Color(0xFF6080C0).copy(alpha = 0.10f),
-        animationSpec = tween(500),
-        label = "cardShadow"
+    val baseColor = tint ?: Color.White
+    val surfaceColor by animateColorState(
+        dark = baseColor.copy(alpha = if (tint != null) 0.55f else 0.07f),
+        light = baseColor.copy(alpha = if (tint != null) 0.42f else 0.26f),
+        label = "cardSurface"
     )
 
     val clickableModifier = if (onClick != null) {
@@ -191,105 +261,104 @@ fun LiquidGlassCard(
 
     Box(
         modifier = modifier
-            .scale(scale)
-            .shadow(
-                elevation = 12.dp,
-                shape = shape,
-                spotColor = shadowColor,
-                ambientColor = shadowColor
-            )
             .then(clickableModifier)
-            .clip(shape)
-            .background(glassBg)
-            .border(width = 1.dp, color = glassBorder, shape = shape)
-            .drawBehind {
-                val w = size.width
-                val h = size.height
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = if (isDark) 0.10f else 0.50f),
-                            Color.White.copy(alpha = if (isDark) 0.06f else 0.30f),
-                            Color.Transparent
-                        ),
-                        startY = 0f,
-                        endY = h * 0.30f
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    vibrancy()
+                    blur(24f.dp.toPx())
+                    lens(14f.dp.toPx(), 18f.dp.toPx())
+                },
+                highlight = { Highlight.Default },
+                shadow = {
+                    Shadow(
+                        radius = 18.dp,
+                        offset = androidx.compose.ui.unit.DpOffset(0.dp, 6.dp),
+                        color = Color.Black.copy(alpha = if (isDark) 0.50f else 0.13f)
                     )
-                )
-                drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = if (isDark) 0.06f else 0.30f),
-                            Color.White.copy(alpha = if (isDark) 0.03f else 0.15f),
-                            Color.Transparent
-                        ),
-                        startX = 0f,
-                        endX = w * 0.18f
+                },
+                innerShadow = {
+                    InnerShadow(
+                        radius = 20.dp,
+                        color = Color.White.copy(alpha = if (isDark) 0.10f else 0.42f)
                     )
-                )
-            }
-            .padding(20.dp),
+                },
+                layerBlock = {
+                    scaleX = pressScale
+                    scaleY = pressScale
+                },
+                onDrawSurface = { drawRect(surfaceColor) }
+            )
+            .padding(contentPadding),
         content = content
     )
 }
 
+/**
+ * 液态玻璃按钮。用主题主色染色，按压时轻微缩放。
+ *
+ * @param tint 可选着色色相。传入后表面以该色着色、文字自动取对比色（详见 [glassContentColor]）。
+ *             默认 null = 用主题主色。
+ */
 @Composable
 fun LiquidGlassButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    tint: Color? = null
 ) {
+    val backdrop = LocalGlassBackdrop.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
+    val isDark = LocalIsDarkTheme.current
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val shape = remember { RoundedCornerShape(16.dp) }
+
+    val pressScale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = spring(dampingRatio = 0.6f, stiffness = 800f),
         label = "buttonScale"
     )
 
-    val isDark = LocalIsDarkTheme.current
-    val primaryColor = MaterialTheme.colorScheme.primary
-
-    val glassBg by animateColorAsState(
-        targetValue = if (isDark) primaryColor.copy(alpha = 0.20f) else primaryColor.copy(alpha = 0.12f),
-        animationSpec = tween(500),
-        label = "btnBg"
+    val baseColor = tint ?: primaryColor
+    val surfaceColor by animateColorState(
+        dark = baseColor.copy(alpha = if (tint != null) 0.55f else 0.22f),
+        light = baseColor.copy(alpha = if (tint != null) 0.45f else 0.16f),
+        label = "btnSurface"
     )
-
-    val borderColor by animateColorAsState(
-        targetValue = if (isDark) primaryColor.copy(alpha = 0.40f) else primaryColor.copy(alpha = 0.30f),
-        animationSpec = tween(500),
-        label = "btnBorder"
-    )
-
-    val shape = RoundedCornerShape(16.dp)
 
     Box(
         modifier = modifier
-            .scale(scale)
-            .shadow(
-                elevation = 8.dp,
-                shape = shape,
-                spotColor = primaryColor.copy(alpha = 0.15f)
-            )
-            .clip(shape)
-            .background(glassBg)
-            .border(width = 1.dp, color = borderColor, shape = shape)
-            .drawBehind {
-                val h = size.height
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = if (isDark) 0.08f else 0.35f),
-                            Color.White.copy(alpha = if (isDark) 0.04f else 0.18f),
-                            Color.Transparent
-                        ),
-                        startY = 0f,
-                        endY = h * 0.45f
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    vibrancy()
+                    blur(18f.dp.toPx())
+                    lens(10f.dp.toPx(), 16f.dp.toPx())
+                },
+                highlight = { Highlight.Default },
+                shadow = {
+                    Shadow(
+                        radius = 10.dp,
+                        offset = androidx.compose.ui.unit.DpOffset(0.dp, 4.dp),
+                        color = primaryColor.copy(alpha = 0.22f)
                     )
-                )
-            }
+                },
+                innerShadow = {
+                    InnerShadow(
+                        radius = 14.dp,
+                        color = Color.White.copy(alpha = if (isDark) 0.12f else 0.38f)
+                    )
+                },
+                layerBlock = {
+                    scaleX = pressScale
+                    scaleY = pressScale
+                },
+                onDrawSurface = { drawRect(surfaceColor) }
+            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -300,13 +369,17 @@ fun LiquidGlassButton(
     ) {
         Text(
             text = text,
-            color = if (enabled) primaryColor else primaryColor.copy(alpha = 0.4f),
+            color = if (!enabled) baseColor.copy(alpha = 0.4f)
+            else if (tint != null) glassContentColor(tint) else primaryColor,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold
         )
     }
 }
 
+/**
+ * 液态玻璃统计卡片。
+ */
 @Composable
 fun LiquidGlassStatCard(
     value: String,
@@ -314,63 +387,42 @@ fun LiquidGlassStatCard(
     modifier: Modifier = Modifier,
     icon: @Composable (() -> Unit)? = null
 ) {
+    val backdrop = LocalGlassBackdrop.current
     val isDark = LocalIsDarkTheme.current
-    val shape = RoundedCornerShape(20.dp)
+    val shape = remember { RoundedCornerShape(20.dp) }
 
-    val glassBg by animateColorAsState(
-        targetValue = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.50f),
-        animationSpec = tween(500),
-        label = "statBg"
-    )
-
-    val glassBorder by animateColorAsState(
-        targetValue = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.65f),
-        animationSpec = tween(500),
-        label = "statBorder"
-    )
-
-    val shadowSpot by animateColorAsState(
-        targetValue = if (isDark) Color.Black.copy(alpha = 0.3f) else Color(0xFF6080C0).copy(alpha = 0.08f),
-        animationSpec = tween(500),
-        label = "statShadow"
+    val surfaceColor by animateColorState(
+        dark = Color.White.copy(alpha = 0.06f),
+        light = Color.White.copy(alpha = 0.24f),
+        label = "statSurface"
     )
 
     Box(
         modifier = modifier
-            .shadow(
-                elevation = 10.dp,
-                shape = shape,
-                spotColor = shadowSpot
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    vibrancy()
+                    blur(20f.dp.toPx())
+                    lens(12f.dp.toPx(), 16f.dp.toPx())
+                },
+                highlight = { Highlight.Default },
+                shadow = {
+                    Shadow(
+                        radius = 14.dp,
+                        offset = androidx.compose.ui.unit.DpOffset(0.dp, 5.dp),
+                        color = Color.Black.copy(alpha = if (isDark) 0.42f else 0.11f)
+                    )
+                },
+                innerShadow = {
+                    InnerShadow(
+                        radius = 16.dp,
+                        color = Color.White.copy(alpha = if (isDark) 0.08f else 0.40f)
+                    )
+                },
+                onDrawSurface = { drawRect(surfaceColor) }
             )
-            .clip(shape)
-            .background(glassBg)
-            .border(width = 1.dp, color = glassBorder, shape = shape)
-            .drawBehind {
-                val w = size.width
-                val h = size.height
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = if (isDark) 0.08f else 0.40f),
-                            Color.White.copy(alpha = if (isDark) 0.04f else 0.20f),
-                            Color.Transparent
-                        ),
-                        startY = 0f,
-                        endY = h * 0.35f
-                    )
-                )
-                drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = if (isDark) 0.05f else 0.25f),
-                            Color.White.copy(alpha = if (isDark) 0.02f else 0.12f),
-                            Color.Transparent
-                        ),
-                        startX = 0f,
-                        endX = w * 0.15f
-                    )
-                )
-            }
             .padding(12.dp)
     ) {
         Column(
@@ -378,7 +430,7 @@ fun LiquidGlassStatCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             icon?.invoke()
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(2.dp))
+            Spacer(modifier = Modifier.padding(2.dp))
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineSmall,
@@ -394,6 +446,10 @@ fun LiquidGlassStatCard(
     }
 }
 
+/**
+ * 分隔线。高度不足 1dp，模糊与折射在如此薄的区域内没有可见效果，
+ * 因此沿用渐变绘制，不套玻璃图层。
+ */
 @Composable
 fun LiquidGlassDivider(modifier: Modifier = Modifier) {
     val isDark = LocalIsDarkTheme.current
@@ -418,51 +474,68 @@ fun LiquidGlassDivider(modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * 液态玻璃表面容器，比卡片更淡，用于包裹次要内容。
+ *
+ * @param tint 可选着色色相，默认 null = 白玻璃。
+ * @param contentPadding 内容内边距，chip 等小元素可传小值。
+ * @param contentAlignment 内容对齐方式。
+ */
 @Composable
 fun LiquidGlassSurface(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 24.dp,
+    tint: Color? = null,
+    contentPadding: Dp = 16.dp,
+    contentAlignment: Alignment = Alignment.TopStart,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val backdrop = LocalGlassBackdrop.current
     val isDark = LocalIsDarkTheme.current
-    val shape = RoundedCornerShape(cornerRadius)
+    val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
 
-    val glassBg by animateColorAsState(
-        targetValue = if (isDark) Color.White.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.45f),
-        animationSpec = tween(500),
-        label = "surfaceBg"
-    )
-
-    val borderColor by animateColorAsState(
-        targetValue = if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.60f),
-        animationSpec = tween(500),
-        label = "surfaceBorder"
+    val baseColor = tint ?: Color.White
+    val surfaceColor by animateColorState(
+        dark = baseColor.copy(alpha = if (tint != null) 0.55f else 0.05f),
+        light = baseColor.copy(alpha = if (tint != null) 0.42f else 0.22f),
+        label = "surfaceTint"
     )
 
     Box(
         modifier = modifier
-            .clip(shape)
-            .background(glassBg)
-            .border(width = 1.dp, color = borderColor, shape = shape)
-            .drawBehind {
-                val h = size.height
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = if (isDark) 0.06f else 0.35f),
-                            Color.White.copy(alpha = if (isDark) 0.03f else 0.18f),
-                            Color.Transparent
-                        ),
-                        startY = 0f,
-                        endY = h * 0.30f
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    vibrancy()
+                    blur(18f.dp.toPx())
+                    lens(10f.dp.toPx(), 14f.dp.toPx())
+                },
+                highlight = { Highlight.Default },
+                shadow = {
+                    Shadow(
+                        radius = 12.dp,
+                        offset = androidx.compose.ui.unit.DpOffset(0.dp, 4.dp),
+                        color = Color.Black.copy(alpha = if (isDark) 0.34f else 0.09f)
                     )
-                )
-            }
-            .padding(16.dp),
+                },
+                innerShadow = {
+                    InnerShadow(
+                        radius = 16.dp,
+                        color = Color.White.copy(alpha = if (isDark) 0.07f else 0.36f)
+                    )
+                },
+                onDrawSurface = { drawRect(surfaceColor) }
+            )
+            .padding(contentPadding),
+        contentAlignment = contentAlignment,
         content = content
     )
 }
 
+/**
+ * 玻璃风格内联时间选择器。
+ */
 @Composable
 fun GlassInlineTimePicker(
     hour: Int,
@@ -470,15 +543,35 @@ fun GlassInlineTimePicker(
     onHourChange: (Int) -> Unit,
     onMinuteChange: (Int) -> Unit
 ) {
+    val backdrop = LocalGlassBackdrop.current
     val isDark = LocalIsDarkTheme.current
-    val shape = RoundedCornerShape(16.dp)
+    val shape = remember { RoundedCornerShape(16.dp) }
+
+    val containerColor by animateColorState(
+        dark = Color.White.copy(alpha = 0.05f),
+        light = Color.White.copy(alpha = 0.20f),
+        label = "pickerSurface"
+    )
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f))
-            .border(1.dp, if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.45f), shape)
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    blur(16f.dp.toPx())
+                    lens(8f.dp.toPx(), 12f.dp.toPx())
+                },
+                highlight = { Highlight.Default },
+                innerShadow = {
+                    InnerShadow(
+                        radius = 14.dp,
+                        color = Color.White.copy(alpha = if (isDark) 0.08f else 0.34f)
+                    )
+                },
+                onDrawSurface = { drawRect(containerColor) }
+            )
             .padding(16.dp)
     ) {
         Row(
@@ -489,21 +582,7 @@ fun GlassInlineTimePicker(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 GlassArrowButton(isDark = isDark) { onHourChange((hour + 1) % 24) }
                 Spacer(modifier = Modifier.height(4.dp))
-                Box(
-                    modifier = Modifier
-                        .size(56.dp, 48.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.60f))
-                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = String.format("%02d", hour),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                GlassDigitBox(text = String.format("%02d", hour))
                 Spacer(modifier = Modifier.height(4.dp))
                 GlassArrowButton(isDark = isDark, isUp = false) { onHourChange((hour - 1 + 24) % 24) }
             }
@@ -522,21 +601,7 @@ fun GlassInlineTimePicker(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 GlassArrowButton(isDark = isDark) { onMinuteChange((minute + 1) % 60) }
                 Spacer(modifier = Modifier.height(4.dp))
-                Box(
-                    modifier = Modifier
-                        .size(56.dp, 48.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.60f))
-                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = String.format("%02d", minute),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                GlassDigitBox(text = String.format("%02d", minute))
                 Spacer(modifier = Modifier.height(4.dp))
                 GlassArrowButton(isDark = isDark, isUp = false) { onMinuteChange((minute - 1 + 60) % 60) }
             }
@@ -544,26 +609,100 @@ fun GlassInlineTimePicker(
     }
 }
 
+/**
+ * 时间选择器里的两位数字框，比外层再亮一档，形成层次。
+ */
+@Composable
+private fun GlassDigitBox(text: String) {
+    val backdrop = LocalGlassBackdrop.current
+    val isDark = LocalIsDarkTheme.current
+    val shape = remember { RoundedCornerShape(14.dp) }
+
+    val surfaceColor by animateColorState(
+        dark = Color.White.copy(alpha = 0.10f),
+        light = Color.White.copy(alpha = 0.34f),
+        label = "digitSurface"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(56.dp, 48.dp)
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    blur(12f.dp.toPx())
+                    lens(6f.dp.toPx(), 10f.dp.toPx())
+                },
+                highlight = { Highlight.Default },
+                innerShadow = {
+                    InnerShadow(
+                        radius = 10.dp,
+                        color = Color.White.copy(alpha = if (isDark) 0.10f else 0.42f)
+                    )
+                },
+                onDrawSurface = { drawRect(surfaceColor) }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+/**
+ * 玻璃箭头按钮。
+ */
 @Composable
 fun GlassArrowButton(
     isDark: Boolean,
     isUp: Boolean = true,
     onClick: () -> Unit
 ) {
+    val backdrop = LocalGlassBackdrop.current
+    val shape = remember { RoundedCornerShape(12.dp) }
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
+
+    val pressScale by animateFloatAsState(
         targetValue = if (isPressed) 0.8f else 1f,
         animationSpec = spring(dampingRatio = 0.5f, stiffness = 500f),
         label = "arrowScale"
     )
 
+    val surfaceColor by animateColorState(
+        dark = Color.White.copy(alpha = 0.08f),
+        light = Color.White.copy(alpha = 0.26f),
+        label = "arrowSurface"
+    )
+
     Box(
         modifier = Modifier
             .size(40.dp)
-            .scale(scale)
-            .clip(RoundedCornerShape(12.dp))
-            .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f))
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    blur(10f.dp.toPx())
+                    lens(5f.dp.toPx(), 8f.dp.toPx())
+                },
+                highlight = { Highlight.Default },
+                innerShadow = {
+                    InnerShadow(
+                        radius = 8.dp,
+                        color = Color.White.copy(alpha = if (isDark) 0.10f else 0.40f)
+                    )
+                },
+                layerBlock = {
+                    scaleX = pressScale
+                    scaleY = pressScale
+                },
+                onDrawSurface = { drawRect(surfaceColor) }
+            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -577,4 +716,21 @@ fun GlassArrowButton(
             color = MaterialTheme.colorScheme.primary
         )
     }
+}
+
+/**
+ * 主题相关的玻璃表面色，明暗切换时平滑过渡。
+ */
+@Composable
+private fun animateColorState(
+    dark: Color,
+    light: Color,
+    label: String
+): androidx.compose.runtime.State<Color> {
+    val isDark = LocalIsDarkTheme.current
+    return androidx.compose.animation.animateColorAsState(
+        targetValue = if (isDark) dark else light,
+        animationSpec = tween(500),
+        label = label
+    )
 }
