@@ -1,6 +1,6 @@
 plugins {
+    // AGP 9.0+ 已内置 Kotlin 支持，无需再 apply org.jetbrains.kotlin.android
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.lalema.app"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.lalema.app"
@@ -48,8 +48,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    // AGP 9 内置 Kotlin：用 kotlin {} 配置 JVM 工具链（取代旧的 kotlinOptions.jvmTarget）
+    kotlin {
+        jvmToolchain(17)
     }
 
     buildFeatures {
@@ -73,16 +74,18 @@ android {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
+    // enforcedPlatform：强制把整个 Compose 依赖树锁定在 BOM 2026.08.00（= Compose 1.12.0），
+    // 与 kyant/backdrop 2.0.1 + shapes 1.2.1 的要求一致，避免任何传递依赖把 Compose 抬高/压低。
+    val composeBom = enforcedPlatform("androidx.compose:compose-bom:2026.08.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
     implementation(project(":backdrop"))
 
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.core:core-ktx:1.16.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
+    implementation("androidx.activity:activity-compose:1.10.1")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -90,17 +93,17 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
 
-    implementation("androidx.navigation:navigation-compose:2.8.5")
+    implementation("androidx.navigation:navigation-compose:2.9.0")
 
-    implementation("androidx.room:room-runtime:2.7.0")
-    implementation("androidx.room:room-ktx:2.7.0")
-    ksp("androidx.room:room-compiler:2.7.0")
+    implementation("androidx.room:room-runtime:2.8.0")
+    implementation("androidx.room:room-ktx:2.8.0")
+    ksp("androidx.room:room-compiler:2.8.0")
 
-    implementation("com.google.dagger:hilt-android:2.53.1")
-    ksp("com.google.dagger:hilt-android-compiler:2.53.1")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("com.google.dagger:hilt-android:2.60.1")
+    ksp("com.google.dagger:hilt-android-compiler:2.60.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")

@@ -232,6 +232,9 @@ fun AiChatScreen(
                     maxLines = 4
                 )
                 Spacer(modifier = Modifier.width(8.dp))
+                // drawBackdrop 的 shadow/onDrawSurface lambda 是非 @Composable 的，
+                // 里面不能调用 MaterialTheme（composable）。先在 composable 作用域取值再传入。
+                val primaryColor = MaterialTheme.colorScheme.primary
                 Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -248,7 +251,7 @@ fun AiChatScreen(
                                 Shadow(
                                     radius = 10.dp,
                                     offset = DpOffset(0.dp, 3.dp),
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
+                                    color = primaryColor.copy(alpha = 0.30f)
                                 )
                             },
                             innerShadow = {
@@ -259,8 +262,8 @@ fun AiChatScreen(
                             },
                             onDrawSurface = {
                                 drawRect(
-                                    if (inputText.isBlank()) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                                    if (inputText.isBlank()) primaryColor.copy(alpha = 0.25f)
+                                    else primaryColor.copy(alpha = 0.85f)
                                 )
                             }
                         )

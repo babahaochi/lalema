@@ -1,7 +1,6 @@
 package com.lalema.app.ui.theme
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateDpAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -744,11 +743,12 @@ fun LiquidGlassSwitch(
         label = "switchThumb"
     )
 
-    val thumbOffset by animateDpAsState(
-        targetValue = if (checked) 24.dp else 0.dp,
+    val thumbOffsetFloat by animateFloatAsState(
+        targetValue = if (checked) 24f else 0f,
         animationSpec = spring(dampingRatio = 0.65f, stiffness = 400f),
         label = "switchThumbOffset"
     )
+    val thumbOffset = thumbOffsetFloat.dp
 
     LiquidGlassSurface(
         modifier = modifier

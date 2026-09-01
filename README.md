@@ -43,7 +43,7 @@
 - ☁️ **数据同步** - 多设备数据同步，冲突自动解决
 - 📊 **统计分析** - 服务端月度统计、趋势分析
 - 👥 **好友服务** - 好友关系管理、排行榜计算
-- 📦 **Docker 部署** - 一键部署 MySQL + Redis + App + Nginx
+- 📦 **Docker 部署** - 一键部署 MySQL + App + Nginx
 - 🔒 **HTTPS 支持** - Nginx 反向代理，SSL 证书配置
 
 ### 界面设计
@@ -71,14 +71,14 @@
 
 | 技术 | 版本 |
 |------|------|
-| 语言 | Kotlin 1.9.22 |
-| UI 框架 | Jetpack Compose (BOM 2024.01.00) |
+| 语言 | Kotlin 2.3.21 |
+| UI 框架 | Jetpack Compose (BOM 2026.08.00 / Compose 1.12.0) |
 | 架构 | MVVM + Repository |
-| 依赖注入 | Hilt 2.50 |
-| 数据库 | Room 2.6.1 |
+| 依赖注入 | Hilt 2.60.1 |
+| 数据库 | Room 2.8.0 |
 | 网络 | Retrofit 2.9.0 + OkHttp 4.12.0 |
 | 安全 | EncryptedSharedPreferences |
-| 导航 | Navigation Compose 2.7.6 |
+| 导航 | Navigation Compose 2.9.0 |
 | 最低 SDK | Android 8.0 (API 26) |
 | 目标 SDK | Android 16 (API 36) |
 
@@ -90,7 +90,6 @@
 | 安全 | Spring Security + JWT |
 | ORM | MyBatis-Plus 3.5.5 |
 | 数据库 | MySQL 8.0 |
-| 缓存 | Redis 7 |
 | 文档 | Knife4j 4.4.0 |
 | 容器 | Docker + Docker Compose |
 | 反向代理 | Nginx + SSL |
@@ -181,7 +180,7 @@ lalema/
 ## 环境要求
 
 - Java 17+
-- Gradle 8.2+
+- Gradle 9.6+
 - Android SDK 34+
 
 ## 构建方式
@@ -206,6 +205,11 @@ docker-compose up -d
 ```
 
 ## 版本历史
+
+### v2.2.0
+- 🍸 **Liquid Glass 重构** - 引入 kyant/backdrop 2.0.1 设计系统，全 App 玻璃化视觉统一（替换手写玻璃效果）
+- 🛠 **构建升级** - AGP 9.3.2 / Kotlin 2.3.21 / Compose BOM 2026.08.00 / Hilt 2.60.1 / Room 2.8.0
+- 🧹 **代码清理** - 移除死代码 NavGraph、未使用的 Redis 依赖
 
 ### v2.1.1
 - 🐛 **修复添加好友无响应** - 后端返回强类型 DTO 替代 Map，解决 Gson 反序列化问题
