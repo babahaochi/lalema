@@ -63,7 +63,9 @@ import com.lalema.app.ai.TrendDirection
 import com.lalema.app.ui.navigation.Screen
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LiquidGlassButton
+import com.lalema.app.ui.theme.LiquidGlassSurface
 import com.lalema.app.ui.theme.LocalIsDarkTheme
+import com.lalema.app.ui.theme.glassContentColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +74,6 @@ fun AiScreen(
     viewModel: AiViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val isDark = LocalIsDarkTheme.current
 
     LaunchedEffect(Unit) {
         viewModel.loadData()
@@ -89,14 +90,13 @@ fun AiScreen(
                     )
                 },
                 actions = {
-                    Box(
+                    LiquidGlassSurface(
                         modifier = Modifier
                             .padding(end = 8.dp)
                             .size(36.dp)
-                            .clip(CircleShape)
-                            .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f))
-                            .clickable { navController.navigate("ai_config") }
-                            .padding(8.dp),
+                            .clickable { navController.navigate("ai_config") },
+                        cornerRadius = 18.dp,
+                        contentPadding = 8.dp,
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -201,18 +201,17 @@ fun AiScreen(
                         .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                            .padding(10.dp),
+                    LiquidGlassSurface(
+                        modifier = Modifier.size(44.dp),
+                        cornerRadius = 12.dp,
+                        tint = MaterialTheme.colorScheme.primary,
+                        contentPadding = 10.dp,
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Chat,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = glassContentColor(MaterialTheme.colorScheme.primary),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -427,18 +426,17 @@ private fun AiFeatureCard(
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(color.copy(alpha = 0.12f))
-                    .padding(8.dp),
+            LiquidGlassSurface(
+                modifier = Modifier.size(40.dp),
+                cornerRadius = 10.dp,
+                tint = color,
+                contentPadding = 8.dp,
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = color,
+                    tint = glassContentColor(color),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -487,17 +485,18 @@ private fun TrendPreviewCard(trend: com.lalema.app.ai.TrendPrediction) {
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(directionColor.copy(alpha = 0.15f))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                LiquidGlassSurface(
+                    cornerRadius = 8.dp,
+                    tint = directionColor,
+                    contentPadding = 0.dp,
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = directionText,
                         fontSize = 12.sp,
-                        color = directionColor,
-                        fontWeight = FontWeight.Medium
+                        color = glassContentColor(directionColor),
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
             }

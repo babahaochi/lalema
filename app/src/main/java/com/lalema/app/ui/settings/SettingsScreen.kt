@@ -12,7 +12,6 @@ import android.os.PowerManager
 import android.provider.MediaStore
 import android.provider.Settings as AndroidSettings
 import android.widget.Toast
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
@@ -61,16 +60,11 @@ import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -91,7 +85,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.offset
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.lalema.app.BuildConfig
@@ -101,7 +94,10 @@ import com.lalema.app.ui.theme.GlassInlineTimePicker
 import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LiquidGlassDivider
+import com.lalema.app.ui.theme.LiquidGlassProgress
+import com.lalema.app.ui.theme.LiquidGlassRadioButton
 import com.lalema.app.ui.theme.LiquidGlassSurface
+import com.lalema.app.ui.theme.LiquidGlassSwitch
 import com.lalema.app.ui.theme.glassContentColor
 import com.lalema.app.ui.theme.LocalThemeSettings
 import com.lalema.app.ui.theme.ThemeMode
@@ -196,9 +192,10 @@ fun SettingsScreen(
                 )
             },
             dismissButton = {
-                TextButton(onClick = { updateDialogInfo = null }) {
-                    Text("稍后提醒", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                LiquidGlassButton(
+                    text = "稍后提醒",
+                    onClick = { updateDialogInfo = null }
+                )
             }
         )
     }
@@ -299,11 +296,11 @@ fun SettingsScreen(
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                        LiquidGlassSurface(
+                            modifier = Modifier.size(64.dp),
+                            cornerRadius = 32.dp,
+                            tint = null,
+                            contentPadding = 0.dp,
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -330,22 +327,24 @@ fun SettingsScreen(
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
-                                    .clickable {
-                                        ApiClient.clearToken(context)
-                                        userInfo = null
-                                        Toast.makeText(context, "已退出登录", Toast.LENGTH_SHORT).show()
-                                    }
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                            LiquidGlassSurface(
+                                cornerRadius = 8.dp,
+                                tint = MaterialTheme.colorScheme.error,
+                                contentPadding = 0.dp,
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = "退出登录",
                                     fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontWeight = FontWeight.Medium
+                                    color = glassContentColor(MaterialTheme.colorScheme.error),
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier
+                                        .clickable {
+                                            ApiClient.clearToken(context)
+                                            userInfo = null
+                                            Toast.makeText(context, "已退出登录", Toast.LENGTH_SHORT).show()
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
                                 )
                             }
                         }
@@ -380,7 +379,7 @@ fun SettingsScreen(
                     title = "闹钟提醒",
                     subtitle = if (alarmEnabled) "${reminderHour}:${String.format("%02d", reminderMinute)} 响铃" else "已关闭",
                     trailing = {
-                        SwitchButton(
+                        LiquidGlassSwitch(
                             checked = alarmEnabled,
                             onCheckedChange = { viewModel.toggleAlarm() }
                         )
@@ -401,7 +400,7 @@ fun SettingsScreen(
                         if (viewModel.isAtLeastAndroid16) "灵动岛 + 通知栏" else "通知栏提醒"
                     } else "已关闭",
                     trailing = {
-                        SwitchButton(
+                        LiquidGlassSwitch(
                             checked = notificationEnabled,
                             onCheckedChange = { viewModel.toggleNotification() }
                         )
@@ -412,7 +411,7 @@ fun SettingsScreen(
                     title = "日历日程提醒",
                     subtitle = if (calendarEnabled) "已在系统日历创建每日日程" else "已关闭",
                     trailing = {
-                        SwitchButton(
+                        LiquidGlassSwitch(
                             checked = calendarEnabled,
                             onCheckedChange = { viewModel.toggleCalendar() }
                         )
@@ -587,45 +586,6 @@ fun SettingsScreen(
     }
 }
 
-@Composable
-private fun SwitchButton(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-
-    val thumbColor by animateColorAsState(
-        targetValue = if (checked) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(300),
-        label = "switchThumb"
-    )
-
-    val thumbOffset by animateDpAsState(
-        targetValue = if (checked) 24.dp else 0.dp,
-        animationSpec = spring(dampingRatio = 0.65f, stiffness = 400f),
-        label = "switchThumbOffset"
-    )
-
-    LiquidGlassSurface(
-        modifier = Modifier
-            .width(52.dp)
-            .height(28.dp)
-            .clickable { onCheckedChange(!checked) },
-        cornerRadius = 14.dp,
-        tint = if (checked) primaryColor else null,
-        contentPadding = 3.dp,
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Box(
-            modifier = Modifier
-                .size(22.dp)
-                .offset(x = thumbOffset)
-                .clip(CircleShape)
-                .background(thumbColor)
-        )
-    }
-}
-
 private fun requestIgnoreBatteryOptimization(context: Context) {
     try {
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -673,13 +633,9 @@ private fun ThemeModeOption(
                 .clickable(onClick = onClick)
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
-            RadioButton(
+            LiquidGlassRadioButton(
                 selected = selected,
-                onClick = onClick,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = MaterialTheme.colorScheme.primary,
-                    unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                onClick = onClick
             )
             Text(
                 text = label,
@@ -994,18 +950,19 @@ private fun ExportDataDialog(
                 }
                 if (isExporting) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.primary
+                    LiquidGlassProgress(
+                        progress = 1f,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            LiquidGlassButton(
+                text = "取消",
+                onClick = onDismiss
+            )
         }
     )
 }
@@ -1138,9 +1095,10 @@ private fun PosterDialog(
             )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            LiquidGlassButton(
+                text = "取消",
+                onClick = onDismiss
+            )
         }
     )
 }

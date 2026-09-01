@@ -96,18 +96,17 @@ fun AiChatScreen(
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                .padding(6.dp),
+                        LiquidGlassSurface(
+                            modifier = Modifier.size(32.dp),
+                            cornerRadius = 16.dp,
+                            tint = MaterialTheme.colorScheme.primary,
+                            contentPadding = 6.dp,
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.SmartToy,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = glassContentColor(MaterialTheme.colorScheme.primary),
                                 modifier = Modifier.size(20.dp)
                             )
                         }

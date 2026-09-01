@@ -1,5 +1,7 @@
 package com.lalema.app.ui.theme
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateDpAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -18,12 +20,15 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -32,14 +37,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import com.kyant.backdrop.Backdrop
@@ -714,6 +722,149 @@ fun GlassArrowButton(
             text = if (isUp) "▲" else "▼",
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+/**
+ * 液态玻璃开关。轨道为着色玻璃（选中用主色），滑块在轨道内滑动。
+ * 全 App 统一使用此组件，取代原生 Switch。
+ */
+@Composable
+fun LiquidGlassSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    val thumbColor by animateColorAsState(
+        targetValue = if (checked) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(300),
+        label = "switchThumb"
+    )
+
+    val thumbOffset by animateDpAsState(
+        targetValue = if (checked) 24.dp else 0.dp,
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = 400f),
+        label = "switchThumbOffset"
+    )
+
+    LiquidGlassSurface(
+        modifier = modifier
+            .width(52.dp)
+            .height(28.dp)
+            .clickable { onCheckedChange(!checked) },
+        cornerRadius = 14.dp,
+        tint = if (checked) primaryColor else null,
+        contentPadding = 3.dp,
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .size(22.dp)
+                .offset(x = thumbOffset)
+                .clip(CircleShape)
+                .background(thumbColor)
+        )
+    }
+}
+
+/**
+ * 液态玻璃图标按钮，用于返回 / 关闭 / 删除 / 月份切换等图标操作，
+ * 取代原生 IconButton 以统一玻璃观感。
+ *
+ * @param tint 传值时按钮整体着色（危险操作可传 error），图标色自动取对比色。
+ */
+@Composable
+fun LiquidGlassIconButton(
+    icon: ImageVector,
+    contentDescription: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    size: Dp = 40.dp,
+    cornerRadius: Dp = 20.dp,
+    tint: Color? = null,
+    iconTint: Color = Color.Unspecified
+) {
+    val resolvedIconTint = if (iconTint != Color.Unspecified) {
+        iconTint
+    } else if (tint != null) {
+        glassContentColor(tint)
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+
+    LiquidGlassSurface(
+        modifier = modifier
+            .size(size)
+            .clickable(onClick = onClick),
+        cornerRadius = cornerRadius,
+        tint = tint,
+        contentPadding = 0.dp,
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = resolvedIconTint,
+            modifier = Modifier.size(size * 0.55f)
+        )
+    }
+}
+
+/**
+ * 液态玻璃单选按钮。选中时着色主色并显示内点，取代原生 RadioButton。
+ */
+@Composable
+fun LiquidGlassRadioButton(
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    LiquidGlassSurface(
+        modifier = modifier
+            .size(24.dp)
+            .clickable(onClick = onClick),
+        cornerRadius = 12.dp,
+        tint = if (selected) primaryColor else null,
+        contentPadding = 0.dp,
+        contentAlignment = Alignment.Center
+    ) {
+        if (selected) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(glassContentColor(primaryColor))
+            )
+        }
+    }
+}
+
+/**
+ * 液态玻璃进度条。轨道为玻璃，进度用主色实心填充，取代原生 LinearProgressIndicator。
+ */
+@Composable
+fun LiquidGlassProgress(
+    progress: Float,
+    modifier: Modifier = Modifier
+) {
+    LiquidGlassSurface(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(8.dp),
+        cornerRadius = 4.dp,
+        contentPadding = 0.dp,
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(4.dp))
+                .background(MaterialTheme.colorScheme.primary)
         )
     }
 }

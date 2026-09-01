@@ -64,8 +64,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -81,9 +79,11 @@ import com.lalema.app.data.PoopSmell
 import com.lalema.app.ui.home.PoopRecordForm
 import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassSurface
 import com.lalema.app.ui.theme.PrimaryLight
 import com.lalema.app.ui.theme.SuccessLight
 import com.lalema.app.ui.theme.WarningLight
+import com.lalema.app.ui.theme.glassContentColor
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -300,24 +300,16 @@ fun CalendarScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     when {
-                                        isRecorded -> Box(
-                                            modifier = Modifier
-                                                .size(36.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    brush = Brush.verticalGradient(
-                                                        colors = listOf(
-                                                            SuccessLight.copy(alpha = 0.8f),
-                                                            SuccessLight
-                                                        )
-                                                    )
-                                                )
-                                                .shadow(4.dp, CircleShape),
+                                        isRecorded -> LiquidGlassSurface(
+                                            modifier = Modifier.size(36.dp),
+                                            cornerRadius = 18.dp,
+                                            tint = SuccessLight,
+                                            contentPadding = 0.dp,
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
                                                 text = day.toString(),
-                                                color = Color.White,
+                                                color = glassContentColor(SuccessLight),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Bold
                                             )

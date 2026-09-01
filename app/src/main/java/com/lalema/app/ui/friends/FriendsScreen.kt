@@ -135,19 +135,19 @@ fun FriendsScreen(
                 },
                 actions = {
                     if (uiState.pendingCount > 0) {
-                        Box(
+                        LiquidGlassSurface(
                             modifier = Modifier
                                 .padding(end = 8.dp)
                                 .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFFF5252))
-                                .clickable { selectedTab = 1 }
-                                .padding(8.dp),
+                                .clickable { selectedTab = 1 },
+                            cornerRadius = 18.dp,
+                            tint = Color(0xFFFF5252),
+                            contentPadding = 8.dp,
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "${uiState.pendingCount}",
-                                color = Color.White,
+                                color = glassContentColor(Color(0xFFFF5252)),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -265,23 +265,24 @@ private fun FriendsListTab(
                 ),
                 singleLine = true
             )
-            Box(
+            LiquidGlassSurface(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.primary)
                     .clickable {
                         if (searchQuery.isNotBlank()) {
                             showSearch = true
                             onSearch(searchQuery)
                         }
                     },
+                cornerRadius = 12.dp,
+                tint = MaterialTheme.colorScheme.primary,
+                contentPadding = 0.dp,
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "搜索",
-                    tint = Color.White,
+                    tint = glassContentColor(MaterialTheme.colorScheme.primary),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -308,16 +309,16 @@ private fun FriendsListTab(
                                 .padding(vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                            LiquidGlassSurface(
+                                modifier = Modifier.size(36.dp),
+                                cornerRadius = 18.dp,
+                                tint = MaterialTheme.colorScheme.primary,
+                                contentPadding = 0.dp,
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = user.nickname.take(1),
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = glassContentColor(MaterialTheme.colorScheme.primary),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
                                 )
@@ -352,18 +353,19 @@ private fun FriendsListTab(
                                     )
                                 }
                                 else -> {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                            .clickable { onSendRequest(user.userId) }
-                                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                                    LiquidGlassSurface(
+                                        modifier = Modifier.clickable { onSendRequest(user.userId) },
+                                        cornerRadius = 8.dp,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        contentPadding = 0.dp,
+                                        contentAlignment = Alignment.Center
                                     ) {
                                         Text(
                                             text = "添加",
                                             fontSize = 12.sp,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.Medium
+                                            color = glassContentColor(MaterialTheme.colorScheme.primary),
+                                            fontWeight = FontWeight.Medium,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                         )
                                     }
                                 }
@@ -439,16 +441,16 @@ private fun FriendItem(friend: FriendUser, onRemove: () -> Unit, onRemind: () ->
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+            LiquidGlassSurface(
+                modifier = Modifier.size(40.dp),
+                cornerRadius = 20.dp,
+                tint = MaterialTheme.colorScheme.primary,
+                contentPadding = 0.dp,
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = friend.nickname.take(1),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = glassContentColor(MaterialTheme.colorScheme.primary),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -467,18 +469,19 @@ private fun FriendItem(friend: FriendUser, onRemove: () -> Unit, onRemind: () ->
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
-                    .clickable { onRemind() }
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            LiquidGlassSurface(
+                modifier = Modifier.clickable { onRemind() },
+                cornerRadius = 8.dp,
+                tint = MaterialTheme.colorScheme.secondary,
+                contentPadding = 0.dp,
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "提醒",
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.Medium
+                    color = glassContentColor(MaterialTheme.colorScheme.secondary),
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
@@ -560,16 +563,16 @@ private fun RequestItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFFF9800).copy(alpha = 0.12f)),
+            LiquidGlassSurface(
+                modifier = Modifier.size(40.dp),
+                cornerRadius = 20.dp,
+                tint = Color(0xFFFF9800),
+                contentPadding = 0.dp,
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = request.nickname.take(1),
-                    color = Color(0xFFFF9800),
+                    color = glassContentColor(Color(0xFFFF9800)),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -591,33 +594,35 @@ private fun RequestItem(
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(
+                LiquidGlassSurface(
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF4CAF50))
                         .clickable(onClick = onAccept),
+                    cornerRadius = 16.dp,
+                    tint = Color(0xFF4CAF50),
+                    contentPadding = 0.dp,
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = "接受",
-                        tint = Color.White,
+                        tint = glassContentColor(Color(0xFF4CAF50)),
                         modifier = Modifier.size(18.dp)
                     )
                 }
-                Box(
+                LiquidGlassSurface(
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFF5252))
                         .clickable(onClick = onReject),
+                    cornerRadius = 16.dp,
+                    tint = Color(0xFFFF5252),
+                    contentPadding = 0.dp,
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "拒绝",
-                        tint = Color.White,
+                        tint = glassContentColor(Color(0xFFFF5252)),
                         modifier = Modifier.size(18.dp)
                     )
                 }
