@@ -229,6 +229,7 @@ private fun BottomNavBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(68.dp)
                 .drawBackdrop(
                     backdrop = backdrop,
                     shape = { pillShape },
@@ -272,7 +273,7 @@ private fun BottomNavBar(
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 6.dp)
+                    .padding(vertical = 6.dp)
             ) {
                 val pillProgress = remember {
                     androidx.compose.animation.core.Animatable(
@@ -298,7 +299,8 @@ private fun BottomNavBar(
                     modifier = Modifier
                         .offset { IntOffset(x = (slotWidthDp * pillProgress.value).roundToPx(), y = 0) }
                         .width(slotWidthDp - 8.dp)
-                        .fillMaxHeight()
+                        .fillMaxHeight(1f)
+                        .align(Alignment.Center)
                         .padding(vertical = 1.dp)
                         .drawBackdrop(
                             backdrop = backdrop,
