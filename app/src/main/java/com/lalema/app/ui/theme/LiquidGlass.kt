@@ -13,6 +13,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +51,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
@@ -774,7 +777,9 @@ fun GlassArrowButton(
 }
 
 /**
- * 液态玻璃开关。轨道为着色玻璃（选中用主色），滑块在轨道内滑动。
+ * 液态玻璃开关。轨道为着色玻璃（选中用主色），滑块是玻璃圆钮（带高光与折射），
+ * 支持点击切换与轨道内水平拖拽。
+ *
  * 全 App 统一使用此组件，取代原生 Switch。
  */
 @Composable
@@ -784,24 +789,47 @@ fun LiquidGlassSwitch(
     modifier: Modifier = Modifier
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val backdrop = LocalGlassBackdrop.current
+    val density = LocalDensity.current
 
-    val thumbColor by animateColorAsState(
-        targetValue = if (checked) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = GlassMotion.control(),
-        label = "switchThumb"
-    )
+    // 拖拽时的滑块位置（像素），null 表示“释放/由动画控制”
+    var dragOffsetPx by remember { mutableStateOf<Float?>(null) }
 
     val thumbOffsetFloat by animateFloatAsState(
         targetValue = if (checked) 24f else 0f,
         animationSpec = GlassMotion.control(),
         label = "switchThumbOffset"
     )
-    val thumbOffset = thumbOffsetFloat.dp
+    // 优先使用拖拽中的实时位置，否则用动画值
+    val animatedOffsetPx = with(density) { thumbOffsetFloat.dp.toPx() }
+    val thumbOffsetPx = dragOffsetPx ?: animatedOffsetPx
+    val thumbOffset = with(density) { thumbOffsetPx.toDp() }
 
     LiquidGlassSurface(
         modifier = modifier
             .width(52.dp)
             .height(28.dp)
+            .pointerInput(checked) {
+                detectHorizontalDragGestures(
+                    onDragStart = {
+                        dragOffsetPx = animatedOffsetPx
+                    },
+                    onDragEnd = {
+                        // 松手时按滑块中心是否越过轨道中点决定
+                        val target = thumbOffsetPx >= (52.dp.toPx() - 22.dp.toPx()) / 2
+                        dragOffsetPx = null
+                        if (target != checked) onCheckedChange(target)
+                    },
+                    onDragCancel = {
+                        dragOffsetPx = null
+                    },
+                    onHorizontalDrag = { _, dragAmount ->
+                        dragOffsetPx = (thumbOffsetPx + dragAmount)
+                            .coerceIn(0f, 52.dp.toPx() - 22.dp.toPx())
+                    }
+                )
+            }
             .clickable { onCheckedChange(!checked) },
         cornerRadius = 14.dp,
         tint = if (checked) primaryColor else null,
@@ -812,8 +840,41 @@ fun LiquidGlassSwitch(
             modifier = Modifier
                 .size(22.dp)
                 .offset(x = thumbOffset)
-                .clip(CircleShape)
-                .background(thumbColor)
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { CircleShape },
+                    effects = {
+                        blur(6f.dp.toPx())
+                        lens(3f.dp.toPx(), 4f.dp.toPx())
+                    },
+                    highlight = { Highlight.Default },
+                    innerShadow = {
+                        InnerShadow(
+                            radius = 5.dp,
+                            color = Color.White.copy(alpha = if (checked) 0.18f else 0.42f)
+                        )
+                    },
+                    onDrawSurface = {
+                        // 玻璃滑块：主色着色的半透明玻璃，顶部高光
+                        drawCircle(
+                            color = if (checked) {
+                                primaryColor.copy(alpha = 0.85f)
+                            } else {
+                                onSurfaceVariant.copy(alpha = 0.72f)
+                            }
+                        )
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = if (checked) 0.50f else 0.35f),
+                                    Color.Transparent
+                                ),
+                                center = Offset(size.width * 0.35f, size.height * 0.30f),
+                                radius = size.width * 0.55f
+                            )
+                        )
+                    }
+                )
         )
     }
 }

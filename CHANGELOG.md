@@ -4,6 +4,12 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)。
 
+## [Unreleased]
+
+### Changed
+- [改进] 底栏改为**可拖动玻璃药丸**：选中指示为独立玻璃药丸，在 5 个 Tab 间滑动（点击/拖动吸附最近 Tab，玻璃 refractive 折射下方内容）
+- [改进] `LiquidGlassSwitch` 滑块升级为**玻璃圆钮**（高光 + 折射 + 顶部反光），支持轨内水平拖拽（过半翻转），取代素色圆位移
+
 ## [2.3.0] - 2026-09-03
 
 ### Added
