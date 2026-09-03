@@ -300,7 +300,7 @@ private fun BottomNavBar(
                         .offset { IntOffset(x = (slotWidthDp * pillProgress.value).roundToPx(), y = 0) }
                         .width(slotWidthDp - 8.dp)
                         .fillMaxHeight(1f)
-                        .align(Alignment.Center)
+                        .align(Alignment.CenterStart)
                         .padding(vertical = 1.dp)
                         .drawBackdrop(
                             backdrop = backdrop,
