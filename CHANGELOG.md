@@ -4,7 +4,7 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)。
 
-## [Unreleased]
+## [2.3.0] - 2026-09-03
 
 ### Added
 - [新增] 动效令牌系统 `GlassMotion`（`ui/theme/LiquidGlass.kt`）：13 个时长常量 + press/control/enter 三组 spring 行为，统一全局动画参数
@@ -17,6 +17,7 @@
 - [改进] AiConfig 原生 Switch → `LiquidGlassSwitch`
 - [改进] 8 处原生 IconButton → `LiquidGlassIconButton`（密码可见性按钮保留在玻璃输入框内）
 - [改进] NavHost 页面过渡与 BottomBar 切换动画接入令牌
+- [改进] versionName 2.2.0 → 2.3.0，versionCode 12 → 13
 
 ### Fixed
 - [修复] 清理 6 处死导入（CircularProgressIndicator×4、CardDefaults、LinearEasing）及清理过程产生的重复导入

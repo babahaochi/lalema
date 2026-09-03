@@ -206,6 +206,12 @@ docker-compose up -d
 
 ## 版本历史
 
+### v2.3.0
+- ✨ **动效令牌系统** - 新增 `GlassMotion`（13 个时长常量 + press/control/enter 三组 spring），全部硬编码动画收敛统一
+- 🧩 **组件补齐** - 新建 `LiquidGlassTextField`（玻璃输入框，聚焦高亮边框）与 `LiquidGlassTextButton`（玻璃对话框按钮）
+- 🔄 **全量组件迁移** - 原生 Switch/IconButton/TextField/TextButton 全部替换为液态玻璃组件，视觉残留清零
+- 🧹 **清理** - 6 处死导入移除，`FiniteAnimationSpec` 类型推断修复
+
 ### v2.2.0
 - 🍸 **Liquid Glass 重构** - 引入 kyant/backdrop 2.0.1 设计系统，全 App 玻璃化视觉统一（替换手写玻璃效果）
 - 🛠 **构建升级** - AGP 9.3.2 / Kotlin 2.3.21 / Compose BOM 2026.08.00 / Hilt 2.60.1 / Room 2.8.0
