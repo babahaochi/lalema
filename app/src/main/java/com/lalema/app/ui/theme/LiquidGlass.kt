@@ -793,11 +793,14 @@ fun LiquidGlassSwitch(
     val backdrop = LocalGlassBackdrop.current
     val density = LocalDensity.current
 
+    // 轨道 content 区 = 52 - 3(contentPadding)*2 = 46dp；滑块 22dp → 最大位移 = 24dp
+    val maxOffsetDp = 24.dp
+
     // 拖拽时的滑块位置（像素），null 表示“释放/由动画控制”
     var dragOffsetPx by remember { mutableStateOf<Float?>(null) }
 
     val thumbOffsetFloat by animateFloatAsState(
-        targetValue = if (checked) 24f else 0f,
+        targetValue = if (checked) maxOffsetDp.value else 0f,
         animationSpec = GlassMotion.control(),
         label = "switchThumbOffset"
     )
@@ -805,19 +808,20 @@ fun LiquidGlassSwitch(
     val animatedOffsetPx = with(density) { thumbOffsetFloat.dp.toPx() }
     val thumbOffsetPx = dragOffsetPx ?: animatedOffsetPx
     val thumbOffset = with(density) { thumbOffsetPx.toDp() }
+    val maxOffsetPx = with(density) { maxOffsetDp.toPx() }
 
     LiquidGlassSurface(
         modifier = modifier
             .width(52.dp)
             .height(28.dp)
-            .pointerInput(checked) {
+            .pointerInput(checked, maxOffsetPx) {
                 detectHorizontalDragGestures(
                     onDragStart = {
                         dragOffsetPx = animatedOffsetPx
                     },
                     onDragEnd = {
                         // 松手时按滑块中心是否越过轨道中点决定
-                        val target = thumbOffsetPx >= (52.dp.toPx() - 22.dp.toPx()) / 2
+                        val target = thumbOffsetPx >= maxOffsetPx / 2f
                         dragOffsetPx = null
                         if (target != checked) onCheckedChange(target)
                     },
@@ -826,7 +830,7 @@ fun LiquidGlassSwitch(
                     },
                     onHorizontalDrag = { _, dragAmount ->
                         dragOffsetPx = (thumbOffsetPx + dragAmount)
-                            .coerceIn(0f, 52.dp.toPx() - 22.dp.toPx())
+                            .coerceIn(0f, maxOffsetPx)
                     }
                 )
             }
