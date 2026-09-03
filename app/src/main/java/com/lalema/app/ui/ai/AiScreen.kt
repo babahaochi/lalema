@@ -1,7 +1,6 @@
 package com.lalema.app.ui.ai
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoGraph
@@ -33,7 +31,6 @@ import androidx.compose.material.icons.filled.LocalDining
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -61,6 +58,7 @@ import androidx.navigation.NavController
 import com.lalema.app.ai.HealthAnalysisResult
 import com.lalema.app.ai.TrendDirection
 import com.lalema.app.ui.navigation.Screen
+import com.lalema.app.ui.theme.GlassMotion
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassSurface
@@ -356,7 +354,7 @@ private fun SimpleLoadingIndicator() {
         initialValue = 0.6f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(600, easing = FastOutSlowInEasing),
+            animation = tween(GlassMotion.DURATION_LOADING),
             repeatMode = RepeatMode.Reverse
         ),
         label = "scale"
@@ -365,7 +363,7 @@ private fun SimpleLoadingIndicator() {
         initialValue = 0.4f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(600, easing = FastOutSlowInEasing),
+            animation = tween(GlassMotion.DURATION_LOADING),
             repeatMode = RepeatMode.Reverse
         ),
         label = "alpha"

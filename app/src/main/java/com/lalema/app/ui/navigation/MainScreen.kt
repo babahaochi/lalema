@@ -1,9 +1,7 @@
 package com.lalema.app.ui.navigation
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -64,6 +62,7 @@ import com.lalema.app.ui.calendar.CalendarScreen
 import com.lalema.app.ui.friends.FriendsScreen
 import com.lalema.app.ui.home.HomeScreen
 import com.lalema.app.ui.settings.SettingsScreen
+import com.lalema.app.ui.theme.GlassMotion
 import com.lalema.app.ui.theme.LocalGlassBackdrop
 import com.lalema.app.ui.theme.LocalIsDarkTheme
 
@@ -100,20 +99,20 @@ fun MainScreen(onThemeSettingsChanged: (com.lalema.app.ui.theme.ThemeSettings) -
                 navController = navController,
                 startDestination = Screen.Home.route,
                 enterTransition = {
-                    fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
-                        scaleIn(initialScale = 0.96f, animationSpec = tween(220, easing = FastOutSlowInEasing))
+                    fadeIn(animationSpec = tween(GlassMotion.DURATION_NAV_ENTER)) +
+                        scaleIn(initialScale = 0.96f, animationSpec = tween(GlassMotion.DURATION_NAV_ENTER))
                 },
                 exitTransition = {
-                    fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
-                        scaleOut(targetScale = 0.96f, animationSpec = tween(160, easing = FastOutSlowInEasing))
+                    fadeOut(animationSpec = tween(GlassMotion.DURATION_NAV_EXIT)) +
+                        scaleOut(targetScale = 0.96f, animationSpec = tween(GlassMotion.DURATION_NAV_EXIT))
                 },
                 popEnterTransition = {
-                    fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
-                        scaleIn(initialScale = 0.96f, animationSpec = tween(220, easing = FastOutSlowInEasing))
+                    fadeIn(animationSpec = tween(GlassMotion.DURATION_NAV_ENTER)) +
+                        scaleIn(initialScale = 0.96f, animationSpec = tween(GlassMotion.DURATION_NAV_ENTER))
                 },
                 popExitTransition = {
-                    fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
-                        scaleOut(targetScale = 0.96f, animationSpec = tween(160, easing = FastOutSlowInEasing))
+                    fadeOut(animationSpec = tween(GlassMotion.DURATION_NAV_EXIT)) +
+                        scaleOut(targetScale = 0.96f, animationSpec = tween(GlassMotion.DURATION_NAV_EXIT))
                 }
             ) {
                 composable(Screen.Home.route) {
@@ -200,7 +199,7 @@ private fun BottomNavBar(
         } else {
             Color.White.copy(alpha = 0.42f)
         },
-        animationSpec = tween(400, easing = FastOutSlowInEasing),
+        animationSpec = tween(GlassMotion.DURATION_THEME),
         label = "navSurface"
     )
 
@@ -280,17 +279,17 @@ private fun GlassNavItem(
 ) {
     val iconColor by animateColorAsState(
         targetValue = if (selected) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-        animationSpec = tween(220, easing = FastOutSlowInEasing),
+        animationSpec = tween(GlassMotion.DURATION_CONTROL),
         label = "navIconColor"
     )
     val textColor by animateColorAsState(
         targetValue = if (selected) primaryColor else Color.Transparent,
-        animationSpec = tween(220, easing = FastOutSlowInEasing),
+        animationSpec = tween(GlassMotion.DURATION_CONTROL),
         label = "navTextColor"
     )
     val iconScale by animateFloatAsState(
         targetValue = if (selected) 1.08f else 1f,
-        animationSpec = spring(dampingRatio = 0.60f, stiffness = 350f),
+        animationSpec = GlassMotion.control(),
         label = "iconScale"
     )
 
@@ -302,7 +301,7 @@ private fun GlassNavItem(
         } else {
             Color.Transparent
         },
-        animationSpec = tween(260, easing = FastOutSlowInEasing),
+        animationSpec = tween(GlassMotion.DURATION_CONTROL),
         label = "chipSurface"
     )
 

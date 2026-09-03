@@ -1,15 +1,11 @@
 package com.lalema.app.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -20,6 +16,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.lalema.app.ui.theme.GlassMotion
 import com.lalema.app.ui.theme.LocalIsDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,7 +45,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -81,6 +77,7 @@ import com.lalema.app.ui.navigation.Screen
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassStatCard
+import com.lalema.app.ui.theme.LiquidGlassTextButton
 import com.lalema.app.ui.theme.PrimaryLight
 import com.lalema.app.ui.theme.TertiaryLight
 import com.lalema.app.ui.theme.SuccessLight
@@ -105,7 +102,7 @@ fun HomeScreen(
     var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.90f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        animationSpec = GlassMotion.press(),
         label = "buttonScale"
     )
     val infiniteTransition = rememberInfiniteTransition(label = "buttonPulse")
@@ -113,7 +110,7 @@ fun HomeScreen(
         initialValue = 1f,
         targetValue = 1.04f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2500, easing = FastOutSlowInEasing),
+            animation = tween(GlassMotion.DURATION_PULSE),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseScale"
@@ -186,9 +183,10 @@ fun HomeScreen(
                 )
             },
             dismissButton = {
-                TextButton(onClick = { showSuccessDialog = false }) {
-                    Text("关闭", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                LiquidGlassTextButton(
+                    text = "关闭",
+                    onClick = { showSuccessDialog = false }
+                )
             }
         )
     }
@@ -222,8 +220,8 @@ fun HomeScreen(
         ) {
             AnimatedVisibility(
                 visible = showContent,
-                enter = fadeIn(animationSpec = tween(500, easing = FastOutSlowInEasing)) + slideInVertically(
-                    animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f),
+                enter = fadeIn(animationSpec = tween(GlassMotion.DURATION_SLOWER)) + slideInVertically(
+                    animationSpec = GlassMotion.enter(),
                     initialOffsetY = { -30 }
                 )
             ) {
@@ -240,8 +238,8 @@ fun HomeScreen(
 
             AnimatedVisibility(
                 visible = showContent,
-                enter = fadeIn(animationSpec = tween(600, delayMillis = 150, easing = FastOutSlowInEasing)) + slideInVertically(
-                    animationSpec = spring(dampingRatio = 0.75f, stiffness = 250f),
+                enter = fadeIn(animationSpec = tween(GlassMotion.DURATION_SLOWER, delayMillis = 150)) + slideInVertically(
+                    animationSpec = GlassMotion.enter(),
                     initialOffsetY = { 50 }
                 )
             ) {
@@ -316,8 +314,8 @@ fun HomeScreen(
 
             AnimatedVisibility(
                 visible = showContent,
-                enter = fadeIn(animationSpec = tween(600, delayMillis = 300, easing = FastOutSlowInEasing)) + slideInVertically(
-                    animationSpec = spring(dampingRatio = 0.75f, stiffness = 200f),
+                enter = fadeIn(animationSpec = tween(GlassMotion.DURATION_SLOWER, delayMillis = 300)) + slideInVertically(
+                    animationSpec = GlassMotion.enter(),
                     initialOffsetY = { 30 }
                 )
             ) {
@@ -371,8 +369,8 @@ fun HomeScreen(
 
             AnimatedVisibility(
                 visible = showContent,
-                enter = fadeIn(animationSpec = tween(600, delayMillis = 450, easing = FastOutSlowInEasing)) + slideInVertically(
-                    animationSpec = spring(dampingRatio = 0.75f, stiffness = 180f),
+                enter = fadeIn(animationSpec = tween(GlassMotion.DURATION_SLOWER, delayMillis = 450)) + slideInVertically(
+                    animationSpec = GlassMotion.enter(),
                     initialOffsetY = { 30 }
                 )
             ) {
@@ -412,7 +410,7 @@ fun HomeScreen(
 
             AnimatedVisibility(
                 visible = showContent && uiState.todayRecords.isNotEmpty(),
-                enter = expandVertically(animationSpec = tween(600, delayMillis = 800)) + fadeIn(animationSpec = tween(600, delayMillis = 800)),
+                enter = expandVertically(animationSpec = tween(GlassMotion.DURATION_SLOWER, delayMillis = 800)) + fadeIn(animationSpec = tween(GlassMotion.DURATION_SLOWER, delayMillis = 800)),
                 exit = shrinkVertically() + fadeOut()
             ) {
                 Column {

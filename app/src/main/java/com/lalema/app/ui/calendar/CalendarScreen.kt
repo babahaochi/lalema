@@ -46,12 +46,10 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -77,9 +75,12 @@ import com.lalema.app.data.PoopConsistency
 import com.lalema.app.data.PoopRecord
 import com.lalema.app.data.PoopSmell
 import com.lalema.app.ui.home.PoopRecordForm
+import com.lalema.app.ui.theme.GlassMotion
 import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassIconButton
 import com.lalema.app.ui.theme.LiquidGlassSurface
+import com.lalema.app.ui.theme.LiquidGlassTextButton
 import com.lalema.app.ui.theme.PrimaryLight
 import com.lalema.app.ui.theme.SuccessLight
 import com.lalema.app.ui.theme.WarningLight
@@ -136,9 +137,10 @@ fun CalendarScreen(
                 )
             },
             dismissButton = {
-                TextButton(onClick = { recordToDelete = null }) {
-                    Text("取消", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                LiquidGlassTextButton(
+                    text = "取消",
+                    onClick = { recordToDelete = null }
+                )
             }
         )
     }
@@ -191,26 +193,24 @@ fun CalendarScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = { viewModel.previousMonth() }) {
-                            Icon(
-                                Icons.Filled.ChevronLeft,
-                                contentDescription = "上个月",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
+                        LiquidGlassIconButton(
+                            icon = Icons.Filled.ChevronLeft,
+                            contentDescription = "上个月",
+                            onClick = { viewModel.previousMonth() },
+                            iconTint = MaterialTheme.colorScheme.primary
+                        )
                         Text(
                             text = "${state.currentYearMonth.year}年${state.currentYearMonth.monthValue}月",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        IconButton(onClick = { viewModel.nextMonth() }) {
-                            Icon(
-                                Icons.Filled.ChevronRight,
-                                contentDescription = "下个月",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
+                        LiquidGlassIconButton(
+                            icon = Icons.Filled.ChevronRight,
+                            contentDescription = "下个月",
+                            onClick = { viewModel.nextMonth() },
+                            iconTint = MaterialTheme.colorScheme.primary
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -241,12 +241,12 @@ fun CalendarScreen(
                             val direction = if (targetState > initialState) 1 else -1
                             (slideInHorizontally(
                                 initialOffsetX = { fullWidth -> direction * fullWidth / 3 },
-                                animationSpec = tween(300)
-                            ) + fadeIn(tween(200))) togetherWith
+                                animationSpec = tween(GlassMotion.DURATION_MEDIUM)
+                            ) + fadeIn(tween(GlassMotion.DURATION_FAST))) togetherWith
                             (slideOutHorizontally(
                                 targetOffsetX = { fullWidth -> -direction * fullWidth / 3 },
-                                animationSpec = tween(300)
-                            ) + fadeOut(tween(200)))
+                                animationSpec = tween(GlassMotion.DURATION_MEDIUM)
+                            ) + fadeOut(tween(GlassMotion.DURATION_FAST)))
                         },
                         modifier = Modifier.fillMaxWidth(),
                         label = "monthTransition"
@@ -437,14 +437,14 @@ private fun RecordDetailCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "删除",
-                        tint = Color.Red.copy(alpha = 0.7f),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                LiquidGlassIconButton(
+                    icon = Icons.Default.Delete,
+                    contentDescription = "删除",
+                    onClick = onDelete,
+                    size = 36.dp,
+                    cornerRadius = 18.dp,
+                    iconTint = Color.Red.copy(alpha = 0.7f)
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -596,9 +596,10 @@ private fun DateDetailBottomSheet(
                 )
             },
             dismissButton = {
-                TextButton(onClick = { recordToDelete = null }) {
-                    Text("取消", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                LiquidGlassTextButton(
+                    text = "取消",
+                    onClick = { recordToDelete = null }
+                )
             }
         )
     }
@@ -638,14 +639,14 @@ private fun DateDetailBottomSheet(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                IconButton(onClick = onDismiss) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = "关闭",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                LiquidGlassIconButton(
+                    icon = Icons.Default.Close,
+                    contentDescription = "关闭",
+                    onClick = onDismiss,
+                    size = 44.dp,
+                    cornerRadius = 22.dp,
+                    iconTint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))

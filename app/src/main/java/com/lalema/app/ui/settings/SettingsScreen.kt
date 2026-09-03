@@ -12,14 +12,12 @@ import android.os.PowerManager
 import android.provider.MediaStore
 import android.provider.Settings as AndroidSettings
 import android.widget.Toast
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -58,8 +56,6 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -91,6 +87,7 @@ import com.lalema.app.BuildConfig
 import com.lalema.app.api.ApiClient
 import com.lalema.app.api.UserData
 import com.lalema.app.ui.theme.GlassInlineTimePicker
+import com.lalema.app.ui.theme.GlassMotion
 import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LiquidGlassDivider
@@ -427,8 +424,8 @@ fun SettingsScreen(
 
                     AnimatedVisibility(
                         visible = showTimePicker,
-                        enter = expandVertically(animationSpec = tween(300)) + fadeIn(animationSpec = tween(200)),
-                        exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(150))
+                        enter = expandVertically(animationSpec = tween(GlassMotion.DURATION_MEDIUM)) + fadeIn(animationSpec = tween(GlassMotion.DURATION_FAST)),
+                        exit = shrinkVertically(animationSpec = tween(GlassMotion.DURATION_FAST)) + fadeOut(animationSpec = tween(GlassMotion.DURATION_MICRO))
                     ) {
                         GlassInlineTimePicker(
                             hour = reminderHour,
@@ -655,13 +652,13 @@ private fun ColorPresetOption(
 ) {
     val borderWidth by animateDpAsState(
         targetValue = if (selected) 2.5.dp else 0.dp,
-        animationSpec = tween(250),
+        animationSpec = tween(GlassMotion.DURATION_CONTROL),
         label = "colorPresetBorder"
     )
 
     val scale by animateFloatAsState(
         targetValue = if (selected) 1.1f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+        animationSpec = GlassMotion.control(),
         label = "colorPresetScale"
     )
 
@@ -1110,7 +1107,7 @@ private fun SimpleLoadingDot(color: Color = MaterialTheme.colorScheme.primary) {
         initialValue = 0.5f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(500, easing = FastOutSlowInEasing),
+            animation = tween(GlassMotion.DURATION_LOADING),
             repeatMode = RepeatMode.Reverse
         ),
         label = "dotScale"

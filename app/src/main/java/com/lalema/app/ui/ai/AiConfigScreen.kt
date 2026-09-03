@@ -1,7 +1,6 @@
 package com.lalema.app.ui.ai
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -30,13 +29,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -56,10 +50,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.lalema.app.ai.AiProvider
+import com.lalema.app.ui.theme.GlassMotion
 import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassIconButton
 import com.lalema.app.ui.theme.LiquidGlassSurface
-import com.lalema.app.ui.theme.LocalIsDarkTheme
+import com.lalema.app.ui.theme.LiquidGlassSwitch
+import com.lalema.app.ui.theme.LiquidGlassTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +70,6 @@ fun AiConfigScreen(
     var model by remember { mutableStateOf(config.model) }
     var customUrl by remember { mutableStateOf(config.customBaseUrl) }
     var useLocalOnly by remember { mutableStateOf(config.useLocalAiOnly) }
-    val isDark = LocalIsDarkTheme.current
 
     Scaffold(
         topBar = {
@@ -86,13 +82,11 @@ fun AiConfigScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                    LiquidGlassIconButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "返回",
+                        onClick = { navController.popBackStack() }
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent
@@ -148,8 +142,8 @@ fun AiConfigScreen(
 
                     AnimatedVisibility(
                         visible = expandedProvider,
-                        enter = expandVertically(animationSpec = tween(200, easing = FastOutSlowInEasing)) + fadeIn(),
-                        exit = shrinkVertically(animationSpec = tween(200, easing = FastOutSlowInEasing)) + fadeOut()
+                        enter = expandVertically(animationSpec = tween(GlassMotion.DURATION_MEDIUM)) + fadeIn(),
+                        exit = shrinkVertically(animationSpec = tween(GlassMotion.DURATION_MEDIUM)) + fadeOut()
                     ) {
                         Column(
                             modifier = Modifier.padding(top = 8.dp),
@@ -275,13 +269,9 @@ fun AiConfigScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Switch(
+                    LiquidGlassSwitch(
                         checked = useLocalOnly,
-                        onCheckedChange = { useLocalOnly = it },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = MaterialTheme.colorScheme.primary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                        )
+                        onCheckedChange = { useLocalOnly = it }
                     )
                 }
             }
@@ -312,20 +302,12 @@ private fun GlassTextField(
     label: String,
     placeholder: String
 ) {
-    val isDark = LocalIsDarkTheme.current
-    OutlinedTextField(
+    LiquidGlassTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label) },
-        placeholder = { Text(placeholder) },
+        label = label,
+        placeholder = placeholder,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f),
-            unfocusedContainerColor = if (isDark) Color.White.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.25f),
-            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-            unfocusedBorderColor = if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.40f)
-        ),
         singleLine = true
     )
 }

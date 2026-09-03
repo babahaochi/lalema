@@ -39,8 +39,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -65,9 +63,11 @@ import com.lalema.app.data.PoopConsistency
 import com.lalema.app.data.PoopSmell
 import com.lalema.app.data.PainLevel
 import com.lalema.app.ui.theme.GlassInlineTimePicker
+import com.lalema.app.ui.theme.GlassMotion
 import com.lalema.app.ui.theme.LiquidGlassButton
 import com.lalema.app.ui.theme.LiquidGlassCard
 import com.lalema.app.ui.theme.LiquidGlassSurface
+import com.lalema.app.ui.theme.LiquidGlassTextField
 import com.lalema.app.ui.theme.glassContentColor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,8 +148,8 @@ fun PoopRecordForm(
 
             AnimatedVisibility(
                 visible = showTimePicker,
-                enter = expandVertically(animationSpec = tween(300)) + fadeIn(animationSpec = tween(200)),
-                exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(150))
+                enter = expandVertically(animationSpec = tween(GlassMotion.DURATION_MEDIUM)) + fadeIn(animationSpec = tween(GlassMotion.DURATION_FAST)),
+                exit = shrinkVertically(animationSpec = tween(GlassMotion.DURATION_FAST)) + fadeOut(animationSpec = tween(GlassMotion.DURATION_MICRO))
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
                 GlassInlineTimePicker(
@@ -319,18 +319,12 @@ fun PoopRecordForm(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(
+            LiquidGlassTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                placeholder = { Text(text = "备注（可选）") },
+                placeholder = "备注（可选）",
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.50f),
-                    unfocusedContainerColor = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.40f),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
+                cornerRadius = 16.dp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -402,7 +396,7 @@ fun ChoiceChip(
         } else {
             MaterialTheme.colorScheme.onSurface
         },
-        animationSpec = tween(250),
+        animationSpec = tween(GlassMotion.DURATION_CONTROL),
         label = "chipText"
     )
 
@@ -434,13 +428,13 @@ fun ColorChip(
 ) {
     val borderColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.3f),
-        animationSpec = tween(250),
+        animationSpec = tween(GlassMotion.DURATION_CONTROL),
         label = "colorChipBorder"
     )
 
     val textColor by animateColorAsState(
         targetValue = if (selected) glassContentColor(MaterialTheme.colorScheme.primary) else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(250),
+        animationSpec = tween(GlassMotion.DURATION_CONTROL),
         label = "colorChipText"
     )
 

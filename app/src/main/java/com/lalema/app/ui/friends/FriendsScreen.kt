@@ -1,12 +1,10 @@
 package com.lalema.app.ui.friends
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -36,13 +33,9 @@ import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -72,10 +65,12 @@ import com.lalema.app.api.ApiClient
 import com.lalema.app.api.FriendRequestData
 import com.lalema.app.api.FriendUser
 import com.lalema.app.api.LeaderboardItem
+import com.lalema.app.ui.theme.GlassMotion
 import com.lalema.app.ui.theme.LiquidGlassCard
+import com.lalema.app.ui.theme.LiquidGlassIconButton
 import com.lalema.app.ui.theme.LiquidGlassSurface
+import com.lalema.app.ui.theme.LiquidGlassTextField
 import com.lalema.app.ui.theme.glassContentColor
-import com.lalema.app.ui.theme.LocalIsDarkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -235,7 +230,6 @@ private fun FriendsListTab(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit
 ) {
-    val isDark = LocalIsDarkTheme.current
     var showSearch by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -245,7 +239,7 @@ private fun FriendsListTab(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedTextField(
+            LiquidGlassTextField(
                 value = searchQuery,
                 onValueChange = {
                     onSearchQueryChange(it)
@@ -254,15 +248,8 @@ private fun FriendsListTab(
                         onSearch(it)
                     }
                 },
-                placeholder = { Text("搜索用户名或昵称") },
+                placeholder = "搜索用户名或昵称",
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.35f),
-                    unfocusedContainerColor = if (isDark) Color.White.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.25f),
-                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    unfocusedBorderColor = if (isDark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.40f)
-                ),
                 singleLine = true
             )
             LiquidGlassSurface(
@@ -383,8 +370,8 @@ private fun FriendsListTab(
         } else if (friends.isEmpty()) {
             AnimatedVisibility(
                 visible = !isLoading,
-                enter = fadeIn(animationSpec = tween(400)) + slideInVertically(
-                    animationSpec = spring(dampingRatio = 0.75f, stiffness = 200f),
+                enter = fadeIn(animationSpec = tween(GlassMotion.DURATION_SLOW)) + slideInVertically(
+                    animationSpec = GlassMotion.enter(),
                     initialOffsetY = { 30 }
                 ),
                 exit = fadeOut()
@@ -419,8 +406,8 @@ private fun FriendsListTab(
                 items(friends, key = { it.userId }) { friend ->
                     androidx.compose.animation.AnimatedVisibility(
                         visible = true,
-                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
-                            animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f),
+                        enter = fadeIn(animationSpec = tween(GlassMotion.DURATION_MEDIUM)) + slideInVertically(
+                            animationSpec = GlassMotion.enter(),
                             initialOffsetY = { 20 }
                         )
                     ) {
@@ -485,14 +472,14 @@ private fun FriendItem(friend: FriendUser, onRemove: () -> Unit, onRemind: () ->
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
-            IconButton(onClick = onRemove) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "删除",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
+            LiquidGlassIconButton(
+                icon = Icons.Default.Close,
+                contentDescription = "删除",
+                onClick = onRemove,
+                size = 32.dp,
+                cornerRadius = 16.dp,
+                iconTint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
         }
     }
 }
@@ -511,8 +498,8 @@ private fun RequestsTab(
     } else if (requests.isEmpty()) {
         AnimatedVisibility(
             visible = !isLoading,
-            enter = fadeIn(animationSpec = tween(400)) + slideInVertically(
-                animationSpec = spring(dampingRatio = 0.75f, stiffness = 200f),
+            enter = fadeIn(animationSpec = tween(GlassMotion.DURATION_SLOW)) + slideInVertically(
+                animationSpec = GlassMotion.enter(),
                 initialOffsetY = { 30 }
             ),
             exit = fadeOut()
@@ -643,8 +630,8 @@ private fun LeaderboardTab(
     } else if (leaderboard.isEmpty()) {
         AnimatedVisibility(
             visible = !isLoading,
-            enter = fadeIn(animationSpec = tween(400)) + slideInVertically(
-                animationSpec = spring(dampingRatio = 0.75f, stiffness = 200f),
+            enter = fadeIn(animationSpec = tween(GlassMotion.DURATION_SLOW)) + slideInVertically(
+                animationSpec = GlassMotion.enter(),
                 initialOffsetY = { 30 }
             ),
             exit = fadeOut()
@@ -756,7 +743,7 @@ private fun SimpleLoadingIndicator() {
         initialValue = 0.6f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(600, easing = FastOutSlowInEasing),
+            animation = tween(GlassMotion.DURATION_LOADING),
             repeatMode = RepeatMode.Reverse
         ),
         label = "scale"
@@ -765,7 +752,7 @@ private fun SimpleLoadingIndicator() {
         initialValue = 0.4f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(600, easing = FastOutSlowInEasing),
+            animation = tween(GlassMotion.DURATION_LOADING),
             repeatMode = RepeatMode.Reverse
         ),
         label = "alpha"

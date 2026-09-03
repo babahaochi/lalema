@@ -1,6 +1,7 @@
 package com.lalema.app.ui.theme
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -10,6 +11,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -29,24 +31,32 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import com.kyant.backdrop.Backdrop
@@ -61,6 +71,44 @@ import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
+
+/**
+ * 全 App 动效令牌。
+ *
+ * 此前所有 spring/tween 参数散落在 11 个文件里手写硬编码，导致同一语义出现多种速度：
+ * 例如「加载中」转圈同时存在 500ms（3 处）与 600ms（4 处），列表入场更是三套节奏。
+ * 这里按**语义**而非数值收敛，新增动画直接引用令牌，避免再次漂移。
+ *
+ * 关于 easing：Compose [tween] 的默认缓动就是 FastOutSlowInEasing，
+ * 因此不显式指定 easing 与原先手写 `easing = FastOutSlowInEasing` 完全等价，
+ * 统一后可以省略。唯一例外是 [DURATION_AMBIENT]，背景光斑是匀速漂移，需保留 LinearEasing。
+ */
+object GlassMotion {
+    // ── 时长（毫秒）──
+    const val DURATION_MICRO = 150      // 收起时的淡出尾帧
+    const val DURATION_FAST = 200       // 小元素淡入 / 收起位移
+    const val DURATION_MEDIUM = 300     // 标准展开收起、控件颜色过渡
+    const val DURATION_SLOW = 400       // 卡片入场
+    const val DURATION_SLOWER = 600     // 带阶梯延迟的入场淡入
+    const val DURATION_THEME = 500      // 明暗主题切换
+    const val DURATION_LOADING = 600    // 加载循环（原 500/600 并存，统一取 600）
+    const val DURATION_PULSE = 2500     // 呼吸 / 脉冲
+    const val DURATION_AMBIENT = 12000  // 背景光斑漂移
+    const val DURATION_NAV_ENTER = 220  // 页面切换：进入
+    const val DURATION_NAV_EXIT = 160   // 页面切换：退出
+    const val DURATION_CONTROL = 250    // 控件数值变化（时间选择器等）
+
+    // ── spring（按手感分三档）──
+
+    /** 按压反馈：按钮 / 卡片的按下缩放，要跟手、回弹克制。 */
+    fun <T> press(): FiniteAnimationSpec<T> = spring<T>(dampingRatio = 0.60f, stiffness = 700f)
+
+    /** 控件位移：开关滑块、指示器等在轨道内移动的元件，位移短、需稳定落位。 */
+    fun <T> control(): FiniteAnimationSpec<T> = spring<T>(dampingRatio = 0.65f, stiffness = 400f)
+
+    /** 入场位移：列表项的滑入，带轻微惯性。阶梯感靠 delayMillis 实现，不靠改刚度。 */
+    fun <T> enter(): FiniteAnimationSpec<T> = spring<T>(dampingRatio = 0.75f, stiffness = 220f)
+}
 
 /**
  * 玻璃组件背后的内容源。
@@ -120,7 +168,7 @@ fun GlassBackground(modifier: Modifier = Modifier) {
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(12000, easing = LinearEasing),
+            animation = tween(GlassMotion.DURATION_AMBIENT, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "shimmerOffset"
@@ -246,7 +294,7 @@ fun LiquidGlassCard(
 
     val pressScale by animateFloatAsState(
         targetValue = if (isPressed && onClick != null) 0.97f else 1f,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = 600f),
+        animationSpec = GlassMotion.press(),
         label = "cardScale"
     )
 
@@ -325,7 +373,7 @@ fun LiquidGlassButton(
 
     val pressScale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 800f),
+        animationSpec = GlassMotion.press(),
         label = "buttonScale"
     )
 
@@ -677,7 +725,7 @@ fun GlassArrowButton(
 
     val pressScale by animateFloatAsState(
         targetValue = if (isPressed) 0.8f else 1f,
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = 500f),
+        animationSpec = GlassMotion.press(),
         label = "arrowScale"
     )
 
@@ -739,13 +787,13 @@ fun LiquidGlassSwitch(
 
     val thumbColor by animateColorAsState(
         targetValue = if (checked) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(300),
+        animationSpec = GlassMotion.control(),
         label = "switchThumb"
     )
 
     val thumbOffsetFloat by animateFloatAsState(
         targetValue = if (checked) 24f else 0f,
-        animationSpec = spring(dampingRatio = 0.65f, stiffness = 400f),
+        animationSpec = GlassMotion.control(),
         label = "switchThumbOffset"
     )
     val thumbOffset = thumbOffsetFloat.dp
@@ -870,6 +918,182 @@ fun LiquidGlassProgress(
 }
 
 /**
+ * 液态玻璃文字按钮。用于对话框的次要操作（关闭 / 取消），
+ * 与 [LiquidGlassButton]（主操作）成对出现，视觉更轻、按压仍有玻璃缩放反馈。
+ *
+ * @param tint 可选着色色相（如危险操作传 error），文字自动取对比色。
+ */
+@Composable
+fun LiquidGlassTextButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color? = null,
+    contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
+) {
+    val backdrop = LocalGlassBackdrop.current
+    val isDark = LocalIsDarkTheme.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val shape = remember { RoundedCornerShape(12.dp) }
+
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = GlassMotion.press(),
+        label = "textButtonScale"
+    )
+
+    val baseColor = tint ?: Color.White
+    val surfaceColor by animateColorState(
+        dark = baseColor.copy(alpha = if (tint != null) 0.30f else 0.05f),
+        light = baseColor.copy(alpha = if (tint != null) 0.24f else 0.14f),
+        label = "textBtnSurface"
+    )
+
+    Box(
+        modifier = modifier
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    vibrancy()
+                    blur(14f.dp.toPx())
+                    lens(8f.dp.toPx(), 12f.dp.toPx())
+                },
+                highlight = { Highlight.Default },
+                layerBlock = {
+                    scaleX = pressScale
+                    scaleY = pressScale
+                },
+                onDrawSurface = { drawRect(surfaceColor) }
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() }
+            .padding(horizontal = 18.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = if (tint != null) glassContentColor(tint) else contentColor,
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+
+/**
+ * 液态玻璃文本输入框，取代原生 TextField / OutlinedTextField。
+ *
+ * 玻璃容器 + 极简输入区：聚焦时边框与表面泛主色微光，失焦回落；
+ * label 以小字标注在容器上方（不再使用描边上的浮动标签）。
+ * 原生各页手写的容器色（暗色 White 6% / 亮色 White 35%）已收敛进此组件。
+ *
+ * @param tint 可选着色色相。
+ */
+@Composable
+fun LiquidGlassTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    placeholder: String? = null,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
+    singleLine: Boolean = false,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    minLines: Int = 1,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    cornerRadius: Dp = 12.dp,
+    tint: Color? = null
+) {
+    val backdrop = LocalGlassBackdrop.current
+    val isDark = LocalIsDarkTheme.current
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
+
+    var isFocused by remember { mutableStateOf(false) }
+
+    val surfaceColor by animateColorState(
+        dark = Color.White.copy(alpha = if (isFocused) 0.08f else 0.05f),
+        light = Color.White.copy(alpha = if (isFocused) 0.32f else 0.24f),
+        label = "textFieldSurface"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (isFocused) {
+            primaryColor.copy(alpha = 0.5f)
+        } else {
+            Color.White.copy(alpha = if (isDark) 0.10f else 0.40f)
+        },
+        animationSpec = tween(GlassMotion.DURATION_FAST),
+        label = "textFieldBorder"
+    )
+
+    Column(modifier = modifier) {
+        if (label != null) {
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { shape },
+                    effects = {
+                        vibrancy()
+                        blur(16f.dp.toPx())
+                        lens(9f.dp.toPx(), 12f.dp.toPx())
+                    },
+                    highlight = { Highlight.Default },
+                    onDrawSurface = { drawRect(surfaceColor) }
+                )
+                .border(0.5.dp, borderColor, shape)
+                .padding(horizontal = 14.dp, vertical = 14.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (leadingIcon != null) {
+                    leadingIcon()
+                    Spacer(modifier = Modifier.width(10.dp))
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    BasicTextField(
+                        value = value,
+                        onValueChange = onValueChange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { isFocused = it.isFocused },
+                        textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
+                        keyboardOptions = keyboardOptions,
+                        singleLine = singleLine,
+                        maxLines = maxLines,
+                        minLines = minLines,
+                        visualTransformation = visualTransformation,
+                        cursorBrush = SolidColor(primaryColor)
+                    )
+                    if (placeholder != null && value.isEmpty()) {
+                        Text(
+                            text = placeholder,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = LocalTextStyle.current
+                        )
+                    }
+                }
+                if (trailingIcon != null) {
+                    Spacer(modifier = Modifier.width(10.dp))
+                    trailingIcon()
+                }
+            }
+        }
+    }
+}
+
+/**
  * 主题相关的玻璃表面色，明暗切换时平滑过渡。
  */
 @Composable
@@ -881,7 +1105,7 @@ private fun animateColorState(
     val isDark = LocalIsDarkTheme.current
     return androidx.compose.animation.animateColorAsState(
         targetValue = if (isDark) dark else light,
-        animationSpec = tween(500),
+        animationSpec = tween(GlassMotion.DURATION_THEME),
         label = label
     )
 }
